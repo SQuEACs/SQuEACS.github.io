@@ -93,10 +93,23 @@
     { id: "saver",    name: "Energy Saver",        hint: "Evolve a small brain where food is scarce.", why: "Brain size 32 or less saves energy (expensive tissue hypothesis).", test: t => t.brain <= 32 },
   ];
 
+  /* ---------- Surprise treasures ---------- */
+  const TREASURE = [
+    { id: "pebble",    name: "Smooth river pebble", color: "#b8b0a0", shape: "pebble",  rarity: "Common",    w: 30 },
+    { id: "quartz",    name: "Quartz crystal",      color: "#f4f2fa", shape: "crystal", rarity: "Common",    w: 22 },
+    { id: "agate",     name: "Banded agate",        color: "#ff8a5c", shape: "pebble",  rarity: "Uncommon",  w: 14 },
+    { id: "jasper",    name: "Red jasper",          color: "#d8434b", shape: "gem",     rarity: "Uncommon",  w: 12 },
+    { id: "geode",     name: "Amethyst geode",      color: "#a47bff", shape: "crystal", rarity: "Rare",      w: 8 },
+    { id: "turquoise", name: "Turquoise nugget",    color: "#2ed3c6", shape: "gem",     rarity: "Rare",      w: 7 },
+    { id: "fossil",    name: "Fossil shell",        color: "#e0c9a0", shape: "fossil",  rarity: "Rare",      w: 5 },
+    { id: "nugget",    name: "Golden nugget",       color: "#ffd23f", shape: "gem",     rarity: "Legendary", w: 2 },
+  ];
+  function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
+
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {} };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex })); } catch (e) {} };
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {} };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; } } catch (e) {}
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 10, fur: 50 + gauss() * 10, ext: 50 + gauss() * 10, cochlea: 50 + gauss() * 10, canal: valOfDeg(84) + gauss() * 8, brain: 50 + gauss() * 10 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -129,6 +142,37 @@
       g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d);
       o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
     } catch (e) {}
+  }
+  function audio() { if (muted) return null; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume(); return ac; } catch (e) { return null; } }
+  let noiseBuf = null;
+  function noise(a) { if (noiseBuf) return noiseBuf; const b = a.createBuffer(1, Math.floor(a.sampleRate * 0.8), a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return (noiseBuf = b); }
+  function env(a, g, vol, att, dur) { const t = a.currentTime; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); }
+  function sfx(kind, vol = 0.1) {
+    const a = audio(); if (!a) return;
+    vol = clamp(vol, 0.005, 0.25); const t = a.currentTime, g = a.createGain(); g.connect(a.destination);
+    const osc = (type, f) => { const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); return o; };
+    const lfoTo = (param, rate, depth, dur) => { const l = osc("sine", rate), lg = a.createGain(); lg.gain.value = depth; l.connect(lg); lg.connect(param); l.start(t); l.stop(t + dur); };
+    if (kind === "eagle") {           // high, rasping screech
+      const o = osc("sawtooth", 2500); o.frequency.exponentialRampToValueAtTime(1300, t + 0.5); lfoTo(o.frequency, 30, 140, 0.6);
+      const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1900; f.Q.value = 1.5; o.connect(f); f.connect(g);
+      env(a, g, vol, 0.03, 0.55); o.start(t); o.stop(t + 0.6);
+    } else if (kind === "growl") {    // low coyote growl
+      const o = osc("sawtooth", 80); lfoTo(o.frequency, 13, 22, 0.7);
+      const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 450; o.connect(f); f.connect(g);
+      env(a, g, vol, 0.05, 0.65); o.start(t); o.stop(t + 0.7);
+    } else if (kind === "howl") {     // distant coyote howl
+      const o = osc("sine", 420); o.frequency.exponentialRampToValueAtTime(720, t + 0.45); o.frequency.exponentialRampToValueAtTime(520, t + 1.2); lfoTo(o.frequency, 6, 12, 1.3);
+      o.connect(g); env(a, g, vol, 0.12, 1.25); o.start(t); o.stop(t + 1.3);
+    } else if (kind === "gator") {    // hiss over a deep rumble
+      const n = a.createBufferSource(); n.buffer = noise(a); const f = a.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 2200; n.connect(f); f.connect(g);
+      env(a, g, vol * 0.8, 0.04, 0.6); n.start(t); n.stop(t + 0.65);
+      const g2 = a.createGain(); g2.connect(a.destination); const r = osc("sine", 52); r.connect(g2); env(a, g2, vol, 0.05, 0.7); r.start(t); r.stop(t + 0.75);
+    } else if (kind === "splash") {
+      const n = a.createBufferSource(); n.buffer = noise(a); const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900; n.connect(f); f.connect(g);
+      env(a, g, vol, 0.02, 0.4); n.start(t); n.stop(t + 0.45);
+    } else if (kind === "sparkle") {
+      [1320, 1760, 2093, 2637].forEach((fr, i) => { const o = a.createOscillator(), gg = a.createGain(); o.type = "triangle"; o.frequency.value = fr; gg.connect(a.destination); o.connect(gg); const st = t + i * 0.07; gg.gain.setValueAtTime(0.0001, st); gg.gain.exponentialRampToValueAtTime(vol, st + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, st + 0.25); o.start(st); o.stop(st + 0.3); });
+    }
   }
   const jingle = () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.12, "triangle", 0.06), i * 90));
 
@@ -187,6 +231,34 @@
       G.worn[id] = on; save(); renderCloset(); if (G.screen !== "season") drawIdle();
     }));
     $("og-outfit-count").textContent = `${Object.keys(OUTFITS).filter(k => G.unlocked[k]).length} of ${Object.keys(OUTFITS).length}`;
+  }
+  function drawGem(c, tr, locked, w = 140, h = 100) {
+    c.clearRect(0, 0, w, h); c.save(); c.translate(w / 2, h / 2 + 4);
+    const col = locked ? "#2b2540" : tr.color, edge = locked ? "#3a3350" : "#0b0a10";
+    c.lineWidth = 3; c.strokeStyle = edge; c.lineJoin = "round"; c.fillStyle = col;
+    if (tr.shape === "pebble") {
+      c.beginPath(); c.ellipse(0, 0, 34, 24, -0.2, 0, 7); c.fill(); c.stroke();
+      if (!locked && tr.id === "agate") { c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 3; [14, 22].forEach(r => { c.beginPath(); c.ellipse(0, 0, r, r * 0.65, -0.2, 0, 7); c.stroke(); }); }
+    } else if (tr.shape === "crystal") {
+      const pts = [[-26, 22], [-30, -2], [-12, -30], [0, -6], [10, -34], [28, -4], [24, 22]];
+      c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.fill(); c.stroke();
+      if (!locked) { c.strokeStyle = "rgba(255,255,255,0.7)"; c.lineWidth = 2; c.beginPath(); c.moveTo(-12, -30); c.lineTo(-10, 20); c.moveTo(10, -34); c.lineTo(8, 20); c.stroke(); }
+    } else if (tr.shape === "gem") {
+      c.beginPath(); c.moveTo(-30, -10); c.lineTo(-16, -26); c.lineTo(16, -26); c.lineTo(30, -10); c.lineTo(0, 28); c.closePath(); c.fill(); c.stroke();
+      if (!locked) { c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 2; c.beginPath(); c.moveTo(-30, -10); c.lineTo(30, -10); c.moveTo(-8, -26); c.lineTo(0, 28); c.lineTo(8, -26); c.stroke(); }
+    } else {
+      c.beginPath(); c.arc(0, 0, 30, 0, 7); c.fill(); c.stroke();
+      if (!locked) { c.strokeStyle = "rgba(90,60,30,0.75)"; c.lineWidth = 2.5; c.beginPath(); for (let a = 0; a < 12; a += 0.15) { const r = 2 + a * 2.3; const x = Math.cos(a) * r, y = Math.sin(a) * r; a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+    }
+    if (locked) { c.fillStyle = "#ff5fa2"; c.font = "700 30px Fredoka, Arial, sans-serif"; c.textAlign = "center"; c.fillText("?", 0, 10); }
+    else { c.fillStyle = "rgba(255,255,255,0.85)"; c.beginPath(); c.arc(-12, -10, 4, 0, 7); c.fill(); }
+    c.restore();
+  }
+  function renderTreasure() {
+    const box = $("og-treasure");
+    box.innerHTML = TREASURE.map(tr => { const n = G.treasure[tr.id] || 0; return `<div class="og-tile${n ? "" : " locked"}"><canvas width="140" height="100" data-gem="${tr.id}" aria-hidden="true"></canvas><b>${n ? tr.name : "???"}</b><span>${tr.rarity}${n ? ` · found ${n}` : ""}</span></div>`; }).join("");
+    box.querySelectorAll("canvas[data-gem]").forEach(cv => { const tr = TREASURE.find(x => x.id === cv.dataset.gem); drawGem(cv.getContext("2d"), tr, !G.treasure[tr.id]); });
+    $("og-treasure-count").textContent = `${TREASURE.filter(tr => G.treasure[tr.id]).length} of ${TREASURE.length}`;
   }
   function renderDex() {
     const box = $("og-dex");
@@ -420,6 +492,15 @@
     const tail = new T3.Mesh(new T3.ConeGeometry(0.4, 2.6, 6), M(c)); tail.rotation.x = -Math.PI / 2; tail.position.z = -2.6; g.add(tail);
     g.scale.setScalar(1.3); return g;
   }
+  function treasureMesh(tr) {
+    const g = new T3.Group(), col = new T3.Color(tr.color);
+    const mat = new T3.MeshPhongMaterial({ color: col, emissive: col.clone().multiplyScalar(0.35), shininess: 90, flatShading: true });
+    const geo = tr.shape === "crystal" ? new T3.OctahedronGeometry(0.55, 0) : tr.shape === "gem" ? new T3.OctahedronGeometry(0.5, 0) : tr.shape === "fossil" ? new T3.TorusGeometry(0.35, 0.18, 8, 16) : new T3.DodecahedronGeometry(0.45, 0);
+    const m = new T3.Mesh(geo, mat); if (tr.shape === "crystal") m.scale.set(0.8, 1.4, 0.8); if (tr.shape === "pebble") m.scale.set(1.2, 0.7, 1); g.add(m);
+    const ring = new T3.Mesh(new T3.TorusGeometry(0.95, 0.05, 6, 24), new T3.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })); ring.rotation.x = Math.PI / 2; g.add(ring);
+    const beam = new T3.Mesh(new T3.CylinderGeometry(0.15, 0.15, 12, 6, 1, true), new T3.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35, depthWrite: false })); beam.position.y = 6; g.add(beam);
+    g.userData = { gem: m, ring }; return g;
+  }
   function logMesh() { const l = new T3.Mesh(new T3.CylinderGeometry(0.45, 0.45, 5, 10), M(0x6b4a2b)); l.rotation.z = Math.PI / 2; const g = new T3.Group(); g.add(l); return g; }
 
   function init3D() {
@@ -481,7 +562,7 @@
     const otter = buildOtter(me.t, G.worn); scene.add(otter);
     S = { scene, world, otter, t: 0, x: sx, z: sz, y: groundY(sx, sz) + 0.5, vy: 0, heading: Math.atan2(-sx, -sz), speed: 0,
           inWater: false, depth: 0, hearts: 3, energy: 100, inv: 0, food: 0, counts: {}, hits: 0, dead: false, cause: "", plastic: 0, plasticRebuilt: 0, starve: 0,
-          tasks: makeTasks(G.hab), items: [], preds: [], logs: [], friends: [], ending: 0, golden: false, camPos: new T3.Vector3(), tipT: 0 };
+          tasks: makeTasks(G.hab), items: [], bonus: [], bonusT: rand(5, 9), sndT: 0, preds: [], logs: [], friends: [], ending: 0, golden: false, camPos: new T3.Vector3(), tipT: 0 };
     // Food
     Object.entries(MENU[G.hab]).forEach(([k, n]) => { for (let i = 0; i < n; i++) spawnFood(k); });
     spawnFood("golden");
@@ -542,6 +623,7 @@
     c.putImageData(mapBase, 0, 0);
     const radar = 10 + lead().t.brain * 0.3;
     S.items.forEach(it => { if (!it.alive || Math.hypot(it.x - S.x, it.z - S.z) > radar) return; const [x, y] = P(it.x, it.z); c.fillStyle = it.f.rare ? "#ffd23f" : "#ffffff"; c.fillRect(x - 1.5, y - 1.5, 3, 3); });
+    S.bonus.forEach(b => { const [x, y] = P(b.x, b.z); c.fillStyle = b.tr.color; c.strokeStyle = "#fff"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y); c.lineTo(x, y + 5); c.lineTo(x - 4, y); c.closePath(); c.fill(); c.stroke(); });
     if (S.place && !S.place.found) { const [x, y] = P(S.place.x, S.place.z); c.fillStyle = "#ffe066"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill(); c.stroke(); }
     S.friends.forEach(f => { if (f.met) return; const [x, y] = P(f.x, f.z); c.fillStyle = "#a47bff"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
     S.preds.forEach(p => { if (p.kind === "eagle" && p.state === "circle") return; const [x, y] = P(p.x, p.z); c.fillStyle = "#ff3b5c"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
@@ -567,7 +649,7 @@
     const k = keys, alive = !S.dead;
     const L = alive && (k.ArrowLeft || k.a || k.A), Rr = alive && (k.ArrowRight || k.d || k.D), U = alive && (k.ArrowUp || k.w || k.W), D = alive && (k.ArrowDown || k.s || k.S);
     const J = alive && k[" "], DV = alive && (k.Shift || k.e || k.E || k.q || k.Q || k.c || k.C || k.dive);
-    S.inWater = isWater(S.x, S.z) && S.y < 0.6;
+    const wasWet = S.inWater; S.inWater = isWater(S.x, S.z) && S.y < 0.6; if (S.inWater && !wasWet && S.t > 0.5) sfx("splash", 0.06);
     // Steering: in fast water, canals near right angles turn more sharply
     let turn = 2.6;
     if (W.flow && S.inWater) turn *= 0.55 + 0.45 * clamp(1 - Math.abs(degOf(t.canal) - 93) / 22, 0, 1);
@@ -686,6 +768,47 @@
       const near = Math.abs(lg.x - S.x) < 2.8 && Math.abs(lg.z - S.z) < 1.1;
       if (near && alive) { if (S.y > -0.6) hurt("Bonked by a log!"); else if (!lg.passed) { lg.passed = 3; bump("under", "logs"); toast("Dove under a log!"); } }
     });
+    // Surprise treasures pop up near the otter now and then
+    S.bonusT -= dt;
+    if (S.bonusT <= 0 && alive && S.bonus.length < 2) {
+      S.bonusT = rand(9, 15);
+      for (let i = 0; i < 40; i++) {
+        const a = rand(0, Math.PI * 2), r = rand(9, 24), x = clamp(S.x + Math.cos(a) * r, -60, 60), z = clamp(S.z + Math.sin(a) * r, -60, 60);
+        if (sdf(x, z) < -3) continue;
+        const tr = pickTreasure(), m = treasureMesh(tr); S.scene.add(m);
+        S.bonus.push({ tr, m, x, z, y: groundY(x, z) + 0.7, life: 16 });
+        sfx("sparkle", 0.05); toast("Something sparkly appeared! Check your map."); break;
+      }
+    }
+    S.bonus = S.bonus.filter(b => {
+      b.life -= dt; b.m.position.set(b.x, b.y + Math.sin(S.t * 3) * 0.2, b.z); b.m.userData.gem.rotation.y += dt * 2;
+      b.m.userData.ring.scale.setScalar(1 + Math.sin(S.t * 5) * 0.15); b.m.visible = b.life > 3 || Math.floor(S.t * 8) % 2 === 0;
+      if (alive && Math.hypot(b.x - S.x, b.z - S.z) < 1.8 && Math.abs(b.y - S.y) < 2) {
+        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; save(); renderTreasure();
+        S.energy = clamp(S.energy + 12, 0, 100); let extra = "";
+        if ((b.tr.rarity === "Rare" || b.tr.rarity === "Legendary") && S.hearts < 3) { S.hearts++; renderHearts(); extra = " +1 heart!"; }
+        sfx("sparkle", 0.09); toast(`Surprise! ${b.tr.rarity} find: ${b.tr.name}!${extra}`);
+        S.scene.remove(b.m); return false;
+      }
+      if (b.life <= 0) { S.scene.remove(b.m); return false; }
+      return true;
+    });
+    // Predator sounds: louder and faster the closer the danger
+    S.sndT -= dt;
+    if (alive && S.sndT <= 0) {
+      let near = null, nd = 1e9;
+      S.preds.forEach(p => { if (p.kind === "eagle" && (p.state === "circle" || p.state === "leave")) return; const d = Math.hypot(p.x - S.x, p.z - S.z); if (d < nd) { nd = d; near = p; } });
+      if (near) {
+        const range = { eagle: 45, coyote: 26, gator: 18 }[near.kind];
+        if (nd < range) {
+          const k = 1 - nd / range;
+          if (near.kind === "eagle") { sfx("eagle", near.state === "swoop" ? 0.22 : 0.06 + 0.12 * k); S.sndT = near.state === "swoop" ? 0.5 : 0.9 - 0.5 * k; }
+          else if (near.kind === "coyote") { if (near.chasing) { sfx("growl", 0.06 + 0.16 * k); S.sndT = 0.25 + (1 - k) * 0.9; } else { sfx("howl", 0.03 + 0.06 * k); S.sndT = 4; } }
+          else { sfx("gator", 0.04 + (near.state === "lunge" ? 0.16 : 0.08) * k); S.sndT = near.state === "lunge" ? 0.35 : 0.8 + (1 - k) * 1.4; }
+        }
+      }
+      if (!near || S.sndT <= 0) S.sndT = 0.4;
+    }
     // Season clock
     if (!S.dead && S.t >= SEASON) { S.dead = false; S.ending = 0.01; }
     // HUD
@@ -994,5 +1117,5 @@
   $("og-mute").addEventListener("click", e => { muted = !muted; e.currentTarget.setAttribute("aria-pressed", String(muted)); e.currentTarget.textContent = muted ? "Sound off" : "Sound on"; glc.focus({ preventScroll: true }); });
   window.addEventListener("resize", () => { resize(); size3D(); updatePanels(); if (!running) drawIdle(); });
 
-  resize(); renderCloset(); renderDex(); updatePanels(); screenTitle(); idleLoop();
+  resize(); renderCloset(); renderDex(); renderTreasure(); updatePanels(); screenTitle(); idleLoop();
 })();

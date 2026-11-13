@@ -466,37 +466,57 @@
     return Math.abs(z - w.a * Math.sin(x / w.p)) - w.w;
   }
   const isWater = (x, z) => sdf(x, z) < 0;
+  const smooth = (a, b, x) => { const k = clamp((x - a) / (b - a), 0, 1); return k * k * (3 - 2 * k); };
   function groundY(x, z) {
     const d = sdf(x, z), r = Math.max(Math.abs(x), Math.abs(z));
-    if (d < 0) return -Math.min(4.2, 0.3 - d * 0.55);
-    return 0.35 + Math.min(d, 3) * 0.05 + Math.max(0, r - 56) * 0.35 + Math.sin(x * 0.21) * Math.cos(z * 0.17) * 0.25;
+    const deep = -Math.min(4.2, 0.6 - Math.min(d, 0) * 0.55);
+    const land = 0.35 + Math.min(Math.max(d, 0), 3) * 0.05 + Math.max(0, r - 56) * 0.35 + Math.sin(x * 0.21) * Math.cos(z * 0.17) * 0.25;
+    return lerp(deep, land, smooth(-2.5, 1.5, d));
   }
   function randLand(minD = 4) { for (let i = 0; i < 200; i++) { const x = rand(-60, 60), z = rand(-60, 60); if (sdf(x, z) > minD) return [x, z]; } return [50, 50]; }
   function randWater(minD = 1.5) { for (let i = 0; i < 300; i++) { const x = rand(-60, 60), z = rand(-60, 60); if (sdf(x, z) < -minD) return [x, z]; } return [0, 0]; }
   function shorePoint() { for (let i = 0; i < 400; i++) { const x = rand(-58, 58), z = rand(-58, 58), d = sdf(x, z); if (d > 1.5 && d < 4 && Math.hypot(x, z) > 25) return [x, z]; } return randLand(); }
 
   /* ----- Mesh builders ----- */
-  const M = (c, o = {}) => new T3.MeshLambertMaterial({ color: c, ...o });
-  const ball = (r, c, sx = 1, sy = 1, sz = 1) => { const m = new T3.Mesh(new T3.SphereGeometry(r, 16, 12), M(c)); m.scale.set(sx, sy, sz); return m; };
+  const M = (c, o = {}) => new T3.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0, ...o });
+  const ball = (r, c, sx = 1, sy = 1, sz = 1) => { const m = new T3.Mesh(new T3.SphereGeometry(r, 22, 16), M(c)); m.scale.set(sx, sy, sz); return m; };
+  const lathe = (pts, seg = 22) => new T3.LatheGeometry(pts.map(([r, y]) => new T3.Vector2(r, y)), seg);
   function buildOtter(t, worn = {}, plastic = 0) {
     const g = new T3.Group(), body = new T3.Group(); g.add(body);
-    const fur = clamp(t.fur + plastic, 0, 100), s = 0.75 + t.size / 100 * 0.6, puff = 1 + fur / 100 * 0.28;
-    const furC = 0x7a4a2c, belly = 0xc99a6b, dark = 0x4e2e1a;
-    body.add(ball(0.5, furC, 0.95 * puff, 0.82 * puff, 2.1));
-    const bel = ball(0.42, belly, 0.8, 0.6, 1.6); bel.position.set(0, -0.12, 0.15); body.add(bel);
-    const head = new T3.Group(); head.position.set(0, 0.32, 1.12); body.add(head);
-    const hr = 0.36 + t.brain / 100 * 0.12;
-    head.add(ball(hr, furC, 1, 0.92, 1.05));
-    const muz = ball(hr * 0.55, belly, 1, 0.75, 0.9); muz.position.set(0, -hr * 0.3, hr * 0.7); head.add(muz);
-    const nose = ball(0.07, 0x0b0a10); nose.position.set(0, -hr * 0.15, hr * 1.18); head.add(nose);
+    const fur = clamp(t.fur + plastic, 0, 100), s = 0.75 + t.size / 100 * 0.6, puff = 1 + fur / 100 * 0.25;
+    const furC = 0x7a4a2c, belly = 0xd2a878, dark = 0x4a2b18;
+    // Sleek torpedo-shaped body with a soft, lighter belly
+    const bg = lathe([[0.001, -1.15], [0.2, -1.05], [0.36, -0.8], [0.46, -0.4], [0.5, 0], [0.47, 0.4], [0.38, 0.75], [0.27, 1.0], [0.001, 1.12]], 26);
+    bg.rotateX(Math.PI / 2);
+    const cols = [], cF = new T3.Color(furC), cBl = new T3.Color(belly), tmp = new T3.Color(), bp = bg.attributes.position;
+    for (let i = 0; i < bp.count; i++) { const k = smooth(0.05, 0.38, -bp.getY(i)); tmp.copy(cF).lerp(cBl, k); cols.push(tmp.r, tmp.g, tmp.b); }
+    bg.setAttribute("color", new T3.Float32BufferAttribute(cols, 3));
+    const bm = new T3.Mesh(bg, new T3.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 })); bm.scale.set(puff, 0.9 * puff, 1); body.add(bm);
+    const head = new T3.Group(); head.position.set(0, 0.3, 1.15); body.add(head);
+    const hr = 0.34 + t.brain / 100 * 0.12;
+    head.add(ball(hr, furC, 1, 0.84, 1.1));
+    const muz = ball(hr * 0.58, belly, 1.15, 0.72, 0.9); muz.position.set(0, -hr * 0.28, hr * 0.62); head.add(muz);
+    const gloss = new T3.MeshStandardMaterial({ color: 0x0b0a10, roughness: 0.25 });
+    const nose = new T3.Mesh(new T3.SphereGeometry(0.075, 14, 10), gloss); nose.scale.set(1.35, 0.8, 0.9); nose.position.set(0, -hr * 0.12, hr * 1.12); head.add(nose);
+    const wl = [];
     [-1, 1].forEach(sd => {
-      const eye = ball(0.055, 0x0b0a10); eye.position.set(sd * hr * 0.45, hr * 0.2, hr * 0.82); head.add(eye);
-      const ear = ball(0.08 + t.ext / 100 * 0.09, dark); ear.position.set(sd * hr * 0.72, hr * 0.68, -hr * 0.1); head.add(ear);
+      const eye = new T3.Mesh(new T3.SphereGeometry(0.062, 14, 10), gloss); eye.position.set(sd * hr * 0.42, hr * 0.17, hr * 0.8); head.add(eye);
+      const hi = new T3.Mesh(new T3.SphereGeometry(0.018, 8, 6), new T3.MeshBasicMaterial({ color: 0xffffff })); hi.position.set(sd * hr * 0.42 + 0.02, hr * 0.17 + 0.03, hr * 0.8 + 0.05); head.add(hi);
+      const ear = ball(0.075 + t.ext / 100 * 0.08, dark, 1, 0.8, 0.6); ear.position.set(sd * hr * 0.72, hr * 0.52, -hr * 0.12); head.add(ear);
+      for (let i = 0; i < 3; i++) wl.push(sd * hr * 0.45, -hr * 0.25, hr * 0.9, sd * hr * 1.35, -hr * 0.3 + (i - 1) * 0.07, hr * 0.75);
     });
+    const wg = new T3.BufferGeometry(); wg.setAttribute("position", new T3.Float32BufferAttribute(wl, 3));
+    head.add(new T3.LineSegments(wg, new T3.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 })));
     const tl = 0.9 + t.ext / 100 * 0.9;
-    const tail = new T3.Mesh(new T3.ConeGeometry(0.22, tl, 10), M(dark)); tail.rotation.x = -Math.PI / 2; tail.position.set(0, -0.05, -1.0 - tl / 2); body.add(tail); g.userData.tail = tail;
+    const tg = lathe([[0.001, 0], [0.24, 0.04], [0.21, 0.3 * tl], [0.13, 0.7 * tl], [0.001, tl]], 16); tg.rotateX(-Math.PI / 2);
+    const tail = new T3.Mesh(tg, M(dark, { roughness: 0.75 })); tail.position.set(0, -0.02, -0.98); tail.rotation.x = 0.12; body.add(tail); g.userData.tail = tail;
     const legs = [];
-    [[-0.32, 0.6], [0.32, 0.6], [-0.32, -0.6], [0.32, -0.6]].forEach(([x, z]) => { const l = new T3.Mesh(new T3.CylinderGeometry(0.1, 0.11, 0.42, 8), M(dark)); l.position.set(x, -0.42, z); body.add(l); legs.push(l); });
+    [[-0.3, 0.55], [0.3, 0.55], [-0.3, -0.55], [0.3, -0.55]].forEach(([x, z]) => {
+      const lg = new T3.Group(); lg.position.set(x, -0.25, z);
+      const shin = new T3.Mesh(new T3.CylinderGeometry(0.1, 0.09, 0.36, 10), M(dark)); shin.position.y = -0.16; lg.add(shin);
+      const foot = ball(0.11, dark, 1, 0.45, 1.4); foot.position.set(0, -0.35, 0.05); lg.add(foot);
+      body.add(lg); legs.push(lg);
+    });
     g.userData.legs = legs;
     // Outfits
     if (worn.beanie) { const b = new T3.Mesh(new T3.SphereGeometry(hr * 1.02, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0xff5fa2)); b.position.y = hr * 0.25; head.add(b); const pom = ball(0.09, 0xefeaf6); pom.position.y = hr * 1.3; head.add(pom); }
@@ -508,27 +528,38 @@
     if (worn.scarf) { const sc = new T3.Mesh(new T3.TorusGeometry(hr * 0.8, 0.09, 8, 20), M(0x2ed3c6)); sc.position.set(0, 0.15, 0.85); sc.rotation.x = Math.PI / 2.3; body.add(sc); }
     if (worn.labcoat) { const lc = new T3.Mesh(new T3.CylinderGeometry(0.52 * puff, 0.55 * puff, 1.1, 14, 1, true), M(0xf4f2fa, { side: T3.DoubleSide })); lc.rotation.x = Math.PI / 2; lc.position.z = 0.25; lc.scale.set(1, 1, 0.92); body.add(lc); }
     g.scale.setScalar(s); g.userData.scale = s;
+    g.traverse(o => { if (o.isMesh) o.castShadow = true; });
     return g;
   }
   function buildFish(f) {
-    const g = new T3.Group();
+    const g = new T3.Group(), mat = M(f.color, { roughness: f.crawl ? 0.6 : 0.35, metalness: f.rare ? 0.5 : 0.1 });
     if (f.crawl) {
-      g.add(ball(0.25, f.color, 1, 0.55, 1.6));
-      [-1, 1].forEach(sd => { const cl = ball(0.14, f.color, 1, 0.6, 1.3); cl.position.set(sd * 0.25, 0, 0.38); g.add(cl); });
+      const b = new T3.Mesh(new T3.SphereGeometry(0.25, 16, 12), mat); b.scale.set(1, 0.55, 1.3); g.add(b);
+      for (let i = 0; i < 3; i++) { const seg = new T3.Mesh(new T3.SphereGeometry(0.17 - i * 0.03, 12, 8), mat); seg.scale.set(1, 0.6, 1); seg.position.z = -0.3 - i * 0.18; g.add(seg); }
+      [-1, 1].forEach(sd => { const cl = new T3.Mesh(new T3.SphereGeometry(0.13, 12, 8), mat); cl.scale.set(0.8, 0.5, 1.4); cl.position.set(sd * 0.25, 0, 0.42); cl.rotation.y = -sd * 0.4; g.add(cl); });
     } else {
-      const b = ball(0.3, f.color, 0.6, 0.8, 1.5); g.add(b);
-      const tail = new T3.Mesh(new T3.ConeGeometry(0.22, 0.4, 4), M(f.color)); tail.rotation.x = Math.PI / 2; tail.position.z = -0.6; g.add(tail);
-      if (f.rare) { const glow = new T3.Mesh(new T3.SphereGeometry(0.75, 12, 10), new T3.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.25 })); g.add(glow); }
+      const b = new T3.Mesh(new T3.SphereGeometry(0.3, 18, 12), mat); b.scale.set(0.55, 0.8, 1.55); g.add(b);
+      const tail = new T3.Mesh(new T3.ConeGeometry(0.26, 0.42, 3), mat); tail.rotation.x = Math.PI / 2; tail.scale.set(1, 0.25, 1); tail.position.z = -0.6; g.add(tail);
+      const fin = new T3.Mesh(new T3.ConeGeometry(0.12, 0.3, 3), mat); fin.scale.set(0.25, 1, 1); fin.position.set(0, 0.26, -0.05); g.add(fin);
+      const eye = new T3.Mesh(new T3.SphereGeometry(0.04, 8, 6), new T3.MeshBasicMaterial({ color: 0x0b0a10 })); eye.position.set(0.13, 0.06, 0.32); g.add(eye); const eye2 = eye.clone(); eye2.position.x = -0.13; g.add(eye2);
+      if (f.rare) { const glow = new T3.Mesh(new T3.SphereGeometry(0.75, 14, 10), new T3.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.25 })); g.add(glow); }
     }
     g.scale.setScalar(f.size * 1.2);
     return g;
   }
+  const GREENS = [0x2f7a45, 0x3a8a4a, 0x2a6b3f, 0x4a9a50];
   function tree(x, z, snowy, h = rand(4, 7)) {
     const g = new T3.Group(), y = groundY(x, z);
-    const tr = new T3.Mesh(new T3.CylinderGeometry(0.25, 0.35, 1.4, 6), M(0x5a3d2b)); tr.position.y = 0.7; g.add(tr);
-    for (let i = 0; i < 3; i++) { const c = new T3.Mesh(new T3.ConeGeometry(1.8 - i * 0.45, h * 0.45, 7), M(snowy ? 0x3f6a5a : 0x2f6b3f)); c.position.y = 1.4 + i * h * 0.22 + h * 0.2; g.add(c); }
-    if (snowy) { const cap = new T3.Mesh(new T3.ConeGeometry(0.7, 1.1, 7), M(0xffffff)); cap.position.y = 1.4 + h * 0.85; g.add(cap); }
-    g.position.set(x, y, z); return g;
+    const tr = new T3.Mesh(new T3.CylinderGeometry(0.2, 0.32, 1.7, 9), M(0x5a3d2b)); tr.position.y = 0.85; g.add(tr);
+    if (!snowy && Math.random() < 0.45) {
+      const leaf = M(GREENS[Math.floor(Math.random() * GREENS.length)], { flatShading: true, roughness: 0.9 });
+      [[0, 2.9, 0, 1.7], [0.9, 2.4, 0.3, 1.2], [-0.8, 2.5, -0.2, 1.25], [0.1, 3.6, -0.3, 1.15]].forEach(([dx, dy, dz, r]) => { const l = new T3.Mesh(new T3.IcosahedronGeometry(r * rand(0.9, 1.1), 1), leaf); l.position.set(dx, dy * h / 5.5, dz); g.add(l); });
+    } else {
+      const col = snowy ? 0x3f6a5a : GREENS[Math.floor(Math.random() * GREENS.length)];
+      for (let i = 0; i < 4; i++) { const c = new T3.Mesh(new T3.ConeGeometry(1.9 - i * 0.42, h * 0.36, 12), M(col, { flatShading: true })); c.position.y = 1.3 + i * h * 0.19 + h * 0.17; c.rotation.y = i; g.add(c); }
+      if (snowy) { for (let i = 0; i < 4; i++) { const cap = new T3.Mesh(new T3.ConeGeometry(0.9 - i * 0.18, 0.5, 12), M(0xffffff)); cap.position.y = 1.3 + i * h * 0.19 + h * 0.17 + h * 0.13; g.add(cap); } }
+    }
+    g.rotation.y = rand(0, 6); g.position.set(x, y, z); return g;
   }
   function cactus(x, z) {
     const g = new T3.Group(), mat = M(0x3f8f5a);
@@ -590,7 +621,8 @@
     try {
       const renderer = new T3.WebGLRenderer({ canvas: glc, antialias: true });
       renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-      R3 = { renderer, cam: new T3.PerspectiveCamera(62, 1, 0.1, 300) };
+      renderer.shadowMap.enabled = true; renderer.shadowMap.type = T3.PCFSoftShadowMap;
+      R3 = { renderer, cam: new T3.PerspectiveCamera(58, 1, 0.1, 400) };
     } catch (e) { R3 = null; }
     return R3;
   }
@@ -605,24 +637,56 @@
   function buildWorld() {
     const hab = G.hab, W = WATER[hab], Lc = LAND[hab];
     const scene = new T3.Scene();
-    scene.background = new T3.Color(Lc.sky);
-    scene.fog = new T3.Fog(Lc.fog, 40, 130);
-    scene.add(new T3.HemisphereLight(0xffffff, 0x445566, 0.85));
-    const sun = new T3.DirectionalLight(0xffffff, 0.75); sun.position.set(30, 60, 20); scene.add(sun);
+    scene.background = new T3.Color(Lc.fog);
+    scene.fog = new T3.Fog(Lc.fog, 45, 150);
+    // Gradient sky dome
+    const SKYTOP = { snow: 0x7f8fd8, desert: 0xff7fa8, fast: 0x4fa8e0, slow: 0x7fb8e0, murky: 0xa88a68, lake: 0x3f98e0 };
+    const skyG = new T3.SphereGeometry(260, 32, 16), sp = skyG.attributes.position, sc = [], top = new T3.Color(SKYTOP[hab]), hor = new T3.Color(Lc.fog), sk = new T3.Color();
+    for (let i = 0; i < sp.count; i++) { sk.copy(hor).lerp(top, smooth(0, 160, sp.getY(i))); sc.push(sk.r, sk.g, sk.b); }
+    skyG.setAttribute("color", new T3.Float32BufferAttribute(sc, 3));
+    const sky = new T3.Mesh(skyG, new T3.MeshBasicMaterial({ vertexColors: true, side: T3.BackSide, fog: false, depthWrite: false })); sky.userData.noShadow = true; scene.add(sky);
+    scene.add(new T3.HemisphereLight(0xffffff, 0x6b5a48, 0.7));
+    const sun = new T3.DirectionalLight(hab === "desert" ? 0xffe2c0 : 0xfff4e0, 1.05);
+    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.03;
+    Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 120 });
+    scene.add(sun); scene.add(sun.target);
     // Terrain
-    const geo = new T3.PlaneGeometry(150, 150, 110, 110); geo.rotateX(-Math.PI / 2);
+    const geo = new T3.PlaneGeometry(150, 150, 150, 150); geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position, cols = [], cA = new T3.Color(Lc.ground), cB = new T3.Color(Lc.ground2), sand = new T3.Color(hab === "snow" ? 0xdfe6f5 : 0xd9c08a), bed = new T3.Color(W.deep).lerp(new T3.Color(0x6b5a40), 0.35), tmp = new T3.Color();
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), z = pos.getZ(i), d = sdf(x, z);
       pos.setY(i, groundY(x, z));
-      if (d < 0) tmp.copy(bed); else if (d < 2.5) tmp.copy(sand); else tmp.copy(cA).lerp(cB, 0.5 + 0.5 * Math.sin(x * 0.13 + z * 0.09));
+      if (d < 0) tmp.copy(sand).lerp(bed, smooth(0, 2.5, -d));
+      else tmp.copy(cA).lerp(cB, 0.5 + 0.5 * Math.sin(x * 0.13 + z * 0.09) * Math.cos(z * 0.07)).lerp(sand, 1 - smooth(1, 3.4, d));
       cols.push(tmp.r, tmp.g, tmp.b);
     }
     geo.setAttribute("color", new T3.Float32BufferAttribute(cols, 3)); geo.computeVertexNormals();
-    scene.add(new T3.Mesh(geo, new T3.MeshLambertMaterial({ vertexColors: true })));
-    // Water surface
-    const water = new T3.Mesh(new T3.PlaneGeometry(150, 150, 1, 1), new T3.MeshPhongMaterial({ color: W.color, transparent: true, opacity: W.op, shininess: 80, side: T3.DoubleSide }));
-    water.rotation.x = -Math.PI / 2; water.position.y = -0.05; scene.add(water);
+    const terrain = new T3.Mesh(geo, new T3.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); terrain.receiveShadow = true; terrain.userData.noShadow = true; scene.add(terrain);
+    // Water surface with gentle waves
+    const wgeo = new T3.PlaneGeometry(150, 150, 75, 75); wgeo.rotateX(-Math.PI / 2);
+    const water = new T3.Mesh(wgeo, new T3.MeshPhongMaterial({ color: W.color, transparent: true, opacity: W.op, shininess: 110, specular: 0xbfeaff, side: T3.DoubleSide }));
+    water.position.y = -0.05; water.receiveShadow = true; water.userData.noShadow = true; scene.add(water);
+    // Grass, flowers, and shrubs
+    const dummy = new T3.Object3D();
+    const scatter = (geom, mat, n, ok, scale, colors) => {
+      const im = new T3.InstancedMesh(geom, mat, n); let k = 0;
+      for (let i = 0; i < n * 4 && k < n; i++) {
+        const x = rand(-62, 62), z = rand(-62, 62), d = sdf(x, z); if (!ok(d)) continue;
+        dummy.position.set(x, groundY(x, z), z); dummy.rotation.set(rand(-0.15, 0.15), rand(0, 6), rand(-0.15, 0.15)); dummy.scale.setScalar(rand(scale[0], scale[1])); dummy.updateMatrix();
+        im.setMatrixAt(k, dummy.matrix); if (colors) im.setColorAt(k, new T3.Color(colors[k % colors.length])); k++;
+      }
+      im.count = k; im.userData.noShadow = true; scene.add(im);
+    };
+    if (["lake", "fast", "slow", "murky"].includes(hab)) {
+      // Soft grass tufts: five thin blades leaning outward, merged into one shape
+      const tuft = [];
+      for (let i = 0; i < 5; i++) { const bl = new T3.ConeGeometry(0.035, rand(0.28, 0.42), 3).toNonIndexed(); bl.translate(0, 0.17, 0); bl.rotateZ(rand(-0.35, 0.35)); bl.rotateY(i * 1.26); bl.translate(Math.cos(i * 1.26) * 0.06, 0, Math.sin(i * 1.26) * 0.06); tuft.push(...bl.attributes.position.array); }
+      const tg = new T3.BufferGeometry(); tg.setAttribute("position", new T3.Float32BufferAttribute(tuft, 3)); tg.computeVertexNormals();
+      scatter(tg, M(new T3.Color(Lc.ground).lerp(new T3.Color(0x2f6b2f), 0.35).getHex(), { side: T3.DoubleSide }), 2600, d => d > 1.8, [0.8, 1.5]);
+      if (hab !== "murky") scatter(new T3.SphereGeometry(0.1, 8, 6).translate(0, 0.35, 0), M(0xffffff), 220, d => d > 3, [0.8, 1.3], [0xff8fc8, 0xffe066, 0xffffff, 0xc9a8ff]);
+    }
+    if (hab === "desert") scatter(new T3.IcosahedronGeometry(0.35, 0).translate(0, 0.2, 0), M(0x9a8a4a, { flatShading: true }), 160, d => d > 3, [0.6, 1.4]);
+    if (hab === "snow") scatter(new T3.SphereGeometry(0.5, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), M(0xffffff), 120, d => d > 3, [0.6, 1.6]);
     // Props
     const props = new T3.Group(); scene.add(props);
     const cover = [];
@@ -631,7 +695,7 @@
     if (hab === "slow" || hab === "murky") for (let i = 0; i < 70; i++) { const x = rand(-60, 60), z = rand(-60, 60), d = sdf(x, z); if (d > -2.5 && d < 1.5) { const r = new T3.Mesh(new T3.CylinderGeometry(0.05, 0.05, rand(1.5, 2.6), 4), M(0x5f8a3a)); r.position.set(x, groundY(x, z) + 1, z); props.add(r); } }
     if (hab === "murky") for (let i = 0; i < 20; i++) { const [x, z] = randWater(2); const p = new T3.Mesh(new T3.CircleGeometry(rand(0.6, 1.1), 10), M(0x4f7a3a)); p.rotation.x = -Math.PI / 2; p.position.set(x, 0.02, z); props.add(p); }
     if (hab === "snow") for (let i = 0; i < 14; i++) { const [x, z] = randWater(3); const ice = new T3.Mesh(new T3.CircleGeometry(rand(2, 4), 7), M(0xf2f8ff)); ice.rotation.x = -Math.PI / 2; ice.position.set(x, 0.03, z); props.add(ice); }
-    return { scene, water, cover };
+    return { scene, water, cover, sky, sun, wbase: wgeo.attributes.position.array.slice() };
   }
 
   function startSeason() {
@@ -665,6 +729,7 @@
       if (p === "gator") { const [x, z] = randWater(5); const m = gatorMesh(); scene.add(m); S.preds.push({ kind: "gator", m, state: "lurk", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, t: 0 }); }
       if (p === "logs") { for (let i = 0; i < 7; i++) { const m = logMesh(); scene.add(m); const x = rand(-60, 60); S.logs.push({ m, x, z: W.a * Math.sin(x / W.p) + rand(-W.w + 2, W.w - 2), passed: 0 }); } }
     });
+    scene.traverse(o => { if (o.isMesh && !o.isInstancedMesh && !o.userData.noShadow && !(o.material && o.material.transparent)) o.castShadow = true; });
     G.screen = "season"; screen("");
     canvas.hidden = true; glc.hidden = false; size3D();
     $("og-hud").hidden = false; document.querySelector(".og-hud-top").appendChild($("og-corner")); $("og-time").parentElement.hidden = !G.opts.timer; $("og-end").hidden = G.opts.timer;
@@ -936,7 +1001,13 @@
     o.visible = !(S.inv > 0 && Math.floor(t * 12) % 2) || S.dead;
     if (S.dead) o.rotation.z = Math.min(Math.PI / 2, o.rotation.z + 0.08);
     // Camera follows behind the otter
-    const cam = R3.cam, back = 8.5, up = 4.2;
+    // Sun follows the otter so shadows stay crisp nearby
+    const sun = S.world.sun; sun.position.set(S.x + 22, 42, S.z + 14); sun.target.position.set(S.x, 0, S.z); sun.target.updateMatrixWorld();
+    // Gentle waves; rapids get bigger, faster ripples
+    const wp = S.world.water.geometry.attributes.position, base = S.world.wbase, A = W.flow ? 0.13 : W.murky ? 0.03 : G.hab === "snow" ? 0.025 : 0.06, fl = (W.flow || 0) * 0.6;
+    for (let i = 0; i < wp.count; i++) { const x = base[i * 3], z = base[i * 3 + 2]; wp.array[i * 3 + 1] = Math.sin(x * 0.35 - t * (1.6 + fl)) * A + Math.cos(z * 0.3 + t * 1.2) * A * 0.7; }
+    wp.needsUpdate = true; if ((S.frame = (S.frame || 0) + 1) % 3 === 0) S.world.water.geometry.computeVertexNormals();
+    const cam = R3.cam, back = 7.8, up = 3.6;
     const cy = S.camYaw;
     const want = new T3.Vector3(S.x - Math.sin(cy) * back, Math.max(S.y + up, groundY(S.x - Math.sin(cy) * back, S.z - Math.cos(cy) * back) + 1.5), S.z - Math.cos(cy) * back);
     if (!S.camInit) { cam.position.copy(want); S.camInit = true; } else cam.position.lerp(want, look ? 0.3 : 0.08);
@@ -945,7 +1016,8 @@
     const under = cam.position.y < 0 || (S.y < -0.9);
     const vis = W.murky ? 4 + lead().t.cochlea * 0.12 : W.vis;
     if (under) { S.scene.fog.color.setHex(W.deep); S.scene.background.setHex(W.deep); S.scene.fog.near = 1; S.scene.fog.far = vis; }
-    else { S.scene.fog.color.setHex(Lc.fog); S.scene.background.setHex(Lc.sky); S.scene.fog.near = 40; S.scene.fog.far = 130; }
+    else { S.scene.fog.color.setHex(Lc.fog); S.scene.background.setHex(Lc.fog); S.scene.fog.near = 45; S.scene.fog.far = 150; }
+    S.world.sky.visible = !under; S.world.sky.position.copy(cam.position);
     S.world.water.material.opacity = under ? 0.35 : W.op;
     R3.renderer.render(S.scene, cam);
     drawMap();

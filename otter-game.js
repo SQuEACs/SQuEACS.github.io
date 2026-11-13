@@ -260,10 +260,57 @@
     box.querySelectorAll("canvas[data-gem]").forEach(cv => { const tr = TREASURE.find(x => x.id === cv.dataset.gem); drawGem(cv.getContext("2d"), tr, !G.treasure[tr.id]); });
     $("og-treasure-count").textContent = `${TREASURE.filter(tr => G.treasure[tr.id]).length} of ${TREASURE.length}`;
   }
+  const LOOK = {
+    classic:  { t: { size: 50, fur: 50, ext: 50, brain: 50 },  bg: "#cdeefa", icon: "star" },
+    mutant:   { t: { size: 38, fur: 25, ext: 120, brain: 95 }, bg: "#fff1a8", icon: "bolt", sparkle: true },
+    fluff:    { t: { size: 55, fur: 150, ext: 30, brain: 50 }, bg: "#eadcff", icon: "cloud" },
+    giant:    { t: { size: 105, fur: 100, ext: 5, brain: 55 }, bg: "#e8eefc", icon: "snow" },
+    sprinter: { t: { size: 5, fur: 0, ext: 140, brain: 40 },   bg: "#ffd9a8", icon: "sun", speed: true },
+    racer:    { t: { size: 55, fur: 35, ext: 50, brain: 60 },  bg: "#bfeaf5", icon: "canalWide", speed: true, waves: true },
+    drifter:  { t: { size: 60, fur: 55, ext: 55, brain: 50 },  bg: "#d6ecc4", icon: "canalNarrow", reeds: true, waves: true },
+    listener: { t: { size: 50, fur: 45, ext: 85, brain: 60 },  bg: "#e6d3b3", icon: "spiral", mud: true },
+    thinker:  { t: { size: 52, fur: 50, ext: 45, brain: 190 }, bg: "#f7d6ea", icon: "bulb" },
+    saver:    { t: { size: 48, fur: 45, ext: 50, brain: -60 }, bg: "#d9f2df", icon: "battery" },
+  };
+  function tileIcon(c, kind, x, y) {
+    c.save(); c.translate(x, y); c.lineWidth = 2.5; c.strokeStyle = "#0b0a10"; c.lineJoin = c.lineCap = "round";
+    const circle = (r, col) => { c.fillStyle = col; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.stroke(); };
+    if (kind === "star") { c.fillStyle = "#ffd23f"; c.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 6 : 13, a = i / 10 * Math.PI * 2 - Math.PI / 2; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); c.stroke(); }
+    if (kind === "bolt") { c.fillStyle = "#ffd23f"; c.beginPath(); c.moveTo(3, -14); c.lineTo(-8, 2); c.lineTo(0, 2); c.lineTo(-3, 14); c.lineTo(8, -3); c.lineTo(0, -3); c.closePath(); c.fill(); c.stroke(); }
+    if (kind === "cloud") { c.fillStyle = "#fff"; c.beginPath(); c.arc(-6, 2, 7, 0, 7); c.arc(3, -3, 8, 0, 7); c.arc(10, 3, 6, 0, 7); c.fill(); c.stroke(); }
+    if (kind === "snow") { c.strokeStyle = "#5a7fd8"; c.lineWidth = 3; for (let i = 0; i < 3; i++) { c.save(); c.rotate(i * Math.PI / 3); c.beginPath(); c.moveTo(0, -12); c.lineTo(0, 12); c.moveTo(-4, -9); c.lineTo(0, -6); c.lineTo(4, -9); c.moveTo(-4, 9); c.lineTo(0, 6); c.lineTo(4, 9); c.stroke(); c.restore(); } }
+    if (kind === "sun") { c.strokeStyle = "#ff8a00"; c.lineWidth = 3; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; c.beginPath(); c.moveTo(Math.cos(a) * 10, Math.sin(a) * 10); c.lineTo(Math.cos(a) * 15, Math.sin(a) * 15); c.stroke(); } c.strokeStyle = "#0b0a10"; c.lineWidth = 2.5; circle(7.5, "#ffd23f"); }
+    if (kind === "canalWide" || kind === "canalNarrow") { const half = (kind === "canalWide" ? 48 : 26) * Math.PI / 180; [["#ff5fa2", -half], ["#a47bff", half]].forEach(([col, r]) => { c.save(); c.rotate(r); c.strokeStyle = col; c.lineWidth = 4; c.beginPath(); c.ellipse(0, -7, 4.5, 8, 0, 0, 7); c.stroke(); c.restore(); }); c.fillStyle = "#e0b43a"; c.beginPath(); c.arc(0, 3, 4, 0, 7); c.fill(); }
+    if (kind === "spiral") { c.strokeStyle = "#e09a1a"; c.lineWidth = 3.5; c.beginPath(); for (let a = 0; a < 15; a += 0.2) { const r = 1 + a * 0.85, px = Math.cos(a) * r, py = Math.sin(a) * r * 0.65; a ? c.lineTo(px, py) : c.moveTo(px, py); } c.stroke(); }
+    if (kind === "bulb") { circle(9, "#ffe066"); c.fillStyle = "#9a93ad"; c.fillRect(-4.5, 8, 9, 6); c.strokeRect(-4.5, 8, 9, 6); }
+    if (kind === "battery") { c.fillStyle = "#fff"; c.fillRect(-12, -7, 22, 14); c.strokeRect(-12, -7, 22, 14); c.fillStyle = "#3ddc6f"; c.fillRect(-10, -5, 8, 10); c.fillStyle = "#0b0a10"; c.fillRect(10, -3, 3, 6); }
+    c.restore();
+  }
+  function paintDexTile(cv, id, locked) {
+    const L = LOOK[id], c = cv.getContext("2d"), w = cv.width, h = cv.height;
+    c.clearRect(0, 0, w, h); c.save();
+    if (!locked) { c.fillStyle = L.bg; c.fillRect(0, 0, w, h); }
+    if (!locked) {
+      if (L.waves) { c.fillStyle = "rgba(46,150,200,0.35)"; c.fillRect(0, h * 0.68, w, h); c.strokeStyle = "rgba(255,255,255,0.8)"; c.lineWidth = 2; c.beginPath(); for (let x = 0; x <= w; x += 4) c.lineTo(x, h * 0.68 + Math.sin(x * 0.15) * 2); c.stroke(); }
+      if (L.mud) { c.fillStyle = "rgba(110,80,40,0.35)"; c.fillRect(0, h * 0.7, w, h); }
+      if (L.reeds) { c.strokeStyle = "#4f8a3a"; c.lineWidth = 2.5; [10, 18, 124, 131].forEach(x => { c.beginPath(); c.moveTo(x, h); c.quadraticCurveTo(x + 4, h * 0.6, x + 2, h * 0.3); c.stroke(); }); }
+      if (id === "giant") { c.fillStyle = "#fff"; [[16, 18], [40, 32], [30, 60], [110, 70], [90, 40]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 2.2, 0, 7); c.fill(); }); }
+      if (L.speed) { c.strokeStyle = "rgba(11,10,16,0.35)"; c.lineWidth = 2.5; [[6, 52], [2, 62], [8, 72]].forEach(([x, y]) => { c.beginPath(); c.moveTo(x, y); c.lineTo(x + 16, y); c.stroke(); }); }
+      if (L.sparkle) { c.fillStyle = "#a47bff"; [[18, 20], [60, 14], [118, 58]].forEach(([x, y]) => { c.beginPath(); c.moveTo(x, y - 6); c.lineTo(x + 2, y); c.lineTo(x, y + 6); c.lineTo(x - 2, y); c.closePath(); c.fill(); c.beginPath(); c.moveTo(x - 6, y); c.lineTo(x, y + 2); c.lineTo(x + 6, y); c.lineTo(x, y - 2); c.closePath(); c.fill(); }); }
+    }
+    const t = { cochlea: 50, canal: 50, ...L.t };
+    drawOtter(c, 62, 92, t, { k: 0.82, swim: !!L.waves, time: 0.3 });
+    if (locked) {
+      c.globalCompositeOperation = "source-in"; c.fillStyle = "#3a3350"; c.fillRect(0, 0, w, h);
+      c.fillStyle = "#15121e"; c.globalCompositeOperation = "destination-over"; c.fillRect(0, 0, w, h); c.globalCompositeOperation = "source-over";
+      c.fillStyle = "#ff5fa2"; c.font = "700 30px Fredoka, Arial, sans-serif"; c.textAlign = "center"; c.fillText("?", 70, 44);
+    } else tileIcon(c, L.icon, w - 18, 18);
+    c.restore();
+  }
   function renderDex() {
     const box = $("og-dex");
     box.innerHTML = DEX.map(d => G.dex[d.id] ? tile(d.id, d.name, d.why, true) : tile(d.id, d.name, d.hint, false)).join("");
-    box.querySelectorAll("canvas[data-tile]").forEach(cv => { const d = G.dex[cv.dataset.tile]; paintTile(cv, d ? d.t : BASE, {}, !d); });
+    box.querySelectorAll("canvas[data-tile]").forEach(cv => paintDexTile(cv, cv.dataset.tile, !G.dex[cv.dataset.tile]));
     $("og-dex-count").textContent = `${DEX.filter(d => G.dex[d.id]).length} of ${DEX.length}`;
   }
   function checkDex(pups) {
@@ -276,7 +323,7 @@
 
   /* ---------- Otter drawing (shared by game and portraits) ---------- */
   function drawOtter(c, x, y, t, o = {}) {
-    const mass = 20 + t.size * 0.8, fur = clamp(t.fur + (o.plastic || 0), 0, 100), fF = fur / 100;
+    const mass = 20 + t.size * 0.8, fur = Math.max(0, t.fur + (o.plastic || 0)), fF = fur / 100;
     const L = 54 + mass * 0.42, H = 18 + mass * 0.2 + fur * 0.05;
     const earR = 3.8 * (0.6 + t.ext * 0.008), tailL = 34 * (0.65 + t.ext * 0.006);
     const swim = !!o.swim, face = o.face || 1, tt = o.time || 0, moving = !!o.moving;
@@ -289,9 +336,10 @@
     if (!swim) { const s = moving && !reduce ? Math.sin(tt * 14) * 4 : 0; [[-L * 0.3, s], [-L * 0.15, -s], [L * 0.22, -s], [L * 0.35, s]].forEach(([lx, d]) => c.fillRect(lx + d - 3, H * 0.3, 6, legH + 2)); }
     else { c.beginPath(); c.ellipse(-L * 0.3, H * 0.45, 8, 3, 0.4 + Math.sin(tt * 8) * 0.3, 0, 7); c.fill(); }
     c.fillStyle = furC; c.beginPath();
-    const n = 28, fl = Math.max(0, fF - 0.45) * 5;
+    const n = fF > 1 ? 40 : 28, fl = Math.max(0, fF - 0.45) * (fF > 1 ? 16 : 5);
     for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2, r = 1 + (i % 2 ? fl / Math.max(L, H) * 2 : 0); const px = Math.cos(a) * L / 2 * r, py = Math.sin(a) * H / 2 * r; i ? c.lineTo(px, py) : c.moveTo(px, py); }
     c.fill();
+    if (fF > 1) { for (let i = 0; i < 22; i++) { const an = i / 22 * Math.PI * 2; c.beginPath(); c.arc(Math.cos(an) * L * 0.5, Math.sin(an) * H * 0.5, 4 + (fF - 1) * 8, 0, 7); c.fill(); } }
     c.fillStyle = belly; c.beginPath(); c.ellipse(L * 0.05, H * 0.2, L * 0.32, H * 0.22, 0, 0, 7); c.fill();
     if (worn.labcoat) {
       c.fillStyle = "#f4f2fa"; c.strokeStyle = "#c9c2dc"; c.lineWidth = 1;
@@ -599,7 +647,7 @@
 
   /* ----- HUD helpers ----- */
   function renderTasks() {
-    $("og-tasks").innerHTML = `<b>Goals</b>` + S.tasks.map(t => `<span class="${t.have >= t.need ? "done" : ""}">${t.have >= t.need ? "✔" : "○"} ${t.label}${t.need > 1 ? ` <em>${Math.min(t.have, t.need)}/${t.need}</em>` : ""}</span>`).join("");
+    $("og-tasks").innerHTML = `<b>Goals</b>` + S.tasks.map(t => `<span class="${t.have >= t.need ? "done" : ""}">${t.have >= t.need ? '<i class="og-check">✔</i>' : taskIcon(t)} ${t.label}${t.need > 1 ? ` <em>${Math.min(t.have, t.need)}/${t.need}</em>` : ""}</span>`).join("");
   }
   function renderHearts() { $("og-hearts").innerHTML = [0, 1, 2].map(i => `<i class="${i < S.hearts ? "" : "lost"}">♥</i>`).join(""); }
   function bump(kind, what) {
@@ -850,28 +898,83 @@
     requestAnimationFrame(loop);
   }
 
+  /* ---------- Picture icons for directions ---------- */
+  const SV = (body, vb = "0 0 32 32") => `<svg class="og-ic" viewBox="${vb}" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">${body}</svg>`;
+  const ICON = {
+    trout:    SV('<ellipse cx="14" cy="16" rx="10" ry="6.5" fill="#ff8fb0"/><path d="M23 16 L30 10 L30 22 Z" fill="#ff8fb0"/><circle cx="9.5" cy="14.5" r="1.6" fill="#0b0a10" stroke="none"/><circle cx="16" cy="14" r="1" fill="#c2185b" stroke="none"/><circle cx="19" cy="17" r="1" fill="#c2185b" stroke="none"/>'),
+    minnow:   SV('<ellipse cx="14" cy="16" rx="9" ry="5" fill="#c9d6e8"/><path d="M22 16 L29 11 L29 21 Z" fill="#c9d6e8"/><circle cx="10" cy="15" r="1.5" fill="#0b0a10" stroke="none"/>'),
+    catfish:  SV('<ellipse cx="15" cy="17" rx="11" ry="6.5" fill="#6b5236"/><path d="M25 17 L31 11 L31 23 Z" fill="#6b5236"/><path d="M5 18 Q1 22 2 26 M6 19 Q4 24 6 27" fill="none"/><circle cx="9" cy="15" r="1.5" fill="#fff" stroke="none"/>'),
+    crayfish: SV('<ellipse cx="16" cy="19" rx="5" ry="8" fill="#ff5a3a"/><ellipse cx="8" cy="8" rx="4" ry="5" fill="#ff5a3a"/><ellipse cx="24" cy="8" rx="4" ry="5" fill="#ff5a3a"/><path d="M12 13 L9 12 M20 13 L23 12" fill="none"/>'),
+    "golden fish": SV('<ellipse cx="14" cy="16" rx="10" ry="6.5" fill="#ffd23f"/><path d="M23 16 L30 10 L30 22 Z" fill="#ffd23f"/>'),
+    eagle:    SV('<path d="M2 15 Q9 7 16 14 Q23 7 30 15 Q23 13 16 21 Q9 13 2 15Z" fill="#6b4a2e"/><circle cx="16" cy="12" r="3.6" fill="#fff"/><path d="M18.5 12.5 L22 13.5 L18.5 14.5Z" fill="#ffb347"/>'),
+    coyote:   SV('<path d="M6 6 L11 13 L21 13 L26 6 L25 17 L16 28 L7 17 Z" fill="#c9a06a"/><circle cx="12" cy="17" r="1.6" fill="#0b0a10" stroke="none"/><circle cx="20" cy="17" r="1.6" fill="#0b0a10" stroke="none"/><circle cx="16" cy="24" r="1.8" fill="#0b0a10" stroke="none"/>'),
+    alligator: SV('<path d="M2 19 Q6 12 15 13 L30 15 L30 19 L15 21 Q6 23 2 19Z" fill="#4f7a3a"/><circle cx="12" cy="12.5" r="2.4" fill="#d8e04a"/><path d="M17 18 L19 16 L21 18 L23 16 L25 18" fill="none" stroke="#fff" stroke-width="1.5"/>'),
+    logs:     SV('<rect x="3" y="11" width="26" height="10" rx="5" fill="#8a6440"/><ellipse cx="25" cy="16" rx="3" ry="5" fill="#c9a06a"/>'),
+    flag:     SV('<path d="M8 29 L8 4" fill="none" stroke-width="2.6"/><path d="M8 5 L26 10 L8 16 Z" fill="#ffe066"/>'),
+    friends:  SV('<circle cx="10" cy="17" r="7" fill="#9a6440"/><circle cx="22" cy="17" r="7" fill="#c98a5a"/><path d="M16 9 C14 5 9 6 11 10 L16 14 L21 10 C23 6 18 5 16 9Z" fill="#ff5fa2" stroke-width="1.6"/>'),
+    heart:    SV('<path d="M16 27 C4 19 3 11 8 8 C12 5 15 8 16 10 C17 8 20 5 24 8 C29 11 28 19 16 27Z" fill="#ff3b5c"/>'),
+    bolt:     SV('<path d="M18 3 L7 18 L15 18 L13 29 L25 13 L17 13 Z" fill="#ffd23f"/>'),
+    gem:      SV('<path d="M5 12 L10 5 L22 5 L27 12 L16 28 Z" fill="#a47bff"/><path d="M5 12 L27 12 M12 5 L16 28 L20 5" fill="none" stroke-width="1.5"/>'),
+    dive:     SV('<path d="M3 10 Q8 7 13 10 T23 10 T30 10" fill="none" stroke="#2b8fc0" stroke-width="2.6"/><path d="M16 13 L16 28 M10 22 L16 28 L22 22" fill="none" stroke-width="3"/>'),
+    tree:     SV('<path d="M16 3 L27 22 L5 22 Z" fill="#2f8a4a"/><rect x="13" y="22" width="6" height="7" fill="#6b4a2b"/>'),
+    water:    SV('<path d="M3 12 Q8 8 13 12 T23 12 T30 12 M3 20 Q8 16 13 20 T23 20 T30 20" fill="none" stroke="#2b8fc0" stroke-width="3"/>'),
+    land:     SV('<path d="M2 24 Q10 12 18 18 T30 14 L30 28 L2 28 Z" fill="#7fbf5a"/>'),
+    snow:     SV('<path d="M16 3 V29 M5 9 L27 23 M27 9 L5 23" fill="none" stroke="#5a7fd8" stroke-width="2.8"/>'),
+    sun:      SV('<circle cx="16" cy="16" r="6.5" fill="#ffd23f"/><path d="M16 2 V6 M16 26 V30 M2 16 H6 M26 16 H30 M6 6 L9 9 M23 23 L26 26 M26 6 L23 9 M9 23 L6 26" fill="none" stroke="#ff8a00" stroke-width="2.6"/>'),
+    ear:      SV('<path d="M16 16 m0 0 a2 2 0 0 1 4 0 a5 5 0 0 1 -9 0 a8 8 0 0 1 15 0 a11 11 0 0 1 -21 0" fill="none" stroke="#e09a1a" stroke-width="3"/>'),
+    brain:    SV('<path d="M16 6 C10 4 5 8 6 14 C3 17 5 24 10 24 C12 28 16 27 16 25 C16 27 20 28 22 24 C27 24 29 17 26 14 C27 8 22 4 16 6Z" fill="#ff9fc8"/><path d="M16 6 V25 M10 12 Q13 14 11 17 M22 12 Q19 14 21 17" fill="none" stroke-width="1.6"/>'),
+    body:     SV('<ellipse cx="16" cy="18" rx="12" ry="8" fill="#9a6440"/><circle cx="26" cy="12" r="5" fill="#9a6440"/>'),
+  };
+  const KEY = k => `<kbd class="og-key">${k}</kbd>`;
+  const coarse = matchMedia("(pointer: coarse)").matches;
+  function taskIcon(t) { return t.kind === "eat" ? ICON[t.what] : t.kind === "dodge" ? ICON.eagle : t.kind === "escape" ? ICON[t.what] : t.kind === "under" ? ICON.logs : t.kind === "friends" ? ICON.friends : ICON.flag; }
   /* ----- Briefing before each season ----- */
   function traitTips() {
     const t = lead().t, tips = [];
-    if (G.hab === "snow") { tips.push(t.fur >= 65 ? "Thick fur keeps you warm here." : "Thin fur: you'll get cold fast. Eat often and keep icy swims short."); tips.push(t.size >= 60 ? "A big body holds heat." : "A small body loses heat quickly."); }
-    if (G.hab === "desert") tips.push(t.fur <= 40 ? "Thin fur keeps you cool." : "Thick fur: you'll overheat on land. Cool off in the river.");
-    if (G.hab === "fast") tips.push(degOf(t.canal) >= 89 ? "Your canals sense quick turns, so you steer sharply in the rapids." : "Your canals sense turns slowly, so steering in the rapids feels sluggish.");
-    if (G.hab === "murky") tips.push(t.cochlea >= 65 ? "Sharp hearing lets you sense fish farther away in the mud." : "Hearing is so-so, so you only sense fish up close.");
-    if (G.hab === "slow") tips.push("Calm water: balance matters less here.");
-    tips.push(t.brain >= 60 ? "A big brain shows food farther away on your map." : "Your map shows only food close by.");
+    if (G.hab === "snow") { tips.push(["snow", t.fur >= 65 ? "Thick fur: you stay warm!" : "Thin fur: you get cold fast. Eat a lot!"]); tips.push(["body", t.size >= 60 ? "Big body: holds heat." : "Small body: loses heat fast."]); }
+    if (G.hab === "desert") tips.push(["sun", t.fur <= 40 ? "Thin fur: you stay cool!" : "Thick fur: you overheat on land. Cool off in the river."]);
+    if (G.hab === "fast") tips.push(["ear", degOf(t.canal) >= 89 ? "Inner ear: sharp turns in the rapids!" : "Inner ear: slow turns in the rapids."]);
+    if (G.hab === "murky") tips.push(["ear", t.cochlea >= 65 ? "Great hearing: find fish farther away." : "So-so hearing: find fish only up close."]);
+    if (G.hab === "slow") tips.push(["water", "Calm water: easy swimming."]);
+    tips.push(["brain", t.brain >= 60 ? "Big brain: see more food on your map." : "Small brain: see less food on your map."]);
     return tips;
   }
   function screenBriefing() {
     G.screen = "brief";
-    const tasks = makeTasks(G.hab), preds = PREDS[G.hab].map(p => ({ eagle: "eagles", coyote: "coyotes", gator: "alligators", logs: "floating logs" })[p]);
-    screen(`<div class="og-card og-wide">
+    const tasks = makeTasks(G.hab);
+    const ESC = {
+      eagle: [ICON.eagle, [ICON.dive, ICON.tree], "Dive or hide"],
+      coyote: [ICON.coyote, [ICON.water], "Jump in water"],
+      gator: [ICON.alligator, [ICON.land], "Swim to land"],
+      logs: [ICON.logs, [ICON.dive], "Dive under"],
+    };
+    const controls = coarse
+      ? `<div class="og-ctl"><span class="og-keys-row">${KEY("◀")}${KEY("▲")}${KEY("▼")}${KEY("▶")}</span><small>Move</small></div>
+         <div class="og-ctl"><span class="og-keys-row">${KEY("Jump")}</span><small>Jump / swim up</small></div>
+         <div class="og-ctl"><span class="og-keys-row">${KEY("Dive")}</span><small>Dive</small></div>`
+      : `<div class="og-ctl"><span class="og-arrows">${KEY("▲")}<span>${KEY("◀")}${KEY("▼")}${KEY("▶")}</span></span><small>Move</small></div>
+         <div class="og-ctl"><span class="og-keys-row">${KEY("Space")}</span><small>Jump / swim up</small></div>
+         <div class="og-ctl"><span class="og-keys-row">${KEY("Shift")}</span><small>Dive</small></div>`;
+    screen(`<div class="og-card og-wide og-brief">
       <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
-      <h2 class="og-h">Season goals</h2>
-      <ul class="og-goals">${tasks.map(t => `<li>${t.label}</li>`).join("")}</ul>
-      <p class="og-sub">Watch out for <b>${preds.join(" and ")}</b>. You have 3 hearts, and your energy drains as you play, so keep eating. Finish all three goals and your otter survives for sure and raises extra pups.</p>
-      <div class="og-tips"><b>Your otter's traits here</b>${traitTips().map(x => `<span>${x}</span>`).join("")}</div>
-      <p class="og-keys"><b>Move:</b> arrows or WASD · <b>Jump / swim up:</b> Space · <b>Dive:</b> Shift or E</p>
-      <button type="button" class="og-btn" id="og-go">Start season</button></div>`);
+      <h2 class="og-h">Your mission</h2>
+      <ul class="og-goals">${tasks.map(t => `<li>${taskIcon(t)}<span>${t.label}</span></li>`).join("")}</ul>
+      <div class="og-brief-grid">
+        <section><h3 class="og-mini">Danger!</h3>
+          ${PREDS[G.hab].map(p => { const [who, how, txt] = ESC[p]; return `<div class="og-row">${who}<b class="og-arrow">➜</b>${how.join("")}<small>${txt}</small></div>`; }).join("")}
+        </section>
+        <section><h3 class="og-mini">Stay alive</h3>
+          <div class="og-row">${ICON.heart}${ICON.heart}${ICON.heart}<small>3 hearts</small></div>
+          <div class="og-row">${ICON.trout}<b class="og-arrow">➜</b>${ICON.bolt}<small>Eat for energy</small></div>
+          <div class="og-row">${ICON.gem}<b class="og-arrow">➜</b>${ICON.heart}<small>Grab sparkly treasure</small></div>
+        </section>
+        <section><h3 class="og-mini">Your otter here</h3>
+          ${traitTips().map(([ic, txt]) => `<div class="og-row">${ICON[ic]}<small>${txt}</small></div>`).join("")}
+        </section>
+      </div>
+      <div class="og-controls">${controls}</div>
+      <p class="og-sub og-small">Finish 2 goals and your otter survives. Finish all 3 for the most pups!</p>
+      <button type="button" class="og-btn" id="og-go">Start season ▶</button></div>`);
     $("og-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); startSeason(); });
   }
 

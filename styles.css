@@ -825,3 +825,33 @@ button.og-tile:focus-visible { outline: 4px solid var(--pink); outline-offset: 2
 .og-pads { flex-wrap: wrap; }
 @media (max-width: 40rem) { .pad { width: 3.4rem; height: 3.4rem; } .pad-wide { width: auto; min-width: 5.5rem; } }
 @media (max-width: 40rem) { .og-toast { bottom: auto; top: 42%; } }
+/* ---------- Picture directions ---------- */
+.og-ic { width: 2rem; height: 2rem; flex: none; display: inline-block; vertical-align: middle; }
+.og-goals li { display: flex; align-items: center; gap: 0.6rem; text-align: left; font-size: 1.15rem; }
+.og-goals li::before { content: none; }
+.og-goals .og-ic { width: 2.4rem; height: 2.4rem; }
+.og-brief-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem; text-align: left; }
+.og-brief-grid section { background: #f3eefc; border: 2px solid #d9cff0; border-radius: 14px; padding: 0.55rem 0.7rem; display: grid; gap: 0.35rem; align-content: start; }
+.og-mini { font: 700 0.8rem/1 var(--og-font); text-transform: uppercase; letter-spacing: 0.08em; color: #7a3fd0; }
+.og-row { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.og-row small { font: 600 0.85rem/1.2 var(--og-font); color: #1b1530; margin-left: 0.2rem; flex: 1 1 6rem; }
+.og-arrow { font: 700 1rem/1 var(--og-font); color: #c2185b; }
+.og-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; background: #1b1530; border: 3px solid #0b0a10; border-radius: 14px; padding: 0.6rem 0.8rem; }
+.og-ctl { display: grid; justify-items: center; gap: 0.3rem; }
+.og-ctl small { font: 600 0.8rem/1 var(--og-font); color: #fff; }
+.og-arrows { display: grid; justify-items: center; gap: 0.15rem; }
+.og-arrows > span, .og-keys-row { display: flex; gap: 0.15rem; }
+.og-key { font: 700 0.85rem/1 var(--og-font); min-width: 1.9rem; height: 1.9rem; padding: 0 0.45rem; display: inline-grid; place-items: center; background: #fff; color: #0b0a10; border: 2px solid #0b0a10; border-radius: 7px; box-shadow: 0 3px 0 #a47bff; }
+.og-small { font-size: 0.9rem; }
+.og-tasks span { display: flex; align-items: center; gap: 0.35rem; }
+.og-tasks .og-ic { width: 1.4rem; height: 1.4rem; }
+.og-check { font-style: normal; display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; background: #3ddc6f; color: #0b0a10; border: 2px solid #0b0a10; border-radius: 50%; font-size: 0.75rem; text-decoration: none; }
+@media (max-width: 40rem) { .og-tasks .og-ic, .og-check { width: 1.1rem; height: 1.1rem; } .og-goals li { font-size: 1rem; } }
+.og-brief { gap: 0.6rem; }
+.og-brief .og-goals { grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); }
+.og-brief .og-goals li { padding: 0.45rem 0.6rem; font-size: 1rem; }
+.og-brief .og-h { font-size: clamp(1.3rem, 3.5vw, 1.6rem); }
+.og-brief { padding: 1rem 1.1rem; gap: 0.5rem; }
+.og-brief .og-controls { padding: 0.4rem 0.7rem; gap: 0.8rem; }
+.og-brief .og-key { min-width: 1.6rem; height: 1.6rem; font-size: 0.78rem; }
+.og-brief .og-btn { padding: 0.7rem 1.6rem; }

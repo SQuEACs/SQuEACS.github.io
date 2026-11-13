@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Otter Adventure</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A small game from the SQuEACs Lab: an otter's body changes with food, climate, and water.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="otter-game.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html">3D Models</a></li>
+          <li class="sub"><a href="otter-game.html" aria-current="page">Otter Adventure</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<main id="top" class="subpage">
+  <section id="otter-game">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Otter Adventure</p>
+        <h1 class="page-title">Otter Adventure</h1>
+        <p>Guide a river otter from a warm desert river to the snowy north. What it eats, the climate it lives in, and how much it swims all change its body. Unlock outfits along the way.</p>
+      </div>
+
+      <div class="game">
+        <div class="game-stage">
+          <canvas id="otter-canvas" tabindex="0" aria-label="Otter Adventure game. Use the arrow keys or the buttons below to move, jump, swim, and dive."></canvas>
+          <p class="game-zone" id="otter-zone" aria-live="polite">Warm desert river</p>
+          <p class="game-toast" id="otter-toast" role="status" hidden></p>
+          <button class="btn primary game-start" id="otter-start" type="button">Start playing</button>
+        </div>
+        <div class="game-controls" aria-label="Touch controls">
+          <button type="button" class="pad" data-key="ArrowLeft" aria-label="Move left">◀</button>
+          <button type="button" class="pad" data-key="ArrowUp" aria-label="Jump or swim up">▲</button>
+          <button type="button" class="pad" data-key="ArrowDown" aria-label="Dive">▼</button>
+          <button type="button" class="pad" data-key="ArrowRight" aria-label="Move right">▶</button>
+        </div>
+        <p class="game-help"><b>Keyboard:</b> ← → to move · ↑ or Space to jump and surface · ↓ to dive. Eat <span class="k-fish">fish</span> and <span class="k-cray">crayfish</span>, swim in the lake, and visit every climate.</p>
+
+        <div class="game-panels">
+          <section class="game-panel">
+            <div class="panel-head"><h2>Your otter</h2><span class="label" id="otter-count">0 fish · 0 crayfish</span></div>
+            <div class="traits" id="otter-traits"></div>
+            <button type="button" class="btn" id="otter-reset">Start over</button>
+          </section>
+          <section class="game-panel fact" id="otter-fact" aria-live="polite">
+            <p class="label">Did you know?</p>
+            <h3>Start exploring</h3>
+            <p>Facts from our research appear here as your otter changes.</p>
+          </section>
+          <section class="game-panel">
+            <div class="panel-head"><h2>Outfit closet</h2><span class="label" id="otter-outfit-count">0 unlocked</span></div>
+            <div class="closet" id="otter-closet"></div>
+          </section>
+        </div>
+        <p class="game-note">The game exaggerates changes that, in real animals, unfold over many generations or a lifetime. It is meant to show the kinds of variation we study, not to model it.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

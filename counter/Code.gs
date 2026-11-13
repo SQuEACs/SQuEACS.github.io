@@ -10,11 +10,11 @@
  *      Click Deploy and copy the Web app URL (ends in /exec).
  *   4. Paste that URL into COUNTER_URL in the website's script.js.
  *
- * The site sends: { event: "view" | "rotate" | "label", model: "tadpole-cns", label: "6 Optic Tectum" }
+ * The site sends: { event: "view" | "rotate" | "label" | "play", model: "tadpole-cns", label: "6 Optic Tectum" }
  * No IP addresses or personal data are stored.
  */
 
-const ALLOWED_EVENTS = ["page", "view", "rotate", "label"];
+const ALLOWED_EVENTS = ["page", "view", "rotate", "label", "play"];
 const TZ = "America/Phoenix";
 
 function setup() {

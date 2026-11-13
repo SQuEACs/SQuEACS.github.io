@@ -19,6 +19,8 @@ function track(event, model, label) {
   } catch (e) { /* counting is optional */ }
 }
 
+window.SQ_track = track;
+
 function slug(file) { return file.replace(/^.*\//, "").replace(/\.glb$/, ""); }
 
 // Per model: "view" = the model finished loading on screen; "rotate" = a visitor

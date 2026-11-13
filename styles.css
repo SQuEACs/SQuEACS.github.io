@@ -904,3 +904,26 @@ button.og-tile:focus-visible { outline: 4px solid var(--pink); outline-offset: 2
 }
 @media (prefers-reduced-motion: reduce) { .og-slot.has-new, .og-modal-box { animation: none; } }
 .og-window > header { border: 0; padding: 0; margin: 0; background: none; position: static; box-shadow: none; }
+/* ---------- Touch controls (Roblox style) ---------- */
+.og-touch { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.og-stick { position: absolute; width: 124px; height: 124px; margin: -62px 0 0 -62px; border-radius: 50%; background: rgba(255,255,255,0.14); border: 3px solid rgba(255,255,255,0.55); opacity: 0.6; transition: opacity 0.15s; }
+.og-stick.on { opacity: 1; background: rgba(255,255,255,0.22); }
+.og-stick i { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(255,255,255,0.9); border: 3px solid #0b0a10; box-shadow: 0 3px 0 #0b0a10; }
+.og-tbtn { position: absolute; pointer-events: auto; display: grid; place-items: center; border-radius: 50%; border: 4px solid #0b0a10; box-shadow: 0 5px 0 #0b0a10; font: 700 1rem/1 var(--og-font); color: #0b0a10; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+.og-jump { right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(18px, env(safe-area-inset-bottom, 0px)); width: 88px; height: 88px; background: rgba(61,220,111,0.94); font-size: 1.1rem; }
+.og-dive { right: calc(max(16px, env(safe-area-inset-right, 0px)) + 100px); bottom: max(26px, env(safe-area-inset-bottom, 0px)); width: 68px; height: 68px; background: rgba(46,211,198,0.94); }
+.og-tbtn.on { transform: translateY(4px); box-shadow: 0 1px 0 #0b0a10; filter: brightness(1.1); }
+.og-touch-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: 80%; text-align: center; font: 700 0.95rem/1.3 var(--og-font); color: #fff; background: rgba(11,10,16,0.75); border: 2px solid #fff; border-radius: 12px; padding: 0.5rem 0.8rem; }
+.og-fs { position: absolute; z-index: 6; right: 0.6rem; top: 0.6rem; width: 2.4rem; height: 2.4rem; display: grid; place-items: center; font: 700 1.1rem/1 var(--og-font); color: #fff; background: rgba(11,10,16,0.82); border: 2px solid #fff; border-radius: 50%; cursor: pointer; pointer-events: auto; }
+.og-hud-top .og-fs { position: static; width: 2.1rem; height: 2.1rem; font-size: 1rem; }
+.og-stage.touch .og-tasks { top: auto; bottom: auto; top: 6rem; max-width: 12rem; font-size: 0.78rem; padding: 0.4rem 0.55rem; }
+.og-stage.touch .og-map { top: 6rem; bottom: auto; width: 84px; height: 84px; }
+.og-stage.touch .og-hud-row { margin-right: 0; }
+.og-stage.og-fs-on { position: fixed; inset: 0; z-index: 45; width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; border: 0; box-shadow: none; margin: 0; }
+body.og-noscroll { overflow: hidden; }
+.og-mini-stick { display: inline-grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: #3a2f5c; border: 2px solid #fff; }
+.og-mini-stick i { width: 1rem; height: 1rem; border-radius: 50%; background: #fff; border: 2px solid #0b0a10; }
+@media (pointer: coarse) and (max-width: 40rem) { .og-stage { height: min(74vh, 620px); } }
+@media (max-width: 40rem) { .og-stage.touch .og-tasks { top: 7.6rem; } .og-stage.touch .og-map { top: 7.6rem; } }
+.og-touch-hint { top: auto; bottom: 120px; transform: translateX(-50%); }
+.og-stage.touch { touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; }

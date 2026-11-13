@@ -9,10 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="styles.css?v=16">
+<link rel="stylesheet" href="styles.css?v=19">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <script src="assets/vendor/three-r149.min.js?v=1" defer></script>
-<script src="otter-game.js?v=15" defer></script>
+<script src="otter-game.js?v=17" defer></script>
 </head>
 <body>
 
@@ -68,6 +68,13 @@
             <div class="og-tasks" id="og-tasks"></div>
             <canvas class="og-map" id="og-map" width="120" height="120" aria-hidden="true"></canvas>
           </div>
+          <div class="og-touch" id="og-touch" hidden>
+            <div class="og-stick" id="og-stick" aria-hidden="true"><i id="og-knob"></i></div>
+            <p class="og-touch-hint" id="og-touch-hint" hidden>Left thumb: move · Right thumb: swipe to look</p>
+            <button type="button" class="og-tbtn og-dive" data-key="dive" aria-label="Dive">Dive</button>
+            <button type="button" class="og-tbtn og-jump" data-key=" " aria-label="Jump or swim up">Jump</button>
+          </div>
+          <button type="button" class="og-fs" id="og-fs" aria-pressed="false" aria-label="Full screen" title="Full screen">⛶</button>
           <p class="og-toast" id="og-toast" role="status" hidden></p>
           <div class="og-screen" id="og-screen" hidden></div>
         </div>
@@ -79,15 +86,7 @@
           <button type="button" class="og-slot" data-win="dex" aria-label="Otter-dex (X)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><circle cx="16" cy="18" r="9" fill="#9a6440"/><circle cx="9" cy="10" r="3.5" fill="#6b4a2b"/><circle cx="23" cy="10" r="3.5" fill="#6b4a2b"/><ellipse cx="16" cy="21" rx="5" ry="3.5" fill="#c99a6b"/><circle cx="12.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="19.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="16" cy="19.5" r="1.6" fill="#0b0a10" stroke="none"/></svg><span>Otter-dex</span><kbd>X</kbd><b class="og-badge-new" hidden>!</b></button>
           <button type="button" class="og-slot" data-win="treasure" aria-label="Treasures (T)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 14 Q16 6 28 14 L28 26 L4 26 Z" fill="#8a6440"/><path d="M4 14 L28 14 M4 18 L28 18" fill="none"/><rect x="13" y="16" width="6" height="5" rx="1" fill="#ffd23f"/><path d="M9 9 L11 6 L13 9 Z M20 8 L23 5 L25 9 Z" fill="#a47bff" stroke-width="1.5"/></svg><span>Treasures</span><kbd>T</kbd><b class="og-badge-new" hidden>!</b></button>
         </nav>
-        <div class="og-pads" aria-label="Touch controls">
-          <button type="button" class="pad" data-key="ArrowLeft" aria-label="Turn left">◀</button>
-          <button type="button" class="pad" data-key="ArrowUp" aria-label="Move forward">▲</button>
-          <button type="button" class="pad" data-key="ArrowDown" aria-label="Move back">▼</button>
-          <button type="button" class="pad" data-key="ArrowRight" aria-label="Turn right">▶</button>
-          <button type="button" class="pad pad-wide" data-key=" " aria-label="Jump or swim up">Jump</button>
-          <button type="button" class="pad pad-wide teal" data-key="dive" aria-label="Dive">Dive</button>
-        </div>
-        <p class="og-help"><b>Keyboard:</b> arrows or WASD to move · Space to jump and swim up · Shift or E to dive. Each season has three goals, predators to escape, and an energy bar to keep full. Use the minimap to find the yellow landmark. Tap the menu slots, or press J, K, V, O, X, or T, to open your Journal, Anatomy, Evolution chart, Wardrobe, Otter-dex, and Treasure chest. Opening a menu pauses the game.</p>
+        <p class="og-help"><b>Touch:</b> left thumb to move, right thumb to swipe and look, plus Jump and Dive buttons. <b>Keyboard:</b> arrows or WASD to move · Space to jump and swim up · Shift or E to dive. Each season has three goals, predators to escape, and an energy bar to keep full. Use the minimap to find the yellow landmark. Tap the menu slots, or press J, K, V, O, X, or T, to open your Journal, Anatomy, Evolution chart, Wardrobe, Otter-dex, and Treasure chest. Opening a menu pauses the game.</p>
 
         <div class="og-modal" id="og-modal" hidden role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
           <div class="og-modal-box">

@@ -370,6 +370,9 @@
   const glc = $("og-3d");
   const ARENA = 66;
   let S = null, keys = {}, running = false, lastT = 0, R3 = null;
+  const stick = { active: false, id: null, ox: 0, oy: 0, x: 0, y: 0 };
+  let look = null, touchMode = matchMedia("(pointer: coarse)").matches;
+  const lerpAngle = (a, b, t) => { let d = (b - a) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return a + d * t; };
 
   // Water layout per habitat: lakes are ellipses, rivers are sine-wave channels
   const WATER = {
@@ -611,6 +614,7 @@
     S = { scene, world, otter, t: 0, x: sx, z: sz, y: groundY(sx, sz) + 0.5, vy: 0, heading: Math.atan2(-sx, -sz), speed: 0,
           inWater: false, depth: 0, hearts: 3, energy: 100, inv: 0, food: 0, counts: {}, hits: 0, dead: false, cause: "", plastic: 0, plasticRebuilt: 0, starve: 0,
           tasks: makeTasks(G.hab), items: [], bonus: [], bonusT: rand(5, 9), sndT: 0, preds: [], logs: [], friends: [], ending: 0, golden: false, camPos: new T3.Vector3(), tipT: 0 };
+    S.camYaw = S.heading;
     // Food
     Object.entries(MENU[G.hab]).forEach(([k, n]) => { for (let i = 0; i < n; i++) spawnFood(k); });
     spawnFood("golden");
@@ -632,7 +636,7 @@
     });
     G.screen = "season"; screen("");
     canvas.hidden = true; glc.hidden = false; size3D();
-    $("og-hud").hidden = false; $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
+    $("og-hud").hidden = false; document.querySelector(".og-hud-top").appendChild($("og-fs")); showTouch(); $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
     renderTasks(); renderHearts(); paintMapBase();
     const f = h.facts[(G.habSeasons[G.hab] - 1) % 2]; setTimeout(() => showFact(f), 1500);
     keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
@@ -701,9 +705,21 @@
     // Steering: in fast water, canals near right angles turn more sharply
     let turn = 2.6;
     if (W.flow && S.inWater) turn *= 0.55 + 0.45 * clamp(1 - Math.abs(degOf(t.canal) - 93) / 22, 0, 1);
-    if (L) S.heading += turn * dt; if (Rr) S.heading -= turn * dt;
     const top = S.inWater ? 9 : 6.2 - (t.size - 50) * 0.02;
-    const target = U ? top : D ? -top * 0.45 : 0;
+    let target = 0;
+    if (stick.active && alive) {
+      // Thumbstick moves the otter relative to the camera, like Roblox
+      const m = Math.min(1, Math.hypot(stick.x, stick.y));
+      if (m > 0.15) {
+        const y = S.camYaw, dx = Math.sin(y) * -stick.y - Math.cos(y) * stick.x, dz = Math.cos(y) * -stick.y + Math.sin(y) * stick.x;
+        S.heading = lerpAngle(S.heading, Math.atan2(dx, dz), Math.min(1, turn * 2.6 * dt)); target = top * m;
+      }
+    } else {
+      if (L) S.heading += turn * dt; if (Rr) S.heading -= turn * dt;
+      target = U ? top : D ? -top * 0.45 : 0;
+    }
+    if (!touchMode) S.camYaw = S.heading;
+    else if (!look && Math.abs(S.speed) > 1) S.camYaw = lerpAngle(S.camYaw, S.heading, Math.min(1, 0.7 * dt));
     S.speed = lerp(S.speed, target, 0.12);
     let nx = S.x + Math.sin(S.heading) * S.speed * dt, nz = S.z + Math.cos(S.heading) * S.speed * dt;
     if (W.flow && S.inWater) nx += W.flow * dt;
@@ -877,9 +893,10 @@
     if (S.dead) o.rotation.z = Math.min(Math.PI / 2, o.rotation.z + 0.08);
     // Camera follows behind the otter
     const cam = R3.cam, back = 8.5, up = 4.2;
-    const want = new T3.Vector3(S.x - Math.sin(S.heading) * back, Math.max(S.y + up, groundY(S.x - Math.sin(S.heading) * back, S.z - Math.cos(S.heading) * back) + 1.5), S.z - Math.cos(S.heading) * back);
-    if (!S.camInit) { cam.position.copy(want); S.camInit = true; } else cam.position.lerp(want, 0.08);
-    cam.lookAt(S.x + Math.sin(S.heading) * 3, S.y + 1, S.z + Math.cos(S.heading) * 3);
+    const cy = S.camYaw;
+    const want = new T3.Vector3(S.x - Math.sin(cy) * back, Math.max(S.y + up, groundY(S.x - Math.sin(cy) * back, S.z - Math.cos(cy) * back) + 1.5), S.z - Math.cos(cy) * back);
+    if (!S.camInit) { cam.position.copy(want); S.camInit = true; } else cam.position.lerp(want, look ? 0.3 : 0.08);
+    cam.lookAt(S.x + Math.sin(cy) * 3, S.y + 1, S.z + Math.cos(cy) * 3);
     // Underwater look
     const under = cam.position.y < 0 || (S.y < -0.9);
     const vis = W.murky ? 4 + lead().t.cochlea * 0.12 : W.vis;
@@ -949,8 +966,9 @@
       gator: [ICON.alligator, [ICON.land], "Swim to land"],
       logs: [ICON.logs, [ICON.dive], "Dive under"],
     };
-    const controls = coarse
-      ? `<div class="og-ctl"><span class="og-keys-row">${KEY("◀")}${KEY("▲")}${KEY("▼")}${KEY("▶")}</span><small>Move</small></div>
+    const controls = (coarse || touchMode)
+      ? `<div class="og-ctl"><span class="og-keys-row"><span class="og-mini-stick"><i></i></span></span><small>Left thumb: move</small></div>
+         <div class="og-ctl"><span class="og-keys-row">${KEY("↔")}</span><small>Right thumb: swipe to look</small></div>
          <div class="og-ctl"><span class="og-keys-row">${KEY("Jump")}</span><small>Jump / swim up</small></div>
          <div class="og-ctl"><span class="og-keys-row">${KEY("Dive")}</span><small>Dive</small></div>`
       : `<div class="og-ctl"><span class="og-arrows">${KEY("▲")}<span>${KEY("◀")}${KEY("▼")}${KEY("▶")}</span></span><small>Move</small></div>
@@ -981,7 +999,7 @@
 
   /* ---------- Between seasons: selection, inheritance, mutation ---------- */
   function endSeason() {
-    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false;
+    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch(); document.querySelector(".og-stage").appendChild($("og-fs"));
     showFact("fitness");
     if (S.food >= 12) unlock("chef");
     if (S.hits === 0 && !S.quick) unlock("crown");
@@ -1240,6 +1258,52 @@
     const k = WIN_KEYS[e.key.toLowerCase()];
     if (k && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); openK === k ? closeWin() : openWin(k); }
   });
+
+  /* ---------- Touch controls (Roblox style) and full screen ---------- */
+  const stage = document.querySelector(".og-stage"), stickEl = $("og-stick"), knob = $("og-knob");
+  function placeStick(x, y, dx = 0, dy = 0, on = false) {
+    stickEl.style.left = x + "px"; stickEl.style.top = y + "px";
+    knob.style.transform = `translate(${dx}px, ${dy}px)`; stickEl.classList.toggle("on", on);
+  }
+  function restStick() { const r = stage.getBoundingClientRect(); placeStick(Math.min(110, r.width * 0.22), r.height - 100); }
+  function showTouch() {
+    stage.classList.toggle("touch", touchMode);
+    if (!touchMode) return;
+    $("og-touch").hidden = false; restStick();
+    const hint = $("og-touch-hint"); hint.hidden = false; setTimeout(() => { hint.hidden = true; }, 6000);
+  }
+  function endTouch() { stick.active = false; stick.id = null; stick.x = stick.y = 0; look = null; }
+  glc.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse") return;
+    if (!touchMode) { touchMode = true; showTouch(); }
+    const r = glc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    glc.setPointerCapture(e.pointerId); e.preventDefault();
+    if (x < r.width * 0.5 && !stick.active) { Object.assign(stick, { active: true, id: e.pointerId, ox: x, oy: y, x: 0, y: 0 }); placeStick(x, y, 0, 0, true); }
+    else if (!look) look = { id: e.pointerId, x: e.clientX };
+  });
+  glc.addEventListener("pointermove", e => {
+    if (stick.active && e.pointerId === stick.id) {
+      const r = glc.getBoundingClientRect(), R = 52; let dx = e.clientX - r.left - stick.ox, dy = e.clientY - r.top - stick.oy;
+      const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
+      stick.x = dx / R; stick.y = dy / R; placeStick(stick.ox, stick.oy, dx, dy, true);
+    } else if (look && e.pointerId === look.id && S) { S.camYaw -= (e.clientX - look.x) * 0.009; look.x = e.clientX; }
+  });
+  const lift = e => {
+    if (stick.active && e.pointerId === stick.id) { stick.active = false; stick.id = null; stick.x = stick.y = 0; restStick(); }
+    if (look && e.pointerId === look.id) look = null;
+  };
+  glc.addEventListener("pointerup", lift); glc.addEventListener("pointercancel", lift);
+  document.querySelectorAll(".og-tbtn").forEach(b => {
+    b.addEventListener("pointerdown", () => b.classList.add("on")); ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, () => b.classList.remove("on")));
+  });
+  function setFull(on) {
+    stage.classList.toggle("og-fs-on", on); document.body.classList.toggle("og-noscroll", on);
+    $("og-fs").setAttribute("aria-pressed", String(on)); $("og-fs").setAttribute("aria-label", on ? "Exit full screen" : "Full screen"); $("og-fs").textContent = on ? "✕" : "⛶";
+    try { if (on && stage.requestFullscreen && !document.fullscreenElement) stage.requestFullscreen().catch(() => {}); if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+    requestAnimationFrame(() => { resize(); size3D(); if (!running) drawIdle(); if (S && touchMode && G.screen === "season") restStick(); });
+  }
+  $("og-fs").addEventListener("click", () => setFull(!stage.classList.contains("og-fs-on")));
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && stage.classList.contains("og-fs-on")) setFull(false); });
 
   /* ---------- Input ---------- */
   const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S", "Shift", "e", "E", "q", "Q", "c", "C"];

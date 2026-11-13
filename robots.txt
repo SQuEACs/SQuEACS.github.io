@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://squeacs.github.io/sitemap.xml

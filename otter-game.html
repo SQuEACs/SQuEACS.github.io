@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Otter Adventure</title>
+<title>Otter Evolution</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="A small game from the SQuEACs Lab: an otter's body changes with food, climate, and water.">
+<meta name="description" content="A game from the SQuEACs Lab: guide a population of otters through natural selection, inheritance, mutation, and drift.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <script src="otter-game.js" defer></script>
 </head>
 <body>
@@ -25,7 +26,7 @@
           <li><a href="research.html">Research</a></li>
           <li><a href="open-science.html">Open Science</a></li>
           <li class="sub"><a href="models.html">3D Models</a></li>
-          <li class="sub"><a href="otter-game.html" aria-current="page">Otter Adventure</a></li>
+          <li class="sub"><a href="otter-game.html" aria-current="page">Otter Evolution</a></li>
           <li><a href="publications.html">Publications</a></li>
           <li><a href="funding.html">Funding</a></li>
           <li><a href="teaching.html">Teaching</a></li>
@@ -42,43 +43,54 @@
   <section id="otter-game">
     <div class="wrap">
       <div class="section-head">
-        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Otter Adventure</p>
-        <h1 class="page-title">Otter Adventure</h1>
-        <p>Guide a river otter from a warm desert river to the snowy north. What it eats, the climate it lives in, how much it swims, and the company it keeps all change its body and brain. Unlock outfits along the way.</p>
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Otter Evolution</p>
+        <h1 class="page-title">Otter Evolution</h1>
+        <p>Guide a population of river otters through eight generations. Play each season as one otter, then watch natural selection, inheritance, mutation, and luck reshape the whole population. Pick snowy, desert, fast, slow, murky, or deep-lake homes, and see how bodies, brains, and inner ears evolve to match.</p>
       </div>
 
-      <div class="game">
-        <div class="game-stage">
-          <canvas id="otter-canvas" tabindex="0" aria-label="Otter Adventure game. Use the arrow keys or the buttons below to move, jump, swim, and dive."></canvas>
-          <p class="game-zone" id="otter-zone" aria-live="polite">Warm desert river</p>
-          <p class="game-toast" id="otter-toast" role="status" hidden></p>
-          <button class="btn primary game-start" id="otter-start" type="button">Start playing</button>
+      <div class="og">
+        <div class="og-stage">
+          <canvas id="og-canvas" tabindex="0" aria-label="Otter Evolution game. Use the arrow keys or the buttons below to move, jump, swim, and dive."></canvas>
+          <div class="og-hud" id="og-hud" hidden>
+            <span class="og-pill pink" id="og-gen">GEN 1</span>
+            <span class="og-pill" id="og-hab">Deep Clear Lake</span>
+            <span class="og-timer" aria-hidden="true"><i id="og-time"></i></span>
+            <span class="og-pill teal" id="og-food">Food 0/8</span>
+            <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
+          </div>
+          <p class="og-toast" id="og-toast" role="status" hidden></p>
+          <div class="og-screen" id="og-screen" hidden></div>
         </div>
-        <div class="game-controls" aria-label="Touch controls">
+        <div class="og-pads" aria-label="Touch controls">
           <button type="button" class="pad" data-key="ArrowLeft" aria-label="Move left">◀</button>
           <button type="button" class="pad" data-key="ArrowUp" aria-label="Jump or swim up">▲</button>
           <button type="button" class="pad" data-key="ArrowDown" aria-label="Dive">▼</button>
           <button type="button" class="pad" data-key="ArrowRight" aria-label="Move right">▶</button>
         </div>
-        <p class="game-help"><b>Keyboard:</b> ← → to move · ↑ or Space to jump and surface · ↓ to dive. Eat <span class="k-fish">fish</span> and <span class="k-cray">crayfish</span>, swim in the lake, visit every climate, and say hello to other otters along the way.</p>
+        <p class="og-help"><b>Keyboard:</b> ← → move · ↑ or Space jump and surface · ↓ dive. Eat <span class="k-fish">fish</span> and <span class="k-cray">crayfish</span>, dodge eagles and logs, and find 8 food to complete each season's quest.</p>
 
-        <div class="game-panels">
-          <section class="game-panel">
-            <div class="panel-head"><h2>Your otter</h2><span class="label" id="otter-count">0 fish · 0 crayfish</span></div>
-            <div class="traits" id="otter-traits"></div>
-            <button type="button" class="btn" id="otter-reset">Start over</button>
+        <div class="og-panels">
+          <section class="og-panel og-anat">
+            <div class="panel-head"><h2>Anatomy</h2><span class="label" id="og-anat-sub">Starting otters</span></div>
+            <figure><canvas id="og-brain" aria-hidden="true"></canvas><figcaption><b>Brain (endocast, top view)</b><span id="og-brain-cap"></span></figcaption></figure>
+            <figure><canvas id="og-ear" aria-hidden="true"></canvas><figcaption><b>Inner ear</b><span id="og-ear-cap"></span></figcaption></figure>
           </section>
-          <section class="game-panel fact" id="otter-fact" aria-live="polite">
-            <p class="label">Did you know?</p>
-            <h3>Start exploring</h3>
-            <p>Facts from our research appear here as your otter changes.</p>
+          <section class="og-panel og-fact" id="og-fact" aria-live="polite">
+            <p class="og-kicker">Science card</p>
+            <h3>Press Play to start</h3>
+            <p>Science cards from our research appear here as your otters evolve. Each card names the hypothesis or concept the way scientists know it.</p>
           </section>
-          <section class="game-panel">
-            <div class="panel-head"><h2>Outfit closet</h2><span class="label" id="otter-outfit-count">0 unlocked</span></div>
-            <div class="closet" id="otter-closet"></div>
+          <section class="og-panel og-evo">
+            <div class="panel-head"><h2>Evolution chart</h2><span class="label">Population average by generation</span></div>
+            <canvas id="og-chart" aria-label="Line chart of average traits across generations"></canvas>
+            <ul class="og-legend"><li><i style="background:#ff5fa2"></i>Body size</li><li><i style="background:#a47bff"></i>Fur thickness</li><li><i style="background:#2ed3c6"></i>Ears and tail</li><li><i style="background:#ffb347"></i>Cochlea shape</li><li><i style="background:#7fd1ff"></i>Canal angle</li><li><i style="background:#f4f2fa"></i>Brain size</li></ul>
+          </section>
+          <section class="og-panel og-closet-panel">
+            <div class="panel-head"><h2>Outfit closet</h2><span class="label" id="og-outfit-count">0 of 8</span></div>
+            <div class="closet" id="og-closet"></div>
           </section>
         </div>
-        <p class="game-note">The game exaggerates changes that, in real animals, unfold over many generations or a lifetime. It is meant to show the kinds of variation we study, not to model it.</p>
+        <p class="og-note">The habitat targets, trait values, and anatomy drawings in this game are illustrative, not measurements. Real populations evolve over many more generations, and the hypotheses on the cards are ideas our lab and others are testing, not settled answers.</p>
       </div>
     </div>
   </section>

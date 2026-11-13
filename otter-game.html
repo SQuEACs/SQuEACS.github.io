@@ -9,10 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="styles.css?v=19">
+<link rel="stylesheet" href="styles.css?v=20">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <script src="assets/vendor/three-r149.min.js?v=1" defer></script>
-<script src="otter-game.js?v=17" defer></script>
+<script src="otter-game.js?v=19" defer></script>
 </head>
 <body>
 
@@ -59,6 +59,7 @@
               <span class="og-pill pink" id="og-gen">GEN 1</span>
               <span class="og-pill" id="og-hab">Deep Clear Lake</span>
               <span class="og-timer" aria-hidden="true"><i id="og-time"></i></span>
+              <button type="button" class="og-pill og-end" id="og-end" hidden>End season ✓</button>
               <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
             </div>
             <div class="og-hud-row">
@@ -74,7 +75,7 @@
             <button type="button" class="og-tbtn og-dive" data-key="dive" aria-label="Dive">Dive</button>
             <button type="button" class="og-tbtn og-jump" data-key=" " aria-label="Jump or swim up">Jump</button>
           </div>
-          <button type="button" class="og-fs" id="og-fs" aria-pressed="false" aria-label="Full screen" title="Full screen">⛶</button>
+          <div class="og-corner" id="og-corner"><button type="button" class="og-bag" id="og-bag" aria-label="Open menu" title="Menu"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round"><path d="M11 9 Q11 4 16 4 Q21 4 21 9" fill="none" stroke="#fff"/><rect x="6" y="9" width="20" height="19" rx="5" fill="#ff8a5c"/><rect x="10" y="17" width="12" height="7" rx="2" fill="#ffd23f"/></svg></button><button type="button" class="og-fs" id="og-fs" aria-pressed="false" aria-label="Full screen" title="Full screen">⛶</button></div>
           <p class="og-toast" id="og-toast" role="status" hidden></p>
           <div class="og-screen" id="og-screen" hidden></div>
         </div>

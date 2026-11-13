@@ -107,9 +107,9 @@
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {} };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure })); } catch (e) {} };
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true } };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; } } catch (e) {}
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 10, fur: 50 + gauss() * 10, ext: 50 + gauss() * 10, cochlea: 50 + gauss() * 10, canal: valOfDeg(84) + gauss() * 8, brain: 50 + gauss() * 10 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -416,7 +416,7 @@
   };
   function makeTasks(hab) {
     const L = PLACE[hab];
-    const t = {
+    let t = {
       snow:   [["eat", "trout", 4], ["dodge", "eagle", 2], ["visit", L, 1]],
       desert: [["eat", "crayfish", 5], ["escape", "coyote", 1], ["visit", L, 1]],
       fast:   [["eat", "trout", 4], ["under", "logs", 3], ["visit", L, 1]],
@@ -426,7 +426,9 @@
     }[hab];
     const label = ([k, what, n]) => k === "eat" ? `Eat ${n} ${what}` : k === "dodge" ? `Dodge ${n} ${what} attacks` : k === "escape" ? `Escape the ${what}` :
       k === "under" ? `Dive under ${n} logs` : k === "friends" ? `Play with ${n} otter friends` : `Find the ${what}`;
-    return t.map(x => ({ kind: x[0], what: x[1], need: x[2], have: 0, label: label(x) }));
+    if (!G.opts.preds) t = t.map(x => ["dodge", "escape", "under"].includes(x[0]) ? ["treasure", "sparkly treasure", 1] : x);
+    const lab = x => x[0] === "treasure" ? "Grab a sparkly treasure" : label(x);
+    return t.map(x => ({ kind: x[0], what: x[1], need: x[2], have: 0, label: lab(x) }));
   }
 
   // Signed distance to the shore: negative in water
@@ -628,7 +630,7 @@
       S.place = { x: lx, z: lz, beacon, found: false };
     }
     // Predators
-    PREDS[G.hab].forEach(p => {
+    (G.opts.preds ? PREDS[G.hab] : []).forEach(p => {
       if (p === "eagle") { const m = eagleMesh(); scene.add(m); const sh = new T3.Mesh(new T3.CircleGeometry(1.6, 16), new T3.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.0, depthWrite: false })); sh.rotation.x = -Math.PI / 2; scene.add(sh); S.preds.push({ kind: "eagle", m, sh, state: "circle", cd: rand(7, 11), a: 0, x: 0, y: 28, z: 0 }); }
       if (p === "coyote") { const [x, z] = randLand(10); const m = coyoteMesh(); scene.add(m); S.preds.push({ kind: "coyote", m, state: "patrol", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, chasing: false }); }
       if (p === "gator") { const [x, z] = randWater(5); const m = gatorMesh(); scene.add(m); S.preds.push({ kind: "gator", m, state: "lurk", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, t: 0 }); }
@@ -636,7 +638,8 @@
     });
     G.screen = "season"; screen("");
     canvas.hidden = true; glc.hidden = false; size3D();
-    $("og-hud").hidden = false; document.querySelector(".og-hud-top").appendChild($("og-fs")); showTouch(); $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
+    $("og-hud").hidden = false; document.querySelector(".og-hud-top").appendChild($("og-corner")); $("og-time").parentElement.hidden = !G.opts.timer; $("og-end").hidden = G.opts.timer;
+    if (touchMode && smallLandscape() && !stage.classList.contains("og-fs-on")) setFull(true); showTouch(); $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
     renderTasks(); renderHearts(); paintMapBase();
     const f = h.facts[(G.habSeasons[G.hab] - 1) % 2]; setTimeout(() => showFact(f), 1500);
     keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
@@ -657,7 +660,7 @@
   function bump(kind, what) {
     let changed = false;
     S.tasks.forEach(t => { if (t.kind === kind && (!what || t.what === what) && t.have < t.need) { t.have++; changed = true; if (t.have === t.need) { jingle(); toast("Goal complete: " + t.label + "!"); } } });
-    if (changed) { renderTasks(); if (S.tasks.every(t => t.have >= t.need) && !S.allDone) { S.allDone = true; setTimeout(() => toast("All goals done! Your otter will survive and raise extra pups."), 1600); } }
+    if (changed) { renderTasks(); if (S.tasks.every(t => t.have >= t.need) && !S.allDone) { S.allDone = true; if (!G.opts.timer) { S.ending = 3; setTimeout(() => toast("All goals done! Season complete!"), 1200); } else setTimeout(() => toast("All goals done! Your otter will survive and raise extra pups."), 1600); } }
   }
   const tasksDone = () => S.tasks.filter(t => t.have >= t.need).length;
   let mapBase = null;
@@ -705,7 +708,7 @@
     // Steering: in fast water, canals near right angles turn more sharply
     let turn = 2.6;
     if (W.flow && S.inWater) turn *= 0.55 + 0.45 * clamp(1 - Math.abs(degOf(t.canal) - 93) / 22, 0, 1);
-    const top = S.inWater ? 9 : 6.2 - (t.size - 50) * 0.02;
+    const top = (S.inWater ? 9 : 6.2 - (t.size - 50) * 0.02) * (S.energy <= 0 && !G.opts.preds ? 0.55 : 1);
     let target = 0;
     if (stick.active && alive) {
       // Thumbstick moves the otter relative to the camera, like Roblox
@@ -744,7 +747,8 @@
     else if (G.hab === "desert") drain += (!S.inWater ? Math.max(0, furE - 35) * 0.06 : 0) + (t.size - 50) * 0.015;
     else drain += 0.3;
     if (alive) S.energy = clamp(S.energy - Math.max(0.6, drain) * dt, 0, 100);
-    if (S.energy <= 0 && alive) { S.starve += dt; if (S.starve > 3.5) { S.starve = 0; S.inv = 0; hurt(G.hab === "snow" ? "Too cold and hungry!" : G.hab === "desert" ? "Too hot and hungry!" : "Starving!"); } }
+    if (S.energy <= 0 && alive && !G.opts.preds) { if (S.tipT <= 0) { S.tipT = 6; toast("So hungry! Eat something to speed up."); } }
+    else if (S.energy <= 0 && alive) { S.starve += dt; if (S.starve > 3.5) { S.starve = 0; S.inv = 0; hurt(G.hab === "snow" ? "Too cold and hungry!" : G.hab === "desert" ? "Too hot and hungry!" : "Starving!"); } }
     // Plasticity: fur responds to this season's climate within the otter's life
     const pT = G.hab === "snow" ? 18 : G.hab === "desert" ? -18 : 0;
     S.plastic = lerp(S.plastic, pT, 0.12 * dt);
@@ -848,7 +852,7 @@
       b.life -= dt; b.m.position.set(b.x, b.y + Math.sin(S.t * 3) * 0.2, b.z); b.m.userData.gem.rotation.y += dt * 2;
       b.m.userData.ring.scale.setScalar(1 + Math.sin(S.t * 5) * 0.15); b.m.visible = b.life > 3 || Math.floor(S.t * 8) % 2 === 0;
       if (alive && Math.hypot(b.x - S.x, b.z - S.z) < 1.8 && Math.abs(b.y - S.y) < 2) {
-        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; save(); renderTreasure(); flag("treasure");
+        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; save(); renderTreasure(); flag("treasure"); bump("treasure");
         S.energy = clamp(S.energy + 12, 0, 100); let extra = "";
         if ((b.tr.rarity === "Rare" || b.tr.rarity === "Legendary") && S.hearts < 3) { S.hearts++; renderHearts(); extra = " +1 heart!"; }
         sfx("sparkle", 0.09); toast(`Surprise! ${b.tr.rarity} find: ${b.tr.name}!${extra}`);
@@ -874,7 +878,7 @@
       if (!near || S.sndT <= 0) S.sndT = 0.4;
     }
     // Season clock
-    if (!S.dead && S.t >= SEASON) { S.dead = false; S.ending = 0.01; }
+    if (!S.dead && G.opts.timer && S.t >= SEASON && S.ending <= 0) S.ending = 0.01;
     // HUD
     $("og-time").style.width = clamp(100 - S.t / SEASON * 100, 0, 100) + "%";
     $("og-energy").style.width = S.energy + "%";
@@ -945,7 +949,7 @@
   };
   const KEY = k => `<kbd class="og-key">${k}</kbd>`;
   const coarse = matchMedia("(pointer: coarse)").matches;
-  function taskIcon(t) { return t.kind === "eat" ? ICON[t.what] : t.kind === "dodge" ? ICON.eagle : t.kind === "escape" ? ICON[t.what] : t.kind === "under" ? ICON.logs : t.kind === "friends" ? ICON.friends : ICON.flag; }
+  function taskIcon(t) { return t.kind === "eat" ? ICON[t.what] : t.kind === "dodge" ? ICON.eagle : t.kind === "escape" ? ICON[t.what] : t.kind === "under" ? ICON.logs : t.kind === "treasure" ? ICON.gem : t.kind === "friends" ? ICON.friends : ICON.flag; }
   /* ----- Briefing before each season ----- */
   function traitTips() {
     const t = lead().t, tips = [];
@@ -977,10 +981,11 @@
     screen(`<div class="og-card og-wide og-brief">
       <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
       <h2 class="og-h">Your mission</h2>
+      <div class="og-modes"><span>${G.opts.preds ? "Predators on" : "No predators"}</span><span>${G.opts.timer ? "75-second timer" : "No timer"}</span><button type="button" class="og-link" id="og-change">Change settings</button></div>
       <ul class="og-goals">${tasks.map(t => `<li>${taskIcon(t)}<span>${t.label}</span></li>`).join("")}</ul>
       <div class="og-brief-grid">
         <section><h3 class="og-mini">Danger!</h3>
-          ${PREDS[G.hab].map(p => { const [who, how, txt] = ESC[p]; return `<div class="og-row">${who}<b class="og-arrow">➜</b>${how.join("")}<small>${txt}</small></div>`; }).join("")}
+          ${G.opts.preds ? PREDS[G.hab].map(p => { const [who, how, txt] = ESC[p]; return `<div class="og-row">${who}<b class="og-arrow">➜</b>${how.join("")}<small>${txt}</small></div>`; }).join("") : `<div class="og-row">${ICON.friends}<small>Relaxed mode: no predators. Explore freely!</small></div>`}
         </section>
         <section><h3 class="og-mini">Stay alive</h3>
           <div class="og-row">${ICON.heart}${ICON.heart}${ICON.heart}<small>3 hearts</small></div>
@@ -992,14 +997,15 @@
         </section>
       </div>
       <div class="og-controls">${controls}</div>
-      <p class="og-sub og-small">Finish 2 goals and your otter survives. Finish all 3 for the most pups!</p>
+      <p class="og-sub og-small">${G.opts.timer ? "Finish 2 goals and your otter survives. Finish all 3 for the most pups!" : "Take your time! The season ends when you finish all 3 goals, or tap End season."}</p>${(coarse || touchMode) && matchMedia("(orientation: portrait)").matches ? '<p class="og-sub og-small">📱 Tip: turn your phone sideways for a bigger view.</p>' : ""}
       <button type="button" class="og-btn" id="og-go">Start season ▶</button></div>`);
     $("og-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); startSeason(); });
+    $("og-change").addEventListener("click", () => screenSettings(screenBriefing));
   }
 
   /* ---------- Between seasons: selection, inheritance, mutation ---------- */
   function endSeason() {
-    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch(); document.querySelector(".og-stage").appendChild($("og-fs"));
+    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch(); document.querySelector(".og-stage").appendChild($("og-corner"));
     showFact("fitness");
     if (S.food >= 12) unlock("chef");
     if (S.hits === 0 && !S.quick) unlock("crown");
@@ -1051,6 +1057,22 @@
     });
   }
 
+  function screenSettings(next) {
+    G.screen = "settings";
+    const opt = (k, val, ic, title, sub) => `<button type="button" class="og-opt" data-k="${k}" data-v="${val}" aria-pressed="${G.opts[k] === val}">${ic}<b>${title}</b><span>${sub}</span></button>`;
+    screen(`<div class="og-card og-wide">
+      <h2 class="og-h">How do you want to play?</h2>
+      <h3 class="og-mini">Predators</h3>
+      <div class="og-opts">${opt("preds", true, ICON.eagle, "Predators on", "Eagles, coyotes, and alligators. More challenge!")}${opt("preds", false, ICON.friends, "No predators", "Relaxed exploring, great for little kids.")}</div>
+      <h3 class="og-mini">Timer</h3>
+      <div class="og-opts">${opt("timer", true, ICON.bolt, "Timer on", "Each season lasts 75 seconds.")}${opt("timer", false, ICON.flag, "No timer", "Play until you finish your goals.")}</div>
+      <button type="button" class="og-btn" id="og-set-go">Let's go ▶</button></div>`);
+    document.querySelectorAll(".og-opt").forEach(b => b.addEventListener("click", () => {
+      G.opts[b.dataset.k] = b.dataset.v === "true"; save(); beep(560, 0.06, "triangle", 0.04);
+      document.querySelectorAll(`.og-opt[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    }));
+    $("og-set-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); next(); });
+  }
   function screenTitle() {
     G.screen = "title";
     screen(`<div class="og-card og-title">
@@ -1063,7 +1085,7 @@
         <li><span><b>Watch the population evolve</b> to fit its habitat.</span></li>
       </ol>
       <button type="button" class="og-btn" id="og-play">Play</button></div>`);
-    $("og-play").addEventListener("click", () => { beep(660, 0.1, "triangle"); if (window.SQ_track) window.SQ_track("play", "otter-game"); screenHabitat(true); });
+    $("og-play").addEventListener("click", () => { beep(660, 0.1, "triangle"); if (window.SQ_track) window.SQ_track("play", "otter-game"); screenSettings(() => screenHabitat(true)); });
   }
   function screenHabitat(fresh) {
     G.screen = "habitat";
@@ -1228,8 +1250,9 @@
 
   /* ---------- RPG menu: hotbar slots open game windows ---------- */
   const modal = $("og-modal"); let openK = null, lastFocus = null;
+  document.querySelector(".og-stage").appendChild(modal);   // so menus also show in full screen
   const WIN_KEYS = { j: "journal", k: "anatomy", v: "evolution", o: "wardrobe", x: "dex", t: "treasure" };
-  function flag(k) { if (openK === k) return; const b = document.querySelector(`.og-slot[data-win="${k}"] .og-badge-new`); if (b) { b.hidden = false; b.parentElement.classList.add("has-new"); } }
+  function flag(k) { if (openK === k) return; const b = document.querySelector(`.og-slot[data-win="${k}"] .og-badge-new`); if (b) { b.hidden = false; b.parentElement.classList.add("has-new"); } $("og-bag").classList.add("has-new"); }
   function openWin(k) {
     if (!openK) lastFocus = document.activeElement;
     openK = k; modal.hidden = false; keys = {};
@@ -1239,7 +1262,7 @@
     const w = document.querySelector(`.og-window[data-win="${k}"]`);
     $("og-modal-title").textContent = w.querySelector("h2").textContent;
     $("og-modal-icon").innerHTML = document.querySelector(`.og-slot[data-win="${k}"] svg`).outerHTML;
-    const b = document.querySelector(`.og-slot[data-win="${k}"]`); b.querySelector(".og-badge-new").hidden = true; b.classList.remove("has-new");
+    const b = document.querySelector(`.og-slot[data-win="${k}"]`); b.querySelector(".og-badge-new").hidden = true; b.classList.remove("has-new"); $("og-bag").classList.toggle("has-new", !!document.querySelector(".og-slot.has-new"));
     if (k === "anatomy" || k === "evolution") requestAnimationFrame(updatePanels);
     beep(520, 0.06, "triangle", 0.04);
     $("og-close").focus({ preventScroll: true });
@@ -1296,10 +1319,17 @@
   document.querySelectorAll(".og-tbtn").forEach(b => {
     b.addEventListener("pointerdown", () => b.classList.add("on")); ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, () => b.classList.remove("on")));
   });
+  const smallLandscape = () => matchMedia("(orientation: landscape) and (max-height: 520px)").matches;
+  matchMedia("(orientation: landscape)").addEventListener("change", () => setTimeout(() => {
+    if (running && touchMode && smallLandscape() && !stage.classList.contains("og-fs-on")) setFull(true);
+    resize(); size3D(); if (!running) drawIdle(); if (running && touchMode) restStick();
+  }, 250));
+  $("og-bag").addEventListener("click", () => openWin(document.querySelector(".og-slot.has-new")?.dataset.win || "journal"));
+  $("og-end").addEventListener("click", () => { if (S && running && S.ending <= 0) { S.ending = 0.01; } });
   function setFull(on) {
     stage.classList.toggle("og-fs-on", on); document.body.classList.toggle("og-noscroll", on);
     $("og-fs").setAttribute("aria-pressed", String(on)); $("og-fs").setAttribute("aria-label", on ? "Exit full screen" : "Full screen"); $("og-fs").textContent = on ? "✕" : "⛶";
-    try { if (on && stage.requestFullscreen && !document.fullscreenElement) stage.requestFullscreen().catch(() => {}); if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+    try { if (on && stage.requestFullscreen && !document.fullscreenElement) stage.requestFullscreen().then(() => { if (touchMode && screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {}); }).catch(() => {}); if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
     requestAnimationFrame(() => { resize(); size3D(); if (!running) drawIdle(); if (S && touchMode && G.screen === "season") restStick(); });
   }
   $("og-fs").addEventListener("click", () => setFull(!stage.classList.contains("og-fs-on")));

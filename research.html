@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SQuEACs Lab Research</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Research projects of the SQuEACs Lab.">
+<meta name="description" content="SQuEACs Lab research organized by anatomical system: brain and endocast, skull, inner ear, and limb.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
@@ -37,71 +37,232 @@
 </header>
 
 <main id="top" class="subpage">
-<section id="research">
+  <section id="research">
     <div class="wrap">
       <div class="section-head">
         <p class="label">Research</p>
-        <h1 class="page-title">How environments shape anatomy</h1>
-        <p>We pair CT imaging and geometric morphometrics with climate, watershed, and genomic data to ask how populations change shape across landscapes.</p>
+        <h1 class="page-title">Research by system</h1>
+        <p>Our projects are organized by the anatomical systems we study. Each project lists its species, people, and related papers or 3D models.</p>
       </div>
-
-      <div class="projects">
-        <article class="project">
-          <h3>Mink inner ear</h3>
-          <p class="taxon">Neogale vison · American mink</p>
-          <p>We use 3D landmarks on the bony labyrinth to test whether inner ear shape tracks climate, watershed, and water conditions across the species' range.</p>
-          <footer>
-            <span class="methods">CT · landmarks · PERMANOVA · PLS</span>
-            <span class="status active">In progress</span>
-          </footer>
-        </article>
-
-        <article class="project">
-          <h3>Mink brain</h3>
-          <p class="taxon">Neogale vison · American mink</p>
-          <p>We place 48 fixed landmarks on virtual endocasts built from museum specimens across many collections to map population-level variation in brain shape.</p>
-          <footer>
-            <span class="methods">Endocasts · geometric morphometrics</span>
-            <span class="status active">In progress</span>
-          </footer>
-        </article>
-
-        <article class="project">
-          <h3>River otter inner ear</h3>
-          <p class="taxon">Lontra canadensis · North American river otter</p>
-          <p>We established the river otter as a model for how environment influences inner ear morphology. <a href="https://doi.org/10.1093/biolinnean/blag081">Jones et al. 2026, <i>Biological Journal of the Linnean Society</i></a>.</p>
-          <footer>
-            <span class="methods">CT · bony labyrinth morphometrics</span>
-            <span class="status published">Published</span>
-          </footer>
-        </article>
-
-        <article class="project">
-          <h3>River otter brain</h3>
-          <p class="taxon">Lontra canadensis · North American river otter</p>
-          <p>We compare endocranial volume and endocast shape across ecoregions to measure intraspecific variation in the otter brain.</p>
-          <footer>
-            <span class="methods">Endocasts · volume · ecoregions</span>
-            <span class="status active">In progress</span>
-          </footer>
-        </article>
-
-        <article class="project">
-          <h3>Tadpole brains</h3>
-          <p class="taxon">Lithobates heckscheri · river frog tadpoles</p>
-          <p>We test how environmental teratogens in river systems affect the development and evolution of the central nervous system in amphibians.</p>
-          <footer>
-            <span class="methods">diceCT · genomics</span>
-            <span class="status active">In progress</span>
-          </footer>
-        </article>
-      </div>
-
+      <nav class="rnav" aria-label="Jump to a system"><a class="chip" href="#brain">Brain and endocast</a><a class="chip" href="#skull">Skull</a><a class="chip" href="#inner-ear">Inner ear</a><a class="chip" href="#limb">Limb</a><a class="chip" href="#human">Human anatomy</a><a class="chip" href="#methods">Methods</a></nav>
+      <section class="rsys" id="brain">
+        <div class="rsys-side">
+          <figure class="rsys-img"><img src="assets/systems/brain.png" alt="Dorsal view of a virtual endocast" loading="lazy"></figure>
+          <h2>Brain and endocast</h2>
+          <p>We use virtual endocasts to measure brain size and shape within and across species, and we test how development, genes, and environment shape the central nervous system.</p>
+        </div>
+        <div class="rsys-list">
+          <article class="rproj">
+            <h3>Brain size, diet, and environment in carnivorans</h3>
+            <p class="rtaxon">Order Carnivora</p>
+            <p>We tested whether relative brain volume tracks environmental and dietary variables across carnivorans. The relationships differ among clades.</p>
+            <p class="rpeople">With Kari Allen</p>
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1159/000523787" target="_blank" rel="noopener">Lynch &amp; Allen 2022, <i>Brain, Behavior and Evolution</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Endocast variation in river otters</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We compare endocranial volume and endocast shape across ecoregions and between the sexes to measure how much the otter brain varies within one species.</p>
+            <p class="rpeople">With Christopher Heesy, Kari Allen, Haley O'Brien, Ryan Felice; student Kristin Marsh</p>
+            <footer><span class="status active">Ongoing</span><ul class="rlinks"><li>Invited talk, North American Paleontological Convention, 2024</li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Endocast shape in American mink</h3>
+            <p class="rtaxon"><i>Neogale vison</i></p>
+            <p>We place 48 fixed landmarks on endocasts from specimens across many museum collections to map population-level variation in brain shape.</p>
+            
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+          <article class="rproj">
+            <h3>Musteloid brain anatomy</h3>
+            <p class="rtaxon">Badger, pine marten, fisher, raccoon, mink, and ermine</p>
+            <p>Labeled endocasts let us compare gyri and sulci across musteloids and relate brain anatomy to ecological specialization.</p>
+            <p class="rpeople">Students Angela Boyer, Blake Andrea, James Bates</p>
+            <footer><span class="status active">Ongoing</span><ul class="rlinks"><li><a href="models.html">Explore the 3D models</a></li><li><a href="open-science.html">All models on Sketchfab</a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Environmental teratogens and the central nervous system</h3>
+            <p class="rtaxon"><i>Lithobates heckscheri</i> tadpoles, <i>Gambusia affinis</i>, and other Cyprinodontiformes</p>
+            <p>We test how heavy metals and other teratogens in river systems affect the developing CNS, from tadpole and fish brain shape to the developmental genes <i>PAX6</i> and <i>BMP4</i>.</p>
+            <p class="rpeople">With John Phillips and Christopher Heesy; students Megan Hostetter, John Neal, Rafael Rios, Sofia Barajas, Mathew Gross</p>
+            <footer><span class="status active">Ongoing</span><ul class="rlinks"><li><a href="models.html">Tadpole CNS 3D model</a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Brain and body plan in lepidosaurs</h3>
+            <p class="rtaxon">Lizards and snakes</p>
+            <p>Relative brain and cerebellum sizes evolved repeatedly alongside shifts in body plan.</p>
+            <p class="rpeople">With Christopher Heesy</p>
+            <footer><span class="status review">In review</span></footer>
+          </article>
+        </div>
+      </section>
+      <section class="rsys" id="skull">
+        <div class="rsys-side">
+          <figure class="rsys-img"><img src="assets/systems/skull.png" alt="Dorsal view of a carnivoran skull" loading="lazy"></figure>
+          <h2>Skull</h2>
+          <p>The skull houses the brain and sense organs and anchors the muscles of feeding and expression. We study its shape, its sexual dimorphism, and the muscles that attach to it.</p>
+        </div>
+        <div class="rsys-list">
+          <article class="rproj">
+            <h3>Sexual dimorphism in the otter skull</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>Wild river otters serve as a model of sexual size and shape dimorphism in the skull and brain. The work also develops segmentation methods for highly fused cranial anatomy.</p>
+            <p class="rpeople">With Christopher Heesy; student Kristin Marsh</p>
+            <footer><span class="status active">Ongoing</span><ul class="rlinks"><li><a href="https://sketchfab.com/3d-models/lontra-canadensis-skull-anatomy-2db4e773c9f74f2cb956fbd6247ef3b8" target="_blank" rel="noopener">Labeled otter skull on Sketchfab</a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Cranial muscles of the African wild dog</h3>
+            <p class="rtaxon"><i>Lycaon pictus</i></p>
+            <p>Dissections show how the jaw, facial, and ear muscles of this hypercarnivore reflect its diet and highly social hunting.</p>
+            <p class="rpeople">With Heather Smith</p>
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1002/ar.25547" target="_blank" rel="noopener">Smith et al. 2026, <i>The Anatomical Record</i></a></li><li><a href="https://doi.org/10.1002/ar.25441" target="_blank" rel="noopener">Smith et al. 2024, <i>The Anatomical Record</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Cranial musculature of two mustelids</h3>
+            <p class="rtaxon">Family Mustelidae</p>
+            <p>We compare cranial muscles between two mustelid species to link functional morphology with ecology.</p>
+            <p class="rpeople">Students James Bates, Blake Andrea</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+        </div>
+      </section>
+      <section class="rsys" id="inner-ear">
+        <div class="rsys-side">
+          <figure class="rsys-img"><img src="assets/systems/inner-ear.png" alt="Three views of a bony labyrinth with the semicircular canals highlighted" loading="lazy"><figcaption class="photo-credit">Figure from <a href="https://doi.org/10.1093/biolinnean/blag081" target="_blank" rel="noopener">Jones et al. 2026</a></figcaption></figure>
+          <h2>Inner ear</h2>
+          <p>The bony labyrinth governs balance, spatial orientation, and hearing. We use it to ask how environment and behavior shape a sensory system within a single species.</p>
+        </div>
+        <div class="rsys-list">
+          <article class="rproj">
+            <h3>Environment and the otter labyrinth</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We established the river otter as a model for how environment influences the morphology of the inner ear within a species.</p>
+            <p class="rpeople">With Celeste Delap and Heather Smith; students Hansan Jones, Erika Tanquilut</p>
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1093/biolinnean/blag081" target="_blank" rel="noopener">Jones et al. 2026, <i>Biological Journal of the Linnean Society</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Sex differences in the vestibular system</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We test whether the semicircular canals differ between male and female river otters.</p>
+            <p class="rpeople">Students Erika Tanquilut, Hansan Jones</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+          <article class="rproj">
+            <h3>Orbit-to-canal orientation</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We measure how the orientation of the orbits and semicircular canals varies among individuals.</p>
+            <p class="rpeople">Led by Dominik Valdez, with Christopher Heesy; student Austin Bay</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+          <article class="rproj">
+            <h3>Inner ear variation in American mink</h3>
+            <p class="rtaxon"><i>Neogale vison</i></p>
+            <p>We use 3D landmarks to test whether inner ear shape tracks climate, watersheds, and water conditions across the species' range.</p>
+            
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+        </div>
+      </section>
+      <section class="rsys" id="limb">
+        <div class="rsys-side">
+          <figure class="rsys-img"><img src="assets/systems/limb.png" alt="A carnivoran humerus" loading="lazy"></figure>
+          <h2>Limb</h2>
+          <p>Limbs record how animals move through their habitats. We study limb shape across climates, glacial history, and environmental contamination.</p>
+        </div>
+        <div class="rsys-list">
+          <article class="rproj">
+            <h3>Pine marten limbs, biome, and climate</h3>
+            <p class="rtaxon"><i>Martes americana</i>/<i>M. caurina</i></p>
+            <p>Limb skeletal shape in pine martens correlates with biome and climate.</p>
+            
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1093/biolinnean/bly175" target="_blank" rel="noopener">Lynch 2019, <i>Biological Journal of the Linnean Society</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Glacial cycles and marten divergence</h3>
+            <p class="rtaxon"><i>Martes americana</i>/<i>M. caurina</i></p>
+            <p>Limb shape diverged in a punctuated pattern alongside Pleistocene glacial cycles, and a fossil-calibrated phylogeny dates the split between the two species.</p>
+            <p class="rpeople">With Ryan Felice and Haley O'Brien</p>
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1002/ar.24545" target="_blank" rel="noopener">Lynch et al. 2021, <i>The Anatomical Record</i></a></li><li><a href="https://doi.org/10.1007/s10914-019-09476-7" target="_blank" rel="noopener">Lynch 2020, <i>Journal of Mammalian Evolution</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Limb asymmetry in river otters</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We test for directional asymmetry in otter limb bone shape.</p>
+            <p class="rpeople">Led by Dominik Valdez</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+          <article class="rproj">
+            <h3>Climate and otter forelimbs</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We compare forelimb shape and robusticity between otters from different climates and geographic regions.</p>
+            <p class="rpeople">With Andrew Lee and Brandon Vera Covarrubias</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+          <article class="rproj">
+            <h3>Heavy metals and bone</h3>
+            <p class="rtaxon"><i>Lontra canadensis</i></p>
+            <p>We test how heavy metal exposure affects bone porosity and other bone properties in river otters.</p>
+            <p class="rpeople">Student Jonathan Tuscano</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+        </div>
+      </section>
+      <section class="rsys" id="human">
+        <div class="rsys-side">
+          <h2>Human anatomical variation</h2>
+          <p>With colleagues and osteopathic medical students at Midwestern University, we document anatomical variation in human body donors and its clinical implications.</p>
+        </div>
+        <div class="rsys-list">
+          <article class="rproj">
+            <h3>Coronary arteries and cardiac veins</h3>
+            <p class="rtaxon">Human body donors</p>
+            <p>We investigate dominance in coronary artery branching and patterns of cardiac venous drainage.</p>
+            <p class="rpeople">With Terrence Ritzman, Tim Campbell, and Heather Smith</p>
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1016/j.aanat.2025.152749" target="_blank" rel="noopener">Lane et al. 2025, <i>Annals of Anatomy</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Nerve, tendon, and airway variants</h3>
+            <p class="rtaxon">Human body donors</p>
+            <p>Case studies describe variation in the lateral femoral cutaneous nerve, the distal iliopsoas tendon, and the thyroid region.</p>
+            
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.7759/cureus.89354" target="_blank" rel="noopener">Douglas et al. 2025, <i>Cureus</i></a></li><li><a href="https://doi.org/10.7759/cureus.101395" target="_blank" rel="noopener">Tracey et al. 2026, <i>Cureus</i></a></li><li><a href="https://doi.org/10.1016/j.hmedic.2024.100055" target="_blank" rel="noopener">Olson et al. 2024, <i>Medical Reports</i></a></li></ul></footer>
+          </article>
+        </div>
+      </section>
+      <section class="rsys" id="methods">
+        <div class="rsys-side">
+          <h2>Methods</h2>
+          <p>We develop and test the imaging methods our work depends on, so that CT data from museum specimens stay robust, reproducible, and reusable.</p>
+        </div>
+        <div class="rsys-list">
+          <article class="rproj">
+            <h3>Iodine staining and museum DNA</h3>
+            <p class="rtaxon">Fixed museum specimens</p>
+            <p>Buffered Lugol's iodine, used for contrast-enhanced CT, preserves DNA fragment lengths in fixed specimens.</p>
+            <p class="rpeople">With Paul Gignac</p>
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1093/iob/obae017" target="_blank" rel="noopener">Gignac et al. 2024, <i>Integrative Organismal Biology</i></a></li></ul></footer>
+          </article>
+          <article class="rproj">
+            <h3>Sequential staining in amphibians</h3>
+            <p class="rtaxon"><i>Lithobates heckscheri</i></p>
+            <p>We assess how staining specimens more than once affects the integrity of microCT data.</p>
+            <p class="rpeople">Student Megan Hostetter</p>
+            <footer><span class="status active">Ongoing</span></footer>
+          </article>
+          <article class="rproj">
+            <h3>Automated segmentation</h3>
+            <p class="rtaxon">CT bone segmentation</p>
+            <p>We compared 2D and 3D segmentation quality of BONe, a one-shot deep learning network.</p>
+            
+            <footer><span class="status published">Published</span><ul class="rlinks"><li><a href="https://doi.org/10.1002/ar.25633" target="_blank" rel="noopener">Lee et al. 2025, <i>The Anatomical Record</i></a></li></ul></footer>
+          </article>
+        </div>
+      </section>
       <div class="nocturn">
         <div>
           <p class="label">Network</p>
           <h3>NoCTURN · Non-Clinical Tomography Users Research Network</h3>
-          <p>Dr. Lynch serves in national leadership for NoCTURN, which builds shared standards and open access for CT data across science, engineering, and education.</p>
+          <p>Dr. Lynch chairs NoCTURN's Conference and Digital Coordination Committee. The network builds shared standards and open access for CT data across science, engineering, and education.</p>
         </div>
         <a class="btn" href="https://nocturnetwork.org/" target="_blank" rel="noopener">Visit NoCTURN →</a>
       </div>

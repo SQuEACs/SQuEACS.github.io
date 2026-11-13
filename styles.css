@@ -659,3 +659,7 @@ section > .wrap { padding-block: 4.5rem; }
   .rsys-side { position: static; }
   .rsys-img { height: 12rem; }
 }
+.outreach-noc { margin: 0 0 2rem; }
+.outreach-noc .os-list { margin-top: 0.75rem; }
+.talk { grid-template-columns: 7.5rem minmax(0, 1fr); }
+@media (max-width: 52rem) { .talk { grid-template-columns: minmax(0, 1fr); } }

@@ -9,9 +9,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=9">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
-<script src="otter-game.js" defer></script>
+<script src="assets/vendor/three-r149.min.js?v=1" defer></script>
+<script src="otter-game.js?v=9" defer></script>
 </head>
 <body>
 
@@ -45,29 +46,40 @@
       <div class="section-head">
         <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Otter Evolution</p>
         <h1 class="page-title">Otter Evolution</h1>
-        <p>Guide a population of river otters through eight generations. Play each season as one otter, then watch natural selection, inheritance, mutation, and luck reshape the whole population. Pick snowy, desert, fast, slow, murky, or deep-lake homes, and see how bodies, brains, and inner ears evolve to match.</p>
+        <p>Guide a population of river otters through eight generations. Explore a small 3D world as one otter each season, escape predators, and finish goals. Then watch natural selection, inheritance, mutation, and luck reshape the whole population. Pick snowy, desert, fast, slow, murky, or deep-lake homes, and see how bodies, brains, and inner ears evolve to match.</p>
       </div>
 
       <div class="og">
         <div class="og-stage">
-          <canvas id="og-canvas" tabindex="0" aria-label="Otter Evolution game. Use the arrow keys or the buttons below to move, jump, swim, and dive."></canvas>
+          <canvas id="og-canvas" aria-hidden="true"></canvas>
+          <canvas id="og-3d" tabindex="0" hidden aria-label="Otter Evolution 3D world. Arrow keys or WASD to move, Space to jump or swim up, Shift or E to dive."></canvas>
+          <div class="og-flash" id="og-stage-flash" aria-hidden="true"></div>
           <div class="og-hud" id="og-hud" hidden>
-            <span class="og-pill pink" id="og-gen">GEN 1</span>
-            <span class="og-pill" id="og-hab">Deep Clear Lake</span>
-            <span class="og-timer" aria-hidden="true"><i id="og-time"></i></span>
-            <span class="og-pill teal" id="og-food">Food 0/8</span>
-            <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
+            <div class="og-hud-top">
+              <span class="og-pill pink" id="og-gen">GEN 1</span>
+              <span class="og-pill" id="og-hab">Deep Clear Lake</span>
+              <span class="og-timer" aria-hidden="true"><i id="og-time"></i></span>
+              <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
+            </div>
+            <div class="og-hud-row">
+              <span class="og-hearts" id="og-hearts" aria-label="Hearts"></span>
+              <span class="og-energy" title="Energy"><b>Energy</b><span><i id="og-energy"></i></span></span>
+            </div>
+            <div class="og-tasks" id="og-tasks"></div>
+            <canvas class="og-map" id="og-map" width="120" height="120" aria-hidden="true"></canvas>
           </div>
           <p class="og-toast" id="og-toast" role="status" hidden></p>
           <div class="og-screen" id="og-screen" hidden></div>
         </div>
         <div class="og-pads" aria-label="Touch controls">
-          <button type="button" class="pad" data-key="ArrowLeft" aria-label="Move left">◀</button>
-          <button type="button" class="pad" data-key="ArrowUp" aria-label="Jump or swim up">▲</button>
-          <button type="button" class="pad" data-key="ArrowDown" aria-label="Dive">▼</button>
-          <button type="button" class="pad" data-key="ArrowRight" aria-label="Move right">▶</button>
+          <button type="button" class="pad" data-key="ArrowLeft" aria-label="Turn left">◀</button>
+          <button type="button" class="pad" data-key="ArrowUp" aria-label="Move forward">▲</button>
+          <button type="button" class="pad" data-key="ArrowDown" aria-label="Move back">▼</button>
+          <button type="button" class="pad" data-key="ArrowRight" aria-label="Turn right">▶</button>
+          <button type="button" class="pad pad-wide" data-key=" " aria-label="Jump or swim up">Jump</button>
+          <button type="button" class="pad pad-wide teal" data-key="dive" aria-label="Dive">Dive</button>
         </div>
-        <p class="og-help"><b>Keyboard:</b> ← → move · ↑ or Space jump and surface · ↓ dive. Eat <span class="k-fish">fish</span> and <span class="k-cray">crayfish</span>, dodge eagles and logs, and find 8 food to complete each season's quest.</p>
+        <p class="og-help"><b>Keyboard:</b> arrows or WASD to move · Space to jump and swim up · Shift or E to dive. Each season has three goals, predators to escape, and an energy bar to keep full. Use the minimap to find the yellow landmark.</p>
 
         <div class="og-panels">
           <section class="og-panel og-anat">
@@ -119,6 +131,6 @@
   </div>
 </footer>
 
-<script src="script.js"></script>
+<script src="script.js?v=8"></script>
 </body>
 </html>

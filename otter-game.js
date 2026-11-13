@@ -12,7 +12,7 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- Constants and helpers ---------- */
-  const VIEW_H = 360, GROUND = 262, SEABED = 338, WORLD_W = 2600, SEASON = 45, POP = 12, GENS = 8, QUEST = 8;
+  const VIEW_H = 360, GROUND = 262, SEABED = 338, WORLD_W = 2600, SEASON = 75, POP = 12, GENS = 8, QUEST = 8;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -245,198 +245,541 @@
     return { L, H };
   }
 
-  /* ---------- Season (the playable part) ---------- */
-  let S = null, keys = {}, parts = [], running = false, lastT = 0;
+  /* ---------- 3D season (the playable part) ---------- */
+  const T3 = window.THREE;
+  const glc = $("og-3d");
+  const ARENA = 66;
+  let S = null, keys = {}, running = false, lastT = 0, R3 = null;
+
+  // Water layout per habitat: lakes are ellipses, rivers are sine-wave channels
+  const WATER = {
+    snow:   { shape: "lake",  rx: 26, rz: 18, cx: 10, cz: 6,  color: 0x6fb7d8, op: 0.78, deep: 0x1d3f63, vis: 45, cold: true },
+    desert: { shape: "river", w: 5,  a: 6,  p: 16, color: 0x58c6e0, op: 0.75, deep: 0x1e5566, vis: 40 },
+    fast:   { shape: "river", w: 11, a: 7,  p: 24, color: 0x6fd0e4, op: 0.72, deep: 0x154a64, vis: 40, flow: 4.2 },
+    slow:   { shape: "river", w: 15, a: 13, p: 18, color: 0x6f9f74, op: 0.82, deep: 0x23402f, vis: 28 },
+    murky:  { shape: "lake",  rx: 44, rz: 36, cx: 0,  cz: 0,  color: 0x8a6a3e, op: 0.94, deep: 0x3a2a18, vis: 9, murky: true },
+    lake:   { shape: "lake",  rx: 50, rz: 42, cx: 0,  cz: 0,  color: 0x4fb8dc, op: 0.75, deep: 0x163a7a, vis: 55 },
+  };
+  const LAND = {
+    snow:   { ground: 0xeef1fb, ground2: 0xcfd6ee, sky: 0xbfc8ee, fog: 0xd9def5 },
+    desert: { ground: 0xdca867, ground2: 0xc28a4a, sky: 0xffb58a, fog: 0xf5c9a0 },
+    fast:   { ground: 0x4f8f4f, ground2: 0x6b7f5a, sky: 0x9bd8f0, fog: 0xc8eaf5 },
+    slow:   { ground: 0x5f8f45, ground2: 0x7a8f50, sky: 0xc8e0a8, fog: 0xd8e8c0 },
+    murky:  { ground: 0x6b7a3a, ground2: 0x7a6440, sky: 0xc9b089, fog: 0xc0aa88 },
+    lake:   { ground: 0x4f9f55, ground2: 0x6f8f4a, sky: 0x8fd0f0, fog: 0xc0e4f5 },
+  };
+  const PREDS = {
+    snow: ["eagle", "coyote"], desert: ["eagle", "coyote"], fast: ["eagle", "logs"],
+    slow: ["eagle", "gator"], murky: ["gator"], lake: ["eagle", "coyote"],
+  };
+  const FOODS = {
+    trout:    { name: "trout",    color: 0xff8fb0, size: 1.0, energy: 16, water: true },
+    minnow:   { name: "minnow",   color: 0xc9d6e8, size: 0.6, energy: 9,  water: true },
+    catfish:  { name: "catfish",  color: 0x4a3a2a, size: 1.2, energy: 22, water: true, bottom: true },
+    crayfish: { name: "crayfish", color: 0xff5a3a, size: 0.8, energy: 12, crawl: true },
+    golden:   { name: "golden fish", color: 0xffd23f, size: 1.0, energy: 40, water: true, rare: true },
+  };
+  const MENU = {
+    snow:   { trout: 10, minnow: 8 },
+    desert: { crayfish: 12, minnow: 8 },
+    fast:   { trout: 14, minnow: 8 },
+    slow:   { catfish: 7, minnow: 10, crayfish: 6 },
+    murky:  { catfish: 10, crayfish: 8, minnow: 6 },
+    lake:   { trout: 14, minnow: 10, crayfish: 4 },
+  };
+  const PLACE = {
+    snow: "ice cave", desert: "old cottonwood", fast: "waterfall rock",
+    slow: "beaver lodge", murky: "sunken boat", lake: "otter slide",
+  };
+  function makeTasks(hab) {
+    const L = PLACE[hab];
+    const t = {
+      snow:   [["eat", "trout", 4], ["dodge", "eagle", 2], ["visit", L, 1]],
+      desert: [["eat", "crayfish", 5], ["escape", "coyote", 1], ["visit", L, 1]],
+      fast:   [["eat", "trout", 4], ["under", "logs", 3], ["visit", L, 1]],
+      slow:   [["eat", "catfish", 2], ["escape", "alligator", 1], ["visit", L, 1]],
+      murky:  [["eat", "catfish", 3], ["escape", "alligator", 1], ["visit", L, 1]],
+      lake:   [["eat", "trout", 4], ["friends", "otter friends", 2], ["dodge", "eagle", 2]],
+    }[hab];
+    const label = ([k, what, n]) => k === "eat" ? `Eat ${n} ${what}` : k === "dodge" ? `Dodge ${n} ${what} attacks` : k === "escape" ? `Escape the ${what}` :
+      k === "under" ? `Dive under ${n} logs` : k === "friends" ? `Play with ${n} otter friends` : `Find the ${what}`;
+    return t.map(x => ({ kind: x[0], what: x[1], need: x[2], have: 0, label: label(x) }));
+  }
+
+  // Signed distance to the shore: negative in water
+  function sdf(x, z) {
+    const w = WATER[G.hab];
+    if (w.shape === "lake") { const dx = (x - w.cx) / w.rx, dz = (z - w.cz) / w.rz; return (Math.sqrt(dx * dx + dz * dz) - 1) * Math.min(w.rx, w.rz); }
+    return Math.abs(z - w.a * Math.sin(x / w.p)) - w.w;
+  }
+  const isWater = (x, z) => sdf(x, z) < 0;
+  function groundY(x, z) {
+    const d = sdf(x, z), r = Math.max(Math.abs(x), Math.abs(z));
+    if (d < 0) return -Math.min(4.2, 0.3 - d * 0.55);
+    return 0.35 + Math.min(d, 3) * 0.05 + Math.max(0, r - 56) * 0.35 + Math.sin(x * 0.21) * Math.cos(z * 0.17) * 0.25;
+  }
+  function randLand(minD = 4) { for (let i = 0; i < 200; i++) { const x = rand(-60, 60), z = rand(-60, 60); if (sdf(x, z) > minD) return [x, z]; } return [50, 50]; }
+  function randWater(minD = 1.5) { for (let i = 0; i < 300; i++) { const x = rand(-60, 60), z = rand(-60, 60); if (sdf(x, z) < -minD) return [x, z]; } return [0, 0]; }
+  function shorePoint() { for (let i = 0; i < 400; i++) { const x = rand(-58, 58), z = rand(-58, 58), d = sdf(x, z); if (d > 1.5 && d < 4 && Math.hypot(x, z) > 25) return [x, z]; } return randLand(); }
+
+  /* ----- Mesh builders ----- */
+  const M = (c, o = {}) => new T3.MeshLambertMaterial({ color: c, ...o });
+  const ball = (r, c, sx = 1, sy = 1, sz = 1) => { const m = new T3.Mesh(new T3.SphereGeometry(r, 16, 12), M(c)); m.scale.set(sx, sy, sz); return m; };
+  function buildOtter(t, worn = {}, plastic = 0) {
+    const g = new T3.Group(), body = new T3.Group(); g.add(body);
+    const fur = clamp(t.fur + plastic, 0, 100), s = 0.75 + t.size / 100 * 0.6, puff = 1 + fur / 100 * 0.28;
+    const furC = 0x7a4a2c, belly = 0xc99a6b, dark = 0x4e2e1a;
+    body.add(ball(0.5, furC, 0.95 * puff, 0.82 * puff, 2.1));
+    const bel = ball(0.42, belly, 0.8, 0.6, 1.6); bel.position.set(0, -0.12, 0.15); body.add(bel);
+    const head = new T3.Group(); head.position.set(0, 0.32, 1.12); body.add(head);
+    const hr = 0.36 + t.brain / 100 * 0.12;
+    head.add(ball(hr, furC, 1, 0.92, 1.05));
+    const muz = ball(hr * 0.55, belly, 1, 0.75, 0.9); muz.position.set(0, -hr * 0.3, hr * 0.7); head.add(muz);
+    const nose = ball(0.07, 0x0b0a10); nose.position.set(0, -hr * 0.15, hr * 1.18); head.add(nose);
+    [-1, 1].forEach(sd => {
+      const eye = ball(0.055, 0x0b0a10); eye.position.set(sd * hr * 0.45, hr * 0.2, hr * 0.82); head.add(eye);
+      const ear = ball(0.08 + t.ext / 100 * 0.09, dark); ear.position.set(sd * hr * 0.72, hr * 0.68, -hr * 0.1); head.add(ear);
+    });
+    const tl = 0.9 + t.ext / 100 * 0.9;
+    const tail = new T3.Mesh(new T3.ConeGeometry(0.22, tl, 10), M(dark)); tail.rotation.x = -Math.PI / 2; tail.position.set(0, -0.05, -1.0 - tl / 2); body.add(tail); g.userData.tail = tail;
+    const legs = [];
+    [[-0.32, 0.6], [0.32, 0.6], [-0.32, -0.6], [0.32, -0.6]].forEach(([x, z]) => { const l = new T3.Mesh(new T3.CylinderGeometry(0.1, 0.11, 0.42, 8), M(dark)); l.position.set(x, -0.42, z); body.add(l); legs.push(l); });
+    g.userData.legs = legs;
+    // Outfits
+    if (worn.beanie) { const b = new T3.Mesh(new T3.SphereGeometry(hr * 1.02, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0xff5fa2)); b.position.y = hr * 0.25; head.add(b); const pom = ball(0.09, 0xefeaf6); pom.position.y = hr * 1.3; head.add(pom); }
+    else if (worn.chef) { const c = new T3.Mesh(new T3.CylinderGeometry(hr * 0.6, hr * 0.55, hr * 0.8, 14), M(0xffffff)); c.position.y = hr * 1.1; head.add(c); const p = ball(hr * 0.65, 0xffffff, 1, 0.6, 1); p.position.y = hr * 1.55; head.add(p); }
+    else if (worn.gradcap) { const c = new T3.Mesh(new T3.BoxGeometry(hr * 1.9, 0.06, hr * 1.9), M(0x15121e)); c.position.y = hr * 1.05; c.rotation.y = Math.PI / 4; head.add(c); const k = new T3.Mesh(new T3.CylinderGeometry(hr * 0.55, hr * 0.6, hr * 0.4, 12), M(0x15121e)); k.position.y = hr * 0.85; head.add(k); }
+    else if (worn.crown) { const c = new T3.Mesh(new T3.CylinderGeometry(hr * 0.55, hr * 0.5, hr * 0.45, 8, 1, true), M(0xffb347, { side: T3.DoubleSide })); c.position.y = hr * 1.05; head.add(c); }
+    if (worn.goggles) { [-1, 1].forEach(sd => { const r = new T3.Mesh(new T3.TorusGeometry(0.1, 0.03, 8, 16), M(0x2ed3c6)); r.position.set(sd * hr * 0.45, hr * 0.2, hr * 0.9); head.add(r); }); }
+    else if (worn.sunglasses) { const sg = new T3.Mesh(new T3.BoxGeometry(hr * 1.4, 0.12, 0.05), M(0x0b0a10)); sg.position.set(0, hr * 0.2, hr * 0.92); head.add(sg); }
+    if (worn.scarf) { const sc = new T3.Mesh(new T3.TorusGeometry(hr * 0.8, 0.09, 8, 20), M(0x2ed3c6)); sc.position.set(0, 0.15, 0.85); sc.rotation.x = Math.PI / 2.3; body.add(sc); }
+    if (worn.labcoat) { const lc = new T3.Mesh(new T3.CylinderGeometry(0.52 * puff, 0.55 * puff, 1.1, 14, 1, true), M(0xf4f2fa, { side: T3.DoubleSide })); lc.rotation.x = Math.PI / 2; lc.position.z = 0.25; lc.scale.set(1, 1, 0.92); body.add(lc); }
+    g.scale.setScalar(s); g.userData.scale = s;
+    return g;
+  }
+  function buildFish(f) {
+    const g = new T3.Group();
+    if (f.crawl) {
+      g.add(ball(0.25, f.color, 1, 0.55, 1.6));
+      [-1, 1].forEach(sd => { const cl = ball(0.14, f.color, 1, 0.6, 1.3); cl.position.set(sd * 0.25, 0, 0.38); g.add(cl); });
+    } else {
+      const b = ball(0.3, f.color, 0.6, 0.8, 1.5); g.add(b);
+      const tail = new T3.Mesh(new T3.ConeGeometry(0.22, 0.4, 4), M(f.color)); tail.rotation.x = Math.PI / 2; tail.position.z = -0.6; g.add(tail);
+      if (f.rare) { const glow = new T3.Mesh(new T3.SphereGeometry(0.75, 12, 10), new T3.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.25 })); g.add(glow); }
+    }
+    g.scale.setScalar(f.size * 1.2);
+    return g;
+  }
+  function tree(x, z, snowy, h = rand(4, 7)) {
+    const g = new T3.Group(), y = groundY(x, z);
+    const tr = new T3.Mesh(new T3.CylinderGeometry(0.25, 0.35, 1.4, 6), M(0x5a3d2b)); tr.position.y = 0.7; g.add(tr);
+    for (let i = 0; i < 3; i++) { const c = new T3.Mesh(new T3.ConeGeometry(1.8 - i * 0.45, h * 0.45, 7), M(snowy ? 0x3f6a5a : 0x2f6b3f)); c.position.y = 1.4 + i * h * 0.22 + h * 0.2; g.add(c); }
+    if (snowy) { const cap = new T3.Mesh(new T3.ConeGeometry(0.7, 1.1, 7), M(0xffffff)); cap.position.y = 1.4 + h * 0.85; g.add(cap); }
+    g.position.set(x, y, z); return g;
+  }
+  function cactus(x, z) {
+    const g = new T3.Group(), mat = M(0x3f8f5a);
+    const m = new T3.Mesh(new T3.CylinderGeometry(0.35, 0.4, 3.2, 8), mat); m.position.y = 1.6; g.add(m);
+    [-1, 1].forEach(sd => { const a = new T3.Mesh(new T3.CylinderGeometry(0.22, 0.22, 1.2, 8), mat); a.position.set(sd * 0.7, 1.9 + sd * 0.3, 0); g.add(a); const j = new T3.Mesh(new T3.CylinderGeometry(0.2, 0.2, 0.7, 8), mat); j.rotation.z = Math.PI / 2; j.position.set(sd * 0.4, 1.4 + sd * 0.3, 0); g.add(j); });
+    g.position.set(x, groundY(x, z), z); return g;
+  }
+  function rock(x, z, s = rand(0.6, 1.6)) { const r = new T3.Mesh(new T3.DodecahedronGeometry(s, 0), M(0x8a8494)); r.position.set(x, groundY(x, z) + s * 0.3, z); r.rotation.set(rand(0, 3), rand(0, 3), 0); return r; }
+  function landmark(hab, x, z) {
+    const g = new T3.Group(), y = groundY(x, z);
+    if (hab === "snow") { const c = new T3.Mesh(new T3.SphereGeometry(3.2, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0xdff3ff)); g.add(c); const d = new T3.Mesh(new T3.CircleGeometry(1.3, 16), M(0x2a3a5a)); d.position.set(0, 1.1, 3.1); g.add(d); }
+    else if (hab === "desert") { g.add(new T3.Mesh(new T3.CylinderGeometry(0.6, 0.9, 5, 8), M(0x6b4a2b))); for (let i = 0; i < 5; i++) { const l = ball(rand(1.6, 2.4), 0x6f9f3a); l.position.set(rand(-1.5, 1.5), 5 + rand(-0.5, 1), rand(-1.5, 1.5)); g.add(l); } g.children[0].position.y = 2.5; }
+    else if (hab === "fast") { const r = new T3.Mesh(new T3.DodecahedronGeometry(3, 0), M(0x7a7486)); r.position.y = 2; g.add(r); const fall = new T3.Mesh(new T3.PlaneGeometry(2.4, 4), new T3.MeshBasicMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.8, side: T3.DoubleSide })); fall.position.set(0, 2, 2.6); g.add(fall); }
+    else if (hab === "slow") { for (let i = 0; i < 26; i++) { const st = new T3.Mesh(new T3.CylinderGeometry(0.12, 0.12, rand(3, 4.5), 5), M(0x7a5232)); const a = i / 26 * Math.PI * 2; st.position.set(Math.cos(a) * 1.4, 1.4, Math.sin(a) * 1.4); st.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5); g.add(st); } }
+    else if (hab === "murky") { const hull = new T3.Mesh(new T3.BoxGeometry(2.4, 1, 5), M(0x6b4a2b)); hull.rotation.set(0.25, 0.4, 0.2); g.add(hull); }
+    else { const sl = new T3.Mesh(new T3.BoxGeometry(2.2, 0.3, 8), M(0x8a6440)); sl.rotation.x = 0.35; sl.position.y = 1.4; g.add(sl); }
+    g.position.set(x, y, z); return g;
+  }
+  function eagleMesh() {
+    const g = new T3.Group(), br = M(0x3b2a1e);
+    g.add(ball(0.5, 0x3b2a1e, 1, 0.8, 2));
+    const head = ball(0.35, 0xffffff); head.position.set(0, 0.2, 0.95); g.add(head);
+    const beak = new T3.Mesh(new T3.ConeGeometry(0.12, 0.35, 6), M(0xffb347)); beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.15, 1.35); g.add(beak);
+    const wings = [-1, 1].map(sd => { const w = new T3.Mesh(new T3.BoxGeometry(3, 0.08, 1.1), br); w.position.x = sd * 1.6; const p = new T3.Group(); p.add(w); g.add(p); return p; });
+    g.userData.wings = wings; g.scale.setScalar(1.3); return g;
+  }
+  function coyoteMesh() {
+    const g = new T3.Group(), c = 0xb08a5a;
+    g.add(ball(0.5, c, 1, 0.9, 2.1));
+    const head = ball(0.4, c, 0.9, 0.9, 1.2); head.position.set(0, 0.45, 1.2); g.add(head);
+    const snout = new T3.Mesh(new T3.ConeGeometry(0.22, 0.6, 8), M(c)); snout.rotation.x = Math.PI / 2; snout.position.set(0, 0.38, 1.7); g.add(snout);
+    [-1, 1].forEach(sd => { const e = new T3.Mesh(new T3.ConeGeometry(0.13, 0.35, 6), M(0x8a6a40)); e.position.set(sd * 0.22, 0.85, 1.05); g.add(e); });
+    const legs = [[-0.3, 0.7], [0.3, 0.7], [-0.3, -0.7], [0.3, -0.7]].map(([x, z]) => { const l = new T3.Mesh(new T3.CylinderGeometry(0.1, 0.1, 0.9, 6), M(0x8a6a40)); l.position.set(x, -0.6, z); g.add(l); return l; });
+    const tail = new T3.Mesh(new T3.ConeGeometry(0.2, 1, 8), M(0x8a6a40)); tail.rotation.x = -Math.PI / 1.6; tail.position.set(0, 0.1, -1.4); g.add(tail);
+    g.userData.legs = legs; g.scale.setScalar(1.25); return g;
+  }
+  function gatorMesh() {
+    const g = new T3.Group(), c = 0x3f5a2f;
+    g.add(ball(0.5, c, 1.1, 0.5, 3.2));
+    const jaw = new T3.Mesh(new T3.BoxGeometry(0.7, 0.25, 1.4), M(c)); jaw.position.set(0, 0, 2.1); g.add(jaw);
+    [-1, 1].forEach(sd => { const e = ball(0.13, 0xd8e04a); e.position.set(sd * 0.25, 0.28, 1.4); g.add(e); });
+    const tail = new T3.Mesh(new T3.ConeGeometry(0.4, 2.6, 6), M(c)); tail.rotation.x = -Math.PI / 2; tail.position.z = -2.6; g.add(tail);
+    g.scale.setScalar(1.3); return g;
+  }
+  function logMesh() { const l = new T3.Mesh(new T3.CylinderGeometry(0.45, 0.45, 5, 10), M(0x6b4a2b)); l.rotation.z = Math.PI / 2; const g = new T3.Group(); g.add(l); return g; }
+
+  function init3D() {
+    if (R3) return R3;
+    if (!T3) return null;
+    try {
+      const renderer = new T3.WebGLRenderer({ canvas: glc, antialias: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+      R3 = { renderer, cam: new T3.PerspectiveCamera(62, 1, 0.1, 300) };
+    } catch (e) { R3 = null; }
+    return R3;
+  }
+  function size3D() {
+    if (!R3) return;
+    const r = glc.getBoundingClientRect();
+    R3.renderer.setSize(r.width, r.height, false);
+    R3.cam.aspect = r.width / Math.max(1, r.height); R3.cam.updateProjectionMatrix();
+  }
+
+  /* ----- Building one season's world ----- */
+  function buildWorld() {
+    const hab = G.hab, W = WATER[hab], Lc = LAND[hab];
+    const scene = new T3.Scene();
+    scene.background = new T3.Color(Lc.sky);
+    scene.fog = new T3.Fog(Lc.fog, 40, 130);
+    scene.add(new T3.HemisphereLight(0xffffff, 0x445566, 0.85));
+    const sun = new T3.DirectionalLight(0xffffff, 0.75); sun.position.set(30, 60, 20); scene.add(sun);
+    // Terrain
+    const geo = new T3.PlaneGeometry(150, 150, 110, 110); geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position, cols = [], cA = new T3.Color(Lc.ground), cB = new T3.Color(Lc.ground2), sand = new T3.Color(hab === "snow" ? 0xdfe6f5 : 0xd9c08a), bed = new T3.Color(W.deep).lerp(new T3.Color(0x6b5a40), 0.35), tmp = new T3.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i), d = sdf(x, z);
+      pos.setY(i, groundY(x, z));
+      if (d < 0) tmp.copy(bed); else if (d < 2.5) tmp.copy(sand); else tmp.copy(cA).lerp(cB, 0.5 + 0.5 * Math.sin(x * 0.13 + z * 0.09));
+      cols.push(tmp.r, tmp.g, tmp.b);
+    }
+    geo.setAttribute("color", new T3.Float32BufferAttribute(cols, 3)); geo.computeVertexNormals();
+    scene.add(new T3.Mesh(geo, new T3.MeshLambertMaterial({ vertexColors: true })));
+    // Water surface
+    const water = new T3.Mesh(new T3.PlaneGeometry(150, 150, 1, 1), new T3.MeshPhongMaterial({ color: W.color, transparent: true, opacity: W.op, shininess: 80, side: T3.DoubleSide }));
+    water.rotation.x = -Math.PI / 2; water.position.y = -0.05; scene.add(water);
+    // Props
+    const props = new T3.Group(); scene.add(props);
+    const cover = [];
+    for (let i = 0; i < (hab === "desert" ? 18 : 34); i++) { const [x, z] = randLand(5); if (hab === "desert") props.add(cactus(x, z)); else { props.add(tree(x, z, hab === "snow")); cover.push([x, z]); } }
+    for (let i = 0; i < 16; i++) { const [x, z] = randLand(2); props.add(rock(x, z)); }
+    if (hab === "slow" || hab === "murky") for (let i = 0; i < 70; i++) { const x = rand(-60, 60), z = rand(-60, 60), d = sdf(x, z); if (d > -2.5 && d < 1.5) { const r = new T3.Mesh(new T3.CylinderGeometry(0.05, 0.05, rand(1.5, 2.6), 4), M(0x5f8a3a)); r.position.set(x, groundY(x, z) + 1, z); props.add(r); } }
+    if (hab === "murky") for (let i = 0; i < 20; i++) { const [x, z] = randWater(2); const p = new T3.Mesh(new T3.CircleGeometry(rand(0.6, 1.1), 10), M(0x4f7a3a)); p.rotation.x = -Math.PI / 2; p.position.set(x, 0.02, z); props.add(p); }
+    if (hab === "snow") for (let i = 0; i < 14; i++) { const [x, z] = randWater(3); const ice = new T3.Mesh(new T3.CircleGeometry(rand(2, 4), 7), M(0xf2f8ff)); ice.rotation.x = -Math.PI / 2; ice.position.set(x, 0.03, z); props.add(ice); }
+    return { scene, water, cover };
+  }
+
   function startSeason() {
-    const h = HAB[G.hab];
+    if (!init3D()) { toast("Your browser can't show the 3D world, so this season was skipped."); S = { food: 0, hits: 0, dead: false, tasks: [], counts: {}, quick: true }; endSeason(); return; }
+    const h = HAB[G.hab], W = WATER[G.hab], me = lead();
     G.habSeasons[G.hab] = (G.habSeasons[G.hab] || 0) + 1;
-    const items = [];
-    if (h.land) {
-      if (G.hab === "snow") for (let i = 0; i < 14; i++) items.push({ type: "fish", x: rand(250, 2450), y: GROUND - 8, hole: true, ph: rand(0, 6) });
-      else { for (let i = 0; i < 7; i++) items.push({ type: "crayfish", x: rand(250, 2450), y: GROUND - 6 }); for (let i = 0; i < 4; i++) items.push({ type: "fish", x: rand(300, 2400), y: GROUND - 8, hole: true, ph: rand(0, 6) }); }
-    } else {
-      const nf = G.hab === "lake" ? 18 : G.hab === "fast" ? 12 : 11;
-      for (let i = 0; i < nf; i++) items.push({ type: "fish", x: rand(260, 2340), y: rand(GROUND + 14, SEABED - 10), swim: true, ph: rand(0, 6) });
-      if (G.hab === "slow" || G.hab === "murky") for (let i = 0; i < 6; i++) items.push({ type: "crayfish", x: rand(260, 2340), y: SEABED - 4 });
-    }
-    items.forEach(it => { it.alive = true; it.x0 = it.x; it.respawn = 0; });
-    const logs = h.hazard === "logs" ? Array.from({ length: G.hab === "fast" ? 6 : 3 }, (_, i) => ({ x: 300 + i * 380, w: rand(50, 80) })) : [];
-    const friends = G.hab === "lake" ? [{ x: 900, ph: 0, c: "#a47bff" }, { x: 1700, ph: 2, c: "#ff5fa2" }] : [];
-    S = { x: 120, y: GROUND, vx: 0, vy: 0, face: 1, ground: true, swim: false, dive: false, t: 0, food: 0, crayfish: 0, hits: 0, inv: 0,
-          plastic: 0, items, logs, friends, eagle: { on: false, x: 0, y: 0, cd: rand(5, 9) }, flakes: Array.from({ length: 60 }, () => ({ x: rand(0, WORLD_W), y: rand(0, VIEW_H), s: rand(1, 3) })) };
-    parts = []; keys = {};
-    G.screen = "season"; screen("");
-    $("og-hud").hidden = false; $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
-    const f = h.facts[(G.habSeasons[G.hab] - 1) % 2]; setTimeout(() => showFact(f), 1200);
-    running = true; lastT = performance.now(); canvas.focus({ preventScroll: true }); requestAnimationFrame(loop);
-  }
-  const waterHab = () => HAB[G.hab].water;
-  const inWater = x => !!waterHab() && x > 200 && x < WORLD_W - 200;
-
-  function update(dt) {
-    const h = HAB[G.hab], W = waterHab(), me = lead();
-    S.t += dt;
-    const L = keys.ArrowLeft || keys.a || keys.A, Rt = keys.ArrowRight || keys.d || keys.D;
-    const U = keys.ArrowUp || keys.w || keys.W || keys[" "], D = keys.ArrowDown || keys.s || keys.S;
-    const tgt = (Rt ? 1 : 0) - (L ? 1 : 0), spd = 3.6 - me.t.size * 0.01;
-    S.vx = lerp(S.vx, tgt * spd * 60, 0.18); if (tgt) S.face = tgt;
-    const wet = inWater(S.x);
-    if (wet && S.y >= GROUND - 2) {
-      S.swim = true; S.ground = false; S.vy *= 0.88;
-      if (D) S.vy += 0.6; else if (U && S.y <= GROUND + 6) S.vy = -6.5; else S.vy -= 0.28;
-      if (!D && S.y > GROUND && S.vy > 0) S.vy *= 0.6;
-      S.dive = S.y > GROUND + 14;
-      S.x += W.flow * dt;
-    } else { S.swim = false; S.dive = false; S.vy += 0.55; if (U && S.ground) { S.vy = -9.2; S.ground = false; beep(330, 0.06, "triangle", 0.03); } }
-    S.x = clamp(S.x + S.vx * dt, 40, WORLD_W - 40); S.y += S.vy;
-    if (wet) { S.y = clamp(S.y, GROUND - 120, SEABED - 6); if (S.y < GROUND - 2) S.swim = false; }
-    else if (S.y >= GROUND) { S.y = GROUND; S.vy = 0; S.ground = true; }
-    // Plasticity: fur responds to this season's climate, but isn't inherited
-    const pTarget = G.hab === "snow" ? 18 : G.hab === "desert" ? -18 : 0;
-    S.plastic = lerp(S.plastic, pTarget, 0.25 * dt);
-    if (Math.abs(S.plastic) > 8) showFact("plasticity");
+    const world = buildWorld(), scene = world.scene;
+    const [sx, sz] = (() => { for (let i = 0; i < 300; i++) { const x = rand(-40, 40), z = rand(-40, 40), d = sdf(x, z); if (d > 1 && d < 6) return [x, z]; } return randLand(); })();
+    const otter = buildOtter(me.t, G.worn); scene.add(otter);
+    S = { scene, world, otter, t: 0, x: sx, z: sz, y: groundY(sx, sz) + 0.5, vy: 0, heading: Math.atan2(-sx, -sz), speed: 0,
+          inWater: false, depth: 0, hearts: 3, energy: 100, inv: 0, food: 0, counts: {}, hits: 0, dead: false, cause: "", plastic: 0, plasticRebuilt: 0, starve: 0,
+          tasks: makeTasks(G.hab), items: [], preds: [], logs: [], friends: [], ending: 0, golden: false, camPos: new T3.Vector3(), tipT: 0 };
     // Food
-    const dims = { L: 54 + (20 + me.t.size * 0.8) * 0.42 };
-    const hx = S.x + S.face * dims.L * 0.55, hy = S.y - 16;
-    for (const it of S.items) {
-      if (!it.alive) { if (S.t > it.respawn) it.alive = true; continue; }
-      if (it.swim) it.x = it.x0 + Math.sin(S.t * 0.8 + it.ph) * 40;
-      const iy = it.hole ? it.y - Math.max(0, Math.sin(S.t * 2 + it.ph)) * 18 : it.y;
-      if (Math.hypot(hx - it.x, hy - iy) < 26) {
-        it.alive = false; it.respawn = S.t + 14; S.food++; if (it.type === "crayfish") S.crayfish++;
-        burst(it.x, iy, it.type === "fish" ? "#2ed3c6" : "#ff8a5c", 12); beep(880 + S.food * 30, 0.08, "square", 0.04);
-        if (S.food === QUEST) { toast("Quest complete! Your otter will raise extra pups."); jingle(); }
-      }
-    }
-    // Hazards
-    S.inv = Math.max(0, S.inv - dt);
-    const hit = () => { if (S.inv > 0) return; S.inv = 1.5; S.hits++; S.food = Math.max(0, S.food - 1); burst(S.x, S.y - 20, "#ffffff", 14); beep(140, 0.2, "sawtooth", 0.05); toast("Ouch! You dropped a fish."); };
-    S.logs.forEach(lg => {
-      lg.x += (W ? W.flow + 30 : 0) * dt; if (lg.x > WORLD_W - 200) lg.x = 220;
-      if (S.swim && !S.dive && Math.abs(lg.x - S.x) < lg.w / 2 + 12) hit();
-    });
-    const e = S.eagle;
-    if (h.hazard === "eagle") {
-      if (!e.on) { e.cd -= dt; if (e.cd <= 0) { e.on = true; e.dir = Math.random() < 0.5 ? 1 : -1; e.x = S.x - e.dir * 420; e.y = 60; } }
-      else {
-        e.x += e.dir * 210 * dt; e.y = lerp(e.y, Math.abs(e.x - S.x) < 140 ? S.y - 30 : 70, 0.05);
-        if (Math.hypot(e.x - S.x, e.y - (S.y - 22)) < 30 && !S.dive) hit();
-        if (Math.abs(e.x - S.x) > 520) { e.on = false; e.cd = rand(6, 10); }
-      }
-    }
-    S.friends.forEach(f => { f.cx = f.x + Math.sin(S.t * 0.6 + f.ph) * 70; if (Math.abs(f.cx - S.x) < 80 && !reduce && Math.random() < 0.1) parts.push({ x: (f.cx + S.x) / 2, y: GROUND - 40, vx: rand(-0.5, 0.5), vy: -1, life: 0.9, c: "#ff5fa2", heart: true }); });
-    parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += p.heart ? 0 : 0.08; p.life -= dt; }); parts = parts.filter(p => p.life > 0);
-    if (!reduce) S.flakes.forEach(f => { f.y += f.s * 0.6; if (f.y > VIEW_H) f.y = -5; });
-    // HUD
-    $("og-food").textContent = `Food ${S.food}/${QUEST}`;
-    $("og-time").style.width = clamp(100 - S.t / SEASON * 100, 0, 100) + "%";
-    if (S.t >= SEASON) endSeason();
-  }
-  function burst(x, y, c, n) { for (let i = 0; i < n; i++) parts.push({ x, y, vx: rand(-1.5, 1.5) * 2, vy: -rand(0, 3), life: 0.6, c }); }
-
-  /* ---------- World drawing ---------- */
-  function draw() {
-    const h = HAB[G.hab], W = waterHab(), me = lead();
-    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
-    const camX = clamp(S.x - viewW * 0.4, 0, WORLD_W - viewW);
-    const g = ctx.createLinearGradient(0, 0, 0, GROUND);
-    g.addColorStop(0, h.sky[2]); g.addColorStop(0.55, h.sky[1]); g.addColorStop(1, h.sky[0]);
-    ctx.fillStyle = g; ctx.fillRect(0, 0, viewW, VIEW_H);
-    ctx.fillStyle = G.hab === "desert" ? "rgba(255,230,170,0.95)" : "rgba(255,255,255,0.75)";
-    ctx.beginPath(); ctx.arc(viewW - 80, 62, G.hab === "desert" ? 30 : 18, 0, 7); ctx.fill();
-    ctx.save(); ctx.translate(-camX * 0.3, 0); ctx.fillStyle = "rgba(20,14,40,0.32)"; ctx.beginPath(); ctx.moveTo(0, GROUND);
-    for (let x = 0; x <= WORLD_W; x += 80) ctx.lineTo(x, GROUND - 60 - Math.sin(x * 0.011) * 30 - Math.sin(x * 0.027) * 18);
-    ctx.lineTo(WORLD_W, GROUND); ctx.fill(); ctx.restore();
-    ctx.save(); ctx.translate(-camX, 0);
-    if (h.land) {
-      ctx.fillStyle = h.ground; ctx.fillRect(0, GROUND, WORLD_W, VIEW_H); ctx.fillStyle = h.ground2; ctx.fillRect(0, GROUND + 14, WORLD_W, VIEW_H);
-      for (let x = 160; x < WORLD_W; x += G.hab === "snow" ? 170 : 240) G.hab === "snow" ? pine(x, GROUND, 50 + (x % 4) * 10, true) : cactus(x, GROUND);
-      if (G.hab === "desert") { ctx.fillStyle = "rgba(88,198,224,0.6)"; for (let x = 400; x < WORLD_W; x += 520) { ctx.beginPath(); ctx.ellipse(x, GROUND + 6, 70, 5, 0, 0, 7); ctx.fill(); } }
+    Object.entries(MENU[G.hab]).forEach(([k, n]) => { for (let i = 0; i < n; i++) spawnFood(k); });
+    spawnFood("golden");
+    // Landmark or friends
+    if (G.hab === "lake") {
+      for (let i = 0; i < 3; i++) { const [x, z] = randWater(4); const f = buildOtter({ size: 55, fur: 55, ext: 45, brain: 60, cochlea: 50, canal: 50 }); scene.add(f); S.friends.push({ m: f, x, z, hx: x, hz: z, a: rand(0, 6), met: false }); }
     } else {
-      ctx.fillStyle = "#2f6b4a"; ctx.fillRect(0, GROUND, 200, VIEW_H); ctx.fillRect(WORLD_W - 200, GROUND, 200, VIEW_H);
-      pine(90, GROUND, 60, false); pine(WORLD_W - 90, GROUND, 60, false);
-      const wg = ctx.createLinearGradient(0, GROUND, 0, VIEW_H); wg.addColorStop(0, W.top); wg.addColorStop(1, W.deep);
-      ctx.fillStyle = wg; ctx.fillRect(200, GROUND - 2, WORLD_W - 400, VIEW_H);
-      ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.5; ctx.beginPath();
-      for (let x = 200; x < WORLD_W - 200; x += 6) ctx.lineTo(x, GROUND - 2 + Math.sin(x * 0.05 + S.t * (2 + W.flow * 0.03)) * (1.5 + W.flow * 0.02));
-      ctx.stroke();
-      if (W.flow > 50) { ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; for (let i = 0; i < 40; i++) { const fx = 200 + ((i * 97 + S.t * W.flow * 1.6) % (WORLD_W - 400)), fy = GROUND + 8 + (i * 37) % 70; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + 18, fy); ctx.stroke(); } }
-      if (G.hab === "slow") { ctx.strokeStyle = "#3f7f4a"; ctx.lineWidth = 2; for (let x = 230; x < WORLD_W - 220; x += 46) { ctx.beginPath(); ctx.moveTo(x, SEABED + 2); ctx.quadraticCurveTo(x + Math.sin(S.t + x) * 6, GROUND + 30, x + 3, GROUND - 14); ctx.stroke(); } }
-      if (G.hab === "murky") { ctx.fillStyle = "#4f7a3a"; for (let x = 260; x < WORLD_W - 220; x += 150) { ctx.beginPath(); ctx.ellipse(x, GROUND - 2, 16, 4, 0, 0, 7); ctx.fill(); } }
-      ctx.fillStyle = "rgba(10,10,20,0.4)"; ctx.fillRect(200, SEABED + 4, WORLD_W - 400, VIEW_H);
+      const [lx, lz] = shorePoint(); scene.add(landmark(G.hab, lx, lz));
+      const beacon = new T3.Mesh(new T3.CylinderGeometry(0.4, 0.4, 30, 8, 1, true), new T3.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.35, side: T3.DoubleSide, depthWrite: false }));
+      beacon.position.set(lx, 15, lz); scene.add(beacon);
+      S.place = { x: lx, z: lz, beacon, found: false };
     }
-    sign(260, h.name);
-    S.items.forEach(it => {
-      if (!it.alive || it.x < camX - 40 || it.x > camX + viewW + 40) return;
-      if (it.type === "fish") {
-        if (it.hole) { ctx.fillStyle = "#1c2b4d"; ctx.beginPath(); ctx.ellipse(it.x0, GROUND + 3, 18, 5, 0, 0, 7); ctx.fill(); fish(it.x, it.y - Math.max(0, Math.sin(S.t * 2 + it.ph)) * 18, 1); }
-        else fish(it.x, it.y, Math.cos(S.t * 0.8 + it.ph) > 0 ? 1 : -1);
-      } else cray(it.x, it.y);
+    // Predators
+    PREDS[G.hab].forEach(p => {
+      if (p === "eagle") { const m = eagleMesh(); scene.add(m); const sh = new T3.Mesh(new T3.CircleGeometry(1.6, 16), new T3.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.0, depthWrite: false })); sh.rotation.x = -Math.PI / 2; scene.add(sh); S.preds.push({ kind: "eagle", m, sh, state: "circle", cd: rand(7, 11), a: 0, x: 0, y: 28, z: 0 }); }
+      if (p === "coyote") { const [x, z] = randLand(10); const m = coyoteMesh(); scene.add(m); S.preds.push({ kind: "coyote", m, state: "patrol", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, chasing: false }); }
+      if (p === "gator") { const [x, z] = randWater(5); const m = gatorMesh(); scene.add(m); S.preds.push({ kind: "gator", m, state: "lurk", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, t: 0 }); }
+      if (p === "logs") { for (let i = 0; i < 7; i++) { const m = logMesh(); scene.add(m); const x = rand(-60, 60); S.logs.push({ m, x, z: W.a * Math.sin(x / W.p) + rand(-W.w + 2, W.w - 2), passed: 0 }); } }
     });
-    S.logs.forEach(lg => { ctx.fillStyle = "#6b4a2b"; ctx.fillRect(lg.x - lg.w / 2, GROUND - 7, lg.w, 12); ctx.fillStyle = "#8a6440"; ctx.beginPath(); ctx.ellipse(lg.x + lg.w / 2, GROUND - 1, 4, 6, 0, 0, 7); ctx.fill(); });
-    S.friends.forEach(f => drawOtter(ctx, f.cx, GROUND + 18, { size: 55, fur: 55, ext: 45, brain: 60 }, { swim: true, face: Math.cos(S.t * 0.6 + f.ph) > 0 ? 1 : -1, time: S.t, k: 0.85 }));
-    if (G.hab === "snow") { ctx.fillStyle = "rgba(255,255,255,0.85)"; S.flakes.forEach(f => { ctx.beginPath(); ctx.arc(f.x, f.y, f.s, 0, 7); ctx.fill(); }); }
-    const blink = S.inv > 0 && Math.floor(S.t * 10) % 2;
-    if (!blink) drawOtter(ctx, S.x, S.swim ? S.y + (S.dive ? 0 : 6) : S.y, me.t, { swim: S.swim, face: S.face, time: S.t, moving: Math.abs(S.vx) > 20, plastic: S.plastic, worn: G.worn, tilt: S.swim ? clamp(S.vy * 0.05, -0.35, 0.35) : 0 });
-    if (S.dive && !reduce && Math.random() < 0.15) parts.push({ x: S.x + S.face * 30, y: S.y - 20, vx: 0, vy: -1.2, life: 0.6, c: "rgba(255,255,255,0.8)" });
-    const e = S.eagle; if (e.on) eagle(e.x, e.y, e.dir);
-    parts.forEach(p => { ctx.globalAlpha = clamp(p.life / 0.6, 0, 1); ctx.fillStyle = p.c; if (p.heart) heart(p.x, p.y, 5); else ctx.fillRect(p.x, p.y, 3, 3); }); ctx.globalAlpha = 1;
-    // Murky water hides everything beyond a short range
-    if (W && W.murk > 0.2) {
-      ctx.save(); ctx.beginPath(); ctx.rect(200, GROUND, WORLD_W - 400, VIEW_H); ctx.clip();
-      const rg = ctx.createRadialGradient(S.x, S.y - 18, 30, S.x, S.y - 18, 120);
-      rg.addColorStop(0, "rgba(55,40,25,0)"); rg.addColorStop(1, `rgba(55,40,25,${W.murk})`);
-      ctx.fillStyle = rg; ctx.fillRect(camX, GROUND, viewW, VIEW_H); ctx.restore();
-    }
-    ctx.restore();
+    G.screen = "season"; screen("");
+    canvas.hidden = true; glc.hidden = false; size3D();
+    $("og-hud").hidden = false; $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
+    renderTasks(); renderHearts(); paintMapBase();
+    const f = h.facts[(G.habSeasons[G.hab] - 1) % 2]; setTimeout(() => showFact(f), 1500);
+    keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
   }
-  function sign(x, text) {
-    ctx.fillStyle = "#5a3d2b"; ctx.fillRect(x - 2, GROUND - 46, 4, 46);
-    ctx.font = "700 12px Fredoka, 'IBM Plex Sans', Arial, sans-serif"; const w = ctx.measureText(text).width + 16;
-    ctx.fillStyle = "#15121e"; ctx.fillRect(x - w / 2, GROUND - 68, w, 24); ctx.strokeStyle = "#ff5fa2"; ctx.lineWidth = 2; ctx.strokeRect(x - w / 2, GROUND - 68, w, 24);
-    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(text, x, GROUND - 51); ctx.textAlign = "left";
+  function spawnFood(kind) {
+    const f = FOODS[kind]; let x, z, y;
+    if (f.crawl) { for (let i = 0; i < 200; i++) { x = rand(-60, 60); z = rand(-60, 60); const d = sdf(x, z); if (d > -3 && d < 2.5) break; } y = groundY(x, z) + 0.15; }
+    else { [x, z] = randWater(f.rare ? 3 : 1.5); const bot = groundY(x, z); y = f.bottom ? bot + 0.5 : rand(Math.max(bot + 0.6, -2.5), -0.4); }
+    const m = buildFish(f); S.scene.add(m);
+    S.items.push({ kind, f, m, x, z, y, hx: x, hz: z, a: rand(0, 6), r: rand(1.5, 4), sp: rand(0.4, 0.9) * (f.rare ? 2 : 1), alive: true, respawn: 0 });
   }
-  function cactus(x, y) { ctx.fillStyle = "#3f8f5a"; ctx.fillRect(x - 6, y - 56, 12, 56); ctx.fillRect(x - 20, y - 36, 8, 16); ctx.fillRect(x - 20, y - 26, 16, 6); ctx.fillRect(x + 12, y - 44, 8, 18); ctx.fillRect(x + 4, y - 32, 16, 6); }
-  function pine(x, y, h, snowy) { ctx.fillStyle = "#5a3d2b"; ctx.fillRect(x - 3, y - 12, 6, 12); ctx.fillStyle = snowy ? "#2f5a4a" : "#1f4d35"; for (let i = 0; i < 3; i++) { const w = 26 - i * 6, ty = y - 12 - i * h * 0.28; ctx.beginPath(); ctx.moveTo(x - w, ty); ctx.lineTo(x + w, ty); ctx.lineTo(x, ty - h * 0.42); ctx.fill(); } if (snowy) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(x - 8, y - 12 - h * 0.62); ctx.lineTo(x + 8, y - 12 - h * 0.62); ctx.lineTo(x, y - 12 - h * 0.98); ctx.fill(); } }
-  function fish(x, y, d) { ctx.save(); ctx.translate(x, y); ctx.scale(d, 1); ctx.fillStyle = "#2ed3c6"; ctx.beginPath(); ctx.ellipse(0, 0, 11, 5, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-17, -6); ctx.lineTo(-17, 6); ctx.fill(); ctx.fillStyle = "#0b0a10"; ctx.beginPath(); ctx.arc(6, -1, 1.4, 0, 7); ctx.fill(); ctx.restore(); }
-  function cray(x, y) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = "#ff6b4a"; ctx.beginPath(); ctx.ellipse(0, 0, 9, 4, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(-11, -2, 4, 3, 0.4, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(11, -3, 5, 3, -0.4, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(14, 1, 4, 2.5, 0.3, 0, 7); ctx.fill(); ctx.restore(); }
-  function heart(x, y, r) { ctx.beginPath(); ctx.moveTo(x, y + r * 0.9); ctx.bezierCurveTo(x - r * 1.6, y - r * 0.2, x - r * 0.6, y - r * 1.4, x, y - r * 0.4); ctx.bezierCurveTo(x + r * 0.6, y - r * 1.4, x + r * 1.6, y - r * 0.2, x, y + r * 0.9); ctx.fill(); }
-  function eagle(x, y, d) { ctx.save(); ctx.translate(x, y); ctx.scale(d, 1); const f = Math.sin(performance.now() / 90) * 8; ctx.fillStyle = "#3b2a1e"; ctx.beginPath(); ctx.moveTo(-30, -f); ctx.quadraticCurveTo(0, 6, 30, -f); ctx.quadraticCurveTo(0, 14, -30, -f); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, 6, 14, 6, 0, 0, 7); ctx.fill(); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(14, 3, 5, 0, 7); ctx.fill(); ctx.fillStyle = "#ffb347"; ctx.beginPath(); ctx.moveTo(18, 3); ctx.lineTo(24, 5); ctx.lineTo(18, 7); ctx.fill(); ctx.restore(); }
 
-  function loop(t) {
+  /* ----- HUD helpers ----- */
+  function renderTasks() {
+    $("og-tasks").innerHTML = `<b>Goals</b>` + S.tasks.map(t => `<span class="${t.have >= t.need ? "done" : ""}">${t.have >= t.need ? "✔" : "○"} ${t.label}${t.need > 1 ? ` <em>${Math.min(t.have, t.need)}/${t.need}</em>` : ""}</span>`).join("");
+  }
+  function renderHearts() { $("og-hearts").innerHTML = [0, 1, 2].map(i => `<i class="${i < S.hearts ? "" : "lost"}">♥</i>`).join(""); }
+  function bump(kind, what) {
+    let changed = false;
+    S.tasks.forEach(t => { if (t.kind === kind && (!what || t.what === what) && t.have < t.need) { t.have++; changed = true; if (t.have === t.need) { jingle(); toast("Goal complete: " + t.label + "!"); } } });
+    if (changed) { renderTasks(); if (S.tasks.every(t => t.have >= t.need) && !S.allDone) { S.allDone = true; setTimeout(() => toast("All goals done! Your otter will survive and raise extra pups."), 1600); } }
+  }
+  const tasksDone = () => S.tasks.filter(t => t.have >= t.need).length;
+  let mapBase = null;
+  function paintMapBase() {
+    const cv = $("og-map"), c = cv.getContext("2d"), n = cv.width;
+    mapBase = c.createImageData(n, n); const Lc = LAND[G.hab], W = WATER[G.hab];
+    const land = new T3.Color(Lc.ground), wat = new T3.Color(W.color);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const x = (i / n - 0.5) * 2 * ARENA, z = (j / n - 0.5) * 2 * ARENA, col = isWater(x, z) ? wat : land, k = (j * n + i) * 4;
+      mapBase.data[k] = col.r * 255; mapBase.data[k + 1] = col.g * 255; mapBase.data[k + 2] = col.b * 255; mapBase.data[k + 3] = 255;
+    }
+  }
+  function drawMap() {
+    const cv = $("og-map"), c = cv.getContext("2d"), n = cv.width, P = (x, z) => [(x / ARENA / 2 + 0.5) * n, (z / ARENA / 2 + 0.5) * n];
+    c.putImageData(mapBase, 0, 0);
+    const radar = 10 + lead().t.brain * 0.3;
+    S.items.forEach(it => { if (!it.alive || Math.hypot(it.x - S.x, it.z - S.z) > radar) return; const [x, y] = P(it.x, it.z); c.fillStyle = it.f.rare ? "#ffd23f" : "#ffffff"; c.fillRect(x - 1.5, y - 1.5, 3, 3); });
+    if (S.place && !S.place.found) { const [x, y] = P(S.place.x, S.place.z); c.fillStyle = "#ffe066"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill(); c.stroke(); }
+    S.friends.forEach(f => { if (f.met) return; const [x, y] = P(f.x, f.z); c.fillStyle = "#a47bff"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
+    S.preds.forEach(p => { if (p.kind === "eagle" && p.state === "circle") return; const [x, y] = P(p.x, p.z); c.fillStyle = "#ff3b5c"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
+    const [px, py] = P(S.x, S.z); c.save(); c.translate(px, py); c.rotate(-S.heading + Math.PI); c.fillStyle = "#ff5fa2"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(0, -7); c.lineTo(5, 5); c.lineTo(-5, 5); c.closePath(); c.fill(); c.stroke(); c.restore();
+  }
+
+  /* ----- Damage, death, and dodges ----- */
+  function hurt(cause) {
+    if (S.inv > 0 || S.dead) return false;
+    S.hearts--; S.hits++; S.inv = 1.8; renderHearts(); beep(140, 0.25, "sawtooth", 0.06);
+    $("og-stage-flash").classList.remove("on"); void $("og-stage-flash").offsetWidth; $("og-stage-flash").classList.add("on");
+    if (S.hearts <= 0) { S.dead = true; S.cause = cause; S.ending = 2.2; toast(cause + " Your otter didn't survive this season."); }
+    else toast(cause + " " + S.hearts + (S.hearts === 1 ? " heart left!" : " hearts left."));
+    return true;
+  }
+
+  /* ----- Main update ----- */
+  function update(dt) {
+    const W = WATER[G.hab], me = lead(), t = me.t;
+    S.t += dt;
+    if (S.ending > 0) { S.ending -= dt; if (S.ending <= 0) { endSeason(); return; } }
+    const k = keys, alive = !S.dead;
+    const L = alive && (k.ArrowLeft || k.a || k.A), Rr = alive && (k.ArrowRight || k.d || k.D), U = alive && (k.ArrowUp || k.w || k.W), D = alive && (k.ArrowDown || k.s || k.S);
+    const J = alive && k[" "], DV = alive && (k.Shift || k.e || k.E || k.q || k.Q || k.c || k.C || k.dive);
+    S.inWater = isWater(S.x, S.z) && S.y < 0.6;
+    // Steering: in fast water, canals near right angles turn more sharply
+    let turn = 2.6;
+    if (W.flow && S.inWater) turn *= 0.55 + 0.45 * clamp(1 - Math.abs(degOf(t.canal) - 93) / 22, 0, 1);
+    if (L) S.heading += turn * dt; if (Rr) S.heading -= turn * dt;
+    const top = S.inWater ? 9 : 6.2 - (t.size - 50) * 0.02;
+    const target = U ? top : D ? -top * 0.45 : 0;
+    S.speed = lerp(S.speed, target, 0.12);
+    let nx = S.x + Math.sin(S.heading) * S.speed * dt, nz = S.z + Math.cos(S.heading) * S.speed * dt;
+    if (W.flow && S.inWater) nx += W.flow * dt;
+    S.x = clamp(nx, -ARENA + 2, ARENA - 2); S.z = clamp(nz, -ARENA + 2, ARENA - 2);
+    const gy = groundY(S.x, S.z);
+    if (isWater(S.x, S.z)) {
+      const floor = gy + 0.45;
+      if (DV) S.y = Math.max(floor, S.y - 4.2 * dt);
+      else if (J && S.y > -0.4) { S.y = Math.min(0.9, S.y + 7 * dt); }
+      else S.y = Math.min(0, S.y + 2.6 * dt);
+      S.y = Math.max(S.y, floor); S.vy = 0;
+    } else {
+      S.vy -= 22 * dt; S.y += S.vy * dt;
+      if (S.y <= gy + 0.5) { S.y = gy + 0.5; S.vy = J ? 8 : 0; if (J) beep(330, 0.05, "triangle", 0.03); }
+    }
+    S.depth = Math.min(0, S.y);
+    const diving = S.y < -0.9, exposed = !diving && !(S.world.cover.some(([x, z]) => Math.hypot(x - S.x, z - S.z) < 2.2));
+    // Energy: climate and traits set the cost of staying warm or cool
+    const furE = t.fur + S.plastic;
+    let drain = 1.5;
+    if (G.hab === "snow") drain += Math.max(0, 70 - furE) * 0.05 + (S.inWater ? Math.max(0, 80 - furE) * 0.05 : 0) - (t.size - 50) * 0.015;
+    else if (G.hab === "desert") drain += (!S.inWater ? Math.max(0, furE - 35) * 0.06 : 0) + (t.size - 50) * 0.015;
+    else drain += 0.3;
+    if (alive) S.energy = clamp(S.energy - Math.max(0.6, drain) * dt, 0, 100);
+    if (S.energy <= 0 && alive) { S.starve += dt; if (S.starve > 3.5) { S.starve = 0; S.inv = 0; hurt(G.hab === "snow" ? "Too cold and hungry!" : G.hab === "desert" ? "Too hot and hungry!" : "Starving!"); } }
+    // Plasticity: fur responds to this season's climate within the otter's life
+    const pT = G.hab === "snow" ? 18 : G.hab === "desert" ? -18 : 0;
+    S.plastic = lerp(S.plastic, pT, 0.12 * dt);
+    if (Math.abs(S.plastic) > 8) showFact("plasticity");
+    if (Math.abs(S.plastic - S.plasticRebuilt) > 5) { S.plasticRebuilt = S.plastic; const o = buildOtter(t, G.worn, S.plastic); S.scene.remove(S.otter); S.otter = o; S.scene.add(o); }
+    // Food
+    const hx = S.x + Math.sin(S.heading) * 1.4 * S.otter.userData.scale, hz = S.z + Math.cos(S.heading) * 1.4 * S.otter.userData.scale;
+    S.items.forEach(it => {
+      if (!it.alive) { if (S.t > it.respawn && !it.f.rare) { it.alive = true; it.m.visible = true; } return; }
+      if (!it.f.crawl) {
+        it.a += it.sp * dt; const nx2 = it.hx + Math.cos(it.a) * it.r, nz2 = it.hz + Math.sin(it.a) * it.r;
+        if (isWater(nx2, nz2)) { it.x = nx2; it.z = nz2; }
+        it.m.rotation.y = Math.atan2(-Math.sin(it.a), Math.cos(it.a)) + Math.PI;
+        if (W.murky) it.m.visible = Math.hypot(it.x - S.x, it.z - S.z) < 6 + t.cochlea * 0.12 || !isWater(S.x, S.z);
+      } else { it.m.rotation.y += dt * 0.5; }
+      it.m.position.set(it.x, it.y + (it.f.crawl ? 0 : Math.sin(S.t * 3 + it.a) * 0.08), it.z);
+      if (alive && Math.hypot(hx - it.x, hz - it.z) < 1.5 && Math.abs(S.y - it.y) < 1.4) {
+        it.alive = false; it.m.visible = false; it.respawn = S.t + 18;
+        S.food++; S.counts[it.kind] = (S.counts[it.kind] || 0) + 1; S.energy = clamp(S.energy + it.f.energy, 0, 100);
+        beep(880 + S.food * 25, 0.08, "square", 0.04);
+        bump("eat", it.f.name);
+        if (it.f.rare) { S.golden = true; jingle(); toast("You caught the golden fish! Bonus pup!"); }
+      }
+    });
+    // Landmark and friends
+    if (S.place && !S.place.found && Math.hypot(S.place.x - S.x, S.place.z - S.z) < 4.5) { S.place.found = true; S.place.beacon.visible = false; bump("visit"); }
+    if (S.place) S.place.beacon.material.opacity = 0.25 + Math.sin(S.t * 3) * 0.1;
+    S.friends.forEach(f => {
+      f.a += dt * 0.5; const nx2 = f.hx + Math.cos(f.a) * 5, nz2 = f.hz + Math.sin(f.a) * 5; if (isWater(nx2, nz2)) { f.x = nx2; f.z = nz2; }
+      f.m.position.set(f.x, -0.1 + Math.sin(S.t * 2 + f.a) * 0.1, f.z); f.m.rotation.y = f.a + Math.PI;
+      if (!f.met && alive && Math.hypot(f.x - S.x, f.z - S.z) < 2.5) { f.met = true; bump("friends"); toast("New otter friend!"); showFact("social"); }
+    });
+    // Predators
+    S.inv = Math.max(0, S.inv - dt);
+    S.preds.forEach(p => {
+      if (p.kind === "eagle") {
+        if (p.state === "circle") {
+          p.a += dt * 0.4; p.x = S.x + Math.cos(p.a) * 30; p.z = S.z + Math.sin(p.a) * 30; p.y = 28; p.cd -= dt;
+          if (p.cd <= 0 && alive) { p.state = "warn"; p.timer = 1.8; p.tx = S.x; p.tz = S.z; toast("Eagle! Dive underwater or hide under a tree!"); beep(1200, 0.15, "square", 0.05); }
+        } else if (p.state === "warn") {
+          p.timer -= dt; p.tx = lerp(p.tx, S.x, 0.06); p.tz = lerp(p.tz, S.z, 0.06);
+          p.x = lerp(p.x, p.tx, 0.03); p.z = lerp(p.z, p.tz, 0.03);
+          p.sh.position.set(p.tx, groundY(p.tx, p.tz) + 0.08 + (isWater(p.tx, p.tz) ? -groundY(p.tx, p.tz) : 0), p.tz); p.sh.material.opacity = 0.45 * (1 - p.timer / 1.8) + 0.1;
+          if (p.timer <= 0) { p.state = "swoop"; p.timer = 0.7; }
+        } else if (p.state === "swoop") {
+          p.timer -= dt; p.x = lerp(p.x, p.tx, 0.2); p.z = lerp(p.z, p.tz, 0.2); p.y = lerp(p.y, 1.5, 0.18);
+          if (p.timer <= 0) {
+            const close = Math.hypot(S.x - p.tx, S.z - p.tz) < 3;
+            if (close && exposed && alive) hurt("Grabbed by the eagle!"); else if (alive) { bump("dodge", "eagle"); toast("Dodged the eagle!"); beep(990, 0.1, "triangle", 0.05); }
+            p.state = "leave"; p.timer = 2; p.sh.material.opacity = 0;
+          }
+        } else if (p.state === "leave") { p.timer -= dt; p.y = lerp(p.y, 30, 0.05); if (p.timer <= 0) { p.state = "circle"; p.cd = rand(9, 14); } }
+        p.m.position.set(p.x, p.y, p.z); p.m.rotation.y = Math.atan2(S.x - p.x, S.z - p.z);
+        const flap = Math.sin(S.t * (p.state === "swoop" ? 4 : 9)) * 0.5; p.m.userData.wings[0].rotation.z = flap; p.m.userData.wings[1].rotation.z = -flap;
+      }
+      if (p.kind === "coyote") {
+        const d = Math.hypot(S.x - p.x, S.z - p.z), onLand = !isWater(S.x, S.z);
+        p.cd = Math.max(0, p.cd - dt);
+        if (p.cd <= 0 && onLand && d < 16 && alive) { if (!p.chasing) { p.chasing = true; toast("A coyote is chasing you! Get into the water!"); beep(600, 0.15, "sawtooth", 0.04); } }
+        let sp = 2, tx = p.hx + Math.cos(p.a) * 8, tz = p.hz + Math.sin(p.a) * 8;
+        if (p.chasing) { sp = 7.4; tx = S.x; tz = S.z; if (!onLand) { p.chasing = false; p.cd = 4; bump("escape", "coyote"); toast("You escaped the coyote!"); } else if (d > 26) p.chasing = false; }
+        else p.a += dt * 0.3;
+        const ang = Math.atan2(tx - p.x, tz - p.z), nx2 = p.x + Math.sin(ang) * sp * dt, nz2 = p.z + Math.cos(ang) * sp * dt;
+        if (sdf(nx2, nz2) > 0.5) { p.x = nx2; p.z = nz2; }
+        p.m.position.set(p.x, groundY(p.x, p.z) + 1.3, p.z); p.m.rotation.y = ang;
+        p.m.userData.legs.forEach((l, i) => l.rotation.x = Math.sin(S.t * (p.chasing ? 16 : 6) + i * Math.PI) * 0.5);
+        if (p.chasing && d < 1.8) { if (hurt("Caught by the coyote!")) { p.chasing = false; p.cd = 4; } }
+      }
+      if (p.kind === "gator") {
+        const d = Math.hypot(S.x - p.x, S.z - p.z), wet = isWater(S.x, S.z);
+        p.cd = Math.max(0, p.cd - dt);
+        let sp = 1.2, tx = p.hx + Math.cos(p.a) * 6, tz = p.hz + Math.sin(p.a) * 6;
+        if (p.state === "lurk") { p.a += dt * 0.25; if (wet && d < 10 && p.cd <= 0 && alive) { p.state = "lunge"; p.t = 2.4; toast("Alligator! Swim for shore!"); beep(220, 0.2, "sawtooth", 0.05); } }
+        else { p.t -= dt; sp = 8.2; tx = S.x; tz = S.z; if (!wet || d > 15) { p.state = "lurk"; p.cd = 4; bump("escape", "alligator"); toast("You escaped the alligator!"); } else if (p.t <= 0) { p.state = "lurk"; p.cd = 3; } }
+        const ang = Math.atan2(tx - p.x, tz - p.z), nx2 = p.x + Math.sin(ang) * sp * dt, nz2 = p.z + Math.cos(ang) * sp * dt;
+        if (sdf(nx2, nz2) < -0.8) { p.x = nx2; p.z = nz2; }
+        p.m.position.set(p.x, -0.25, p.z); p.m.rotation.y = ang;
+        if (p.state === "lunge" && d < 2.2) { if (hurt("Snapped by the alligator!")) { p.state = "lurk"; p.cd = 4; } }
+      }
+    });
+    S.logs.forEach(lg => {
+      lg.x += (W.flow + 1.5) * dt; if (lg.x > ARENA) { lg.x = -ARENA; lg.z = W.a * Math.sin(lg.x / W.p) + rand(-W.w + 2, W.w - 2); }
+      lg.m.position.set(lg.x, 0.05, lg.z);
+      lg.passed = Math.max(0, lg.passed - dt);
+      const near = Math.abs(lg.x - S.x) < 2.8 && Math.abs(lg.z - S.z) < 1.1;
+      if (near && alive) { if (S.y > -0.6) hurt("Bonked by a log!"); else if (!lg.passed) { lg.passed = 3; bump("under", "logs"); toast("Dove under a log!"); } }
+    });
+    // Season clock
+    if (!S.dead && S.t >= SEASON) { S.dead = false; S.ending = 0.01; }
+    // HUD
+    $("og-time").style.width = clamp(100 - S.t / SEASON * 100, 0, 100) + "%";
+    $("og-energy").style.width = S.energy + "%";
+    $("og-energy").parentElement.classList.toggle("low", S.energy < 25);
+    S.tipT -= dt;
+  }
+
+  function draw3D() {
+    const W = WATER[G.hab], Lc = LAND[G.hab], o = S.otter, t = S.t;
+    o.position.set(S.x, S.y, S.z); o.rotation.y = S.heading;
+    o.rotation.x = S.inWater ? clamp(-S.speed * 0.01, -0.2, 0.2) : 0;
+    const moving = Math.abs(S.speed) > 0.5;
+    o.userData.legs.forEach((l, i) => l.rotation.x = moving && !S.inWater ? Math.sin(t * 14 + (i % 2) * Math.PI) * 0.6 : 0);
+    o.userData.tail.rotation.y = Math.sin(t * (S.inWater ? 8 : 4)) * 0.3;
+    o.visible = !(S.inv > 0 && Math.floor(t * 12) % 2) || S.dead;
+    if (S.dead) o.rotation.z = Math.min(Math.PI / 2, o.rotation.z + 0.08);
+    // Camera follows behind the otter
+    const cam = R3.cam, back = 8.5, up = 4.2;
+    const want = new T3.Vector3(S.x - Math.sin(S.heading) * back, Math.max(S.y + up, groundY(S.x - Math.sin(S.heading) * back, S.z - Math.cos(S.heading) * back) + 1.5), S.z - Math.cos(S.heading) * back);
+    if (!S.camInit) { cam.position.copy(want); S.camInit = true; } else cam.position.lerp(want, 0.08);
+    cam.lookAt(S.x + Math.sin(S.heading) * 3, S.y + 1, S.z + Math.cos(S.heading) * 3);
+    // Underwater look
+    const under = cam.position.y < 0 || (S.y < -0.9);
+    const vis = W.murky ? 4 + lead().t.cochlea * 0.12 : W.vis;
+    if (under) { S.scene.fog.color.setHex(W.deep); S.scene.background.setHex(W.deep); S.scene.fog.near = 1; S.scene.fog.far = vis; }
+    else { S.scene.fog.color.setHex(Lc.fog); S.scene.background.setHex(Lc.sky); S.scene.fog.near = 40; S.scene.fog.far = 130; }
+    S.world.water.material.opacity = under ? 0.35 : W.op;
+    R3.renderer.render(S.scene, cam);
+    drawMap();
+  }
+
+  function loop(now) {
     if (!running) return;
-    const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
-    update(dt); if (running) draw();
+    const dt = Math.min(0.1, (now - lastT) / 1000 || 0.016); lastT = now;
+    update(dt); if (running) draw3D();
     if (toastT > 0) { toastT -= dt; if (toastT <= 0) $("og-toast").hidden = true; }
     requestAnimationFrame(loop);
   }
 
+  /* ----- Briefing before each season ----- */
+  function traitTips() {
+    const t = lead().t, tips = [];
+    if (G.hab === "snow") { tips.push(t.fur >= 65 ? "Thick fur keeps you warm here." : "Thin fur: you'll get cold fast. Eat often and keep icy swims short."); tips.push(t.size >= 60 ? "A big body holds heat." : "A small body loses heat quickly."); }
+    if (G.hab === "desert") tips.push(t.fur <= 40 ? "Thin fur keeps you cool." : "Thick fur: you'll overheat on land. Cool off in the river.");
+    if (G.hab === "fast") tips.push(degOf(t.canal) >= 89 ? "Your canals sense quick turns, so you steer sharply in the rapids." : "Your canals sense turns slowly, so steering in the rapids feels sluggish.");
+    if (G.hab === "murky") tips.push(t.cochlea >= 65 ? "Sharp hearing lets you sense fish farther away in the mud." : "Hearing is so-so, so you only sense fish up close.");
+    if (G.hab === "slow") tips.push("Calm water: balance matters less here.");
+    tips.push(t.brain >= 60 ? "A big brain shows food farther away on your map." : "Your map shows only food close by.");
+    return tips;
+  }
+  function screenBriefing() {
+    G.screen = "brief";
+    const tasks = makeTasks(G.hab), preds = PREDS[G.hab].map(p => ({ eagle: "eagles", coyote: "coyotes", gator: "alligators", logs: "floating logs" })[p]);
+    screen(`<div class="og-card og-wide">
+      <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
+      <h2 class="og-h">Season goals</h2>
+      <ul class="og-goals">${tasks.map(t => `<li>${t.label}</li>`).join("")}</ul>
+      <p class="og-sub">Watch out for <b>${preds.join(" and ")}</b>. You have 3 hearts, and your energy drains as you play, so keep eating. Finish all three goals and your otter survives for sure and raises extra pups.</p>
+      <div class="og-tips"><b>Your otter's traits here</b>${traitTips().map(x => `<span>${x}</span>`).join("")}</div>
+      <p class="og-keys"><b>Move:</b> arrows or WASD · <b>Jump / swim up:</b> Space · <b>Dive:</b> Shift or E</p>
+      <button type="button" class="og-btn" id="og-go">Start season</button></div>`);
+    $("og-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); startSeason(); });
+  }
+
   /* ---------- Between seasons: selection, inheritance, mutation ---------- */
   function endSeason() {
-    running = false; keys = {}; $("og-hud").hidden = true;
+    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false;
     showFact("fitness");
     if (S.food >= 12) unlock("chef");
-    if (S.hits === 0) unlock("crown");
+    if (S.hits === 0 && !S.quick) unlock("crown");
     if (G.hab === "snow") unlock("scarf");
+    const done = S.tasks.length ? tasksDone() : 0, all = S.tasks.length > 0 && done === S.tasks.length;
     // Selection
     const f = G.pop.map(o => fitness(o.t, G.hab));
     const ranked = f.map((v, i) => i).sort((a, b) => f[b] - f[a]);
     G.pop.forEach((o, i) => {
-      if (o.lead && S.food >= QUEST) { o.alive = true; return; }
+      if (o.lead && S.dead) { o.alive = false; return; }
+      if (o.lead && done >= 2) { o.alive = true; return; }
       o.alive = Math.random() < 0.15 + 0.8 * f[i];
     });
     let alive = G.pop.filter(o => o.alive);
-    while (alive.length < 3) { const i = ranked.find(j => !G.pop[j].alive); G.pop[i].alive = true; alive = G.pop.filter(o => o.alive); }
-    const drift = ranked.slice(0, 3).some(i => !G.pop[i].alive);
-    G.lastFood = S.food; G.drift = drift;
-    screenSurvival(f);
+    while (alive.length < 3) { const i = ranked.find(j => !G.pop[j].alive && !(G.pop[j].lead && S.dead)); if (i === undefined) break; G.pop[i].alive = true; alive = G.pop.filter(o => o.alive); }
+    const drift = ranked.slice(0, 3).some(i => !G.pop[i].alive && !G.pop[i].lead);
+    Object.assign(G, { lastFood: S.food, lastDone: done, lastAll: all, lastDead: S.dead, lastCause: S.cause, lastGolden: S.golden, drift });
+    screenSurvival(f); idleLoop();
   }
   function breed() {
     const surv = G.pop.filter(o => o.alive);
     const fw = surv.map(o => 0.2 + fitness(o.t, G.hab));
     const pick = () => { let r = Math.random() * fw.reduce((a, b) => a + b, 0); for (let i = 0; i < surv.length; i++) { r -= fw[i]; if (r <= 0) return surv[i]; } return surv[surv.length - 1]; };
     const leadParent = surv.find(o => o.lead);
-    const extra = leadParent ? (G.lastFood >= QUEST ? 3 : 1) : 0;
+    const extra = leadParent ? G.lastDone + (G.lastGolden ? 1 : 0) : 0;
     const pups = []; let mutated = false;
     for (let i = 0; i < POP; i++) {
       const a = i < extra ? leadParent : pick(); let b = pick(); if (b === a && surv.length > 1) b = surv.find(o => o !== a);
@@ -486,7 +829,7 @@
     document.querySelectorAll(".og-hab").forEach(b => b.addEventListener("click", () => {
       G.hab = b.dataset.h; beep(520, 0.08, "triangle");
       if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; }
-      updatePanels(); startSeason();
+      updatePanels(); screenBriefing();
     }));
   }
   function screenSurvival(f) {
@@ -495,7 +838,7 @@
     screen(`<div class="og-card og-wide">
       <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
       <h2 class="og-h">Season over! Who survived?</h2>
-      <p class="og-sub">Your otter found <b>${G.lastFood}</b> food${G.lastFood >= QUEST ? " and completed the quest, so it survives and raises extra pups." : "."} Otters whose traits suit this habitat had better odds.</p>
+      <p class="og-sub">${G.lastDead ? `Your otter was lost. ${G.lastCause} You'll play next season as a pup from another family.` : `Your otter ate <b>${G.lastFood}</b> food and finished <b>${G.lastDone} of 3</b> goals${G.lastDone >= 2 ? ", so it survives and raises extra pups" : ""}.`} Across the population, otters whose traits suit this habitat had better odds.</p>
       <div class="og-grid" id="og-grid">${G.pop.map((o, i) => portrait(o, i)).join("")}</div>
       <p class="og-result" id="og-result" aria-live="polite"></p>
       <button type="button" class="og-btn" id="og-next" disabled>See the pups →</button></div>`);
@@ -532,7 +875,7 @@
     paintPortraits(G.pop, $("og-grid"));
     showFact("inherit"); if (G.mutated) setTimeout(() => showFact("mutation"), 600);
     G.gen++; updatePanels(); checkTraitUnlocks();
-    $("og-next").addEventListener("click", () => { beep(660, 0.08, "triangle"); G.gen > GENS ? screenSummary() : startSeason(); });
+    $("og-next").addEventListener("click", () => { beep(660, 0.08, "triangle"); G.gen > GENS ? screenSummary() : screenBriefing(); });
     const mv = $("og-move"); if (mv) mv.addEventListener("click", () => screenHabitat(false));
   }
   function screenSummary() {
@@ -639,17 +982,17 @@
   function idleLoop() { if (!running && G.screen !== "season") { drawIdle(); if (!reduce) requestAnimationFrame(idleLoop); } }
 
   /* ---------- Input ---------- */
-  const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S"];
-  canvas.addEventListener("keydown", e => { if (GAME_KEYS.includes(e.key)) { keys[e.key] = true; e.preventDefault(); } });
-  canvas.addEventListener("keyup", e => { keys[e.key] = false; });
-  canvas.addEventListener("blur", () => { keys = {}; });
+  const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S", "Shift", "e", "E", "q", "Q", "c", "C"];
+  window.addEventListener("keydown", e => { if (G.screen === "season" && GAME_KEYS.includes(e.key)) { keys[e.key] = true; e.preventDefault(); } });
+  window.addEventListener("keyup", e => { keys[e.key] = false; });
+  window.addEventListener("blur", () => { keys = {}; });
   document.querySelectorAll("[data-key]").forEach(b => {
     const k = b.dataset.key, on = e => { e.preventDefault(); keys[k] = true; }, off = () => { keys[k] = false; };
     b.addEventListener("pointerdown", on); b.addEventListener("pointerup", off); b.addEventListener("pointerleave", off); b.addEventListener("pointercancel", off);
   });
-  canvas.addEventListener("pointerdown", () => canvas.focus({ preventScroll: true }));
-  $("og-mute").addEventListener("click", e => { muted = !muted; e.currentTarget.setAttribute("aria-pressed", String(muted)); e.currentTarget.textContent = muted ? "Sound off" : "Sound on"; canvas.focus({ preventScroll: true }); });
-  window.addEventListener("resize", () => { resize(); updatePanels(); if (!running) drawIdle(); });
+  glc.addEventListener("pointerdown", () => glc.focus({ preventScroll: true }));
+  $("og-mute").addEventListener("click", e => { muted = !muted; e.currentTarget.setAttribute("aria-pressed", String(muted)); e.currentTarget.textContent = muted ? "Sound off" : "Sound on"; glc.focus({ preventScroll: true }); });
+  window.addEventListener("resize", () => { resize(); size3D(); updatePanels(); if (!running) drawIdle(); });
 
   resize(); renderCloset(); renderDex(); updatePanels(); screenTitle(); idleLoop();
 })();

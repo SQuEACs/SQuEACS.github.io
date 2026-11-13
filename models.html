@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SQuEACs Lab 3D Models</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interactive, labeled 3D models from the SQuEACs Lab.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html" aria-current="page">3D Models</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<main id="top" class="subpage">
+<section id="models">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / 3D Models</p>
+        <h1 class="page-title">Specimens in three dimensions</h1>
+        <p>Drag to rotate, scroll or pinch to zoom. Full datasets live in our <a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource project</a>.</p>
+      </div>
+      <!-- Models are listed in script.js (MODELS). Drop .glb files into /models to fill each slot. -->
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+{
+ "note": "Sketchfab annotation names and positions (Sketchfab Z-up coordinates) for models not yet on the site. Used by build_model.py.",
+ "taxidea-endocast": {
+  "title": "Taxidea taxus endocast anatomy",
+  "sketchfab": "https://sketchfab.com/3d-models/taxidea-taxus-endocast-anatomy-6de91c5d63864b88b4c448b928d5c459",
+  "labels": [
+   [
+    "Olfactory bulb",
+    85.966,
+    -76.166,
+    33.558
+   ],
+   [
+    "Proreal gyrus",
+    93.542,
+    -84.173,
+    33.73
+   ],
+   [
+    "Anterior sigmoid gyrus",
+    101.302,
+    -88.938,
+    35.878
+   ],
+   [
+    "Pro-posterior sigmoid gyrus",
+    116.423,
+    -87.236,
+    28.271
+   ],
+   [
+    "Lateral gyrus",
+    135.325,
+    -86.378,
+    35.597
+   ],
+   [
+    "Rhinal fissure",
+    98.427,
+    -66.622,
+    29.675
+   ],
+   [
+    "Original gyrus",
+    97.392,
+    -77.151,
+    24.327
+   ],
+   [
+    "Pro-coronal gyrus",
+    106.832,
+    -70.298,
+    20.198
+   ],
+   [
+    "Coronal gyrus",
+    119.067,
+    -74.389,
+    16.568
+   ],
+   [
+    "Suprasylvian gyrus",
+    135.428,
+    -81.432,
+    22.593
+   ],
+   [
+    "Pro-anterior ectosylvian gyrus",
+    112.545,
+    -66.954,
+    18.703
+   ],
+   [
+    "Anterior ectosylvian gyrus",
+    123.448,
+    -71.685,
+    16.808
+   ],
+   [
+    "Medial ectosylvian gyrus",
+    130.844,
+    -77.407,
+    16.79
+   ],
+   [
+    "Posterior ectosylvian sulcus",
+    127.901,
+    -67.733,
+    12.336
+   ],
+   [
+    "Presylvian sulcus",
+    100.366,
+    -75.697,
+    56.257
+   ],
+   [
+    "Cruciate sulcus",
+    111.5,
+    -82.73,
+    55.005
+   ],
+   [
+    "Coronal sulcus",
+    117.201,
+    -74.39,
+    62.061
+   ],
+   [
+    "Lateral sulcus",
+    133.569,
+    -83.362,
+    54.44
+   ],
+   [
+    "Suprasylvian sulcus",
+    128.593,
+    -77.749,
+    60.67
+   ],
+   [
+    "Psuedosylvian sulcus",
+    125.261,
+    -69.854,
+    63.518
+   ]
+  ]
+ },
+ "martes-endocast": {
+  "title": "Martes americana endocast anatomy",
+  "sketchfab": "https://sketchfab.com/3d-models/martes-americana-endocast-anatomy-888567dc9f8b4b16887e4f672be9e3f3",
+  "labels": [
+   [
+    "Olfactory bulb",
+    45.509,
+    -41.502,
+    25.485
+   ],
+   [
+    "Proreal gyrus",
+    52.979,
+    -51.294,
+    25.854
+   ],
+   [
+    "Anterior sigmoid gyrus",
+    63.431,
+    -52.699,
+    23.704
+   ],
+   [
+    "Lateral gyrus",
+    88.074,
+    -47.903,
+    13.175
+   ],
+   [
+    "Rhinal fissure",
+    54.448,
+    -37.161,
+    15.525
+   ],
+   [
+    "Orbital gyrus",
+    52.411,
+    -42.683,
+    16.25
+   ],
+   [
+    "Pro-coronal gyrus",
+    58.045,
+    -41.817,
+    9.613
+   ],
+   [
+    "Posterior sigmoid gyrus",
+    63.48,
+    -49.288,
+    10.418
+   ],
+   [
+    "Coronal gyrus",
+    66.419,
+    -46.319,
+    7.215
+   ],
+   [
+    "Suprasylvian gyrus",
+    78.53,
+    -49.902,
+    9.455
+   ],
+   [
+    "Pro-anterior ectosylvian gyrus",
+    62.146,
+    -38.428,
+    7.011
+   ],
+   [
+    "Anterior ectosylvian gyrus",
+    69.205,
+    -44.261,
+    5.398
+   ],
+   [
+    "Medial ectosylvian gyrus",
+    75.568,
+    -46.236,
+    5.201
+   ],
+   [
+    "Posterior ectosylvian gyrus",
+    70.941,
+    -39.46,
+    2.055
+   ],
+   [
+    "Presylvian sulcus",
+    56.989,
+    -42.173,
+    32.181
+   ],
+   [
+    "Cruciate sulcus",
+    65.191,
+    -47.955,
+    32.203
+   ],
+   [
+    "Coronal sulcus",
+    72.637,
+    -44.786,
+    32.461
+   ],
+   [
+    "Lateral sulcus",
+    84.079,
+    -47.193,
+    26.618
+   ],
+   [
+    "Suprasylvian sulcus",
+    78.683,
+    -42.594,
+    32.014
+   ],
+   [
+    "Pseudosylvian sulcus",
+    73.445,
+    -35.498,
+    34.232
+   ]
+  ]
+ },
+ "pekania-endocast": {
+  "title": "Pekania pennanti endocast anatomy",
+  "sketchfab": "https://sketchfab.com/3d-models/pekania-pennanti-endocast-anatomy-2369a0a41af04c2e98fc9985fc54dc4d",
+  "labels": [
+   [
+    "Olfactory bulb",
+    48.516,
+    -30.683,
+    24.999
+   ],
+   [
+    "Proreal gyrus",
+    56.932,
+    -32.658,
+    17.556
+   ],
+   [
+    "Orbital gyrus",
+    56.149,
+    -26.531,
+    18.83
+   ],
+   [
+    "Rhinal fissure",
+    56.07,
+    -22.604,
+    21.492
+   ],
+   [
+    "Anterior sigmoid gyrus",
+    61.359,
+    -32.976,
+    16.048
+   ],
+   [
+    "Posterior sigmoid gyrus",
+    68.028,
+    -32.349,
+    15.906
+   ],
+   [
+    "Post cruciate gyrus",
+    73.187,
+    -35.656,
+    21.266
+   ],
+   [
+    "Lateral gyrus",
+    81.858,
+    -33.288,
+    20.19
+   ],
+   [
+    "Suprasylvian gyrus",
+    79.564,
+    -28.344,
+    13.221
+   ],
+   [
+    "Coronal gyrus",
+    68.743,
+    -25.569,
+    12.737
+   ],
+   [
+    "Pro-coronal gyrus",
+    61.309,
+    -24.959,
+    15.228
+   ],
+   [
+    "Posterior ectosylvian gyrus",
+    73.298,
+    -19.663,
+    11.072
+   ],
+   [
+    "Medial ectosylvian gyrus",
+    76.812,
+    -25.853,
+    11.51
+   ],
+   [
+    "Anterior ectosylvian gyrus",
+    71.623,
+    -22.7,
+    12.283
+   ],
+   [
+    "Pro- anterior ectosylvian gyrus",
+    65.894,
+    -21.509,
+    14.059
+   ],
+   [
+    "Lateral sulcus",
+    83.946,
+    -30.246,
+    34.989
+   ],
+   [
+    "Suprasylvian sulcus",
+    81.284,
+    -29.897,
+    36.373
+   ],
+   [
+    "Psudosylvian sulcus",
+    76.234,
+    -28.717,
+    37.211
+   ],
+   [
+    "Coronal sulcus",
+    70.36,
+    -32.915,
+    34.432
+   ]
+  ]
+ },
+ "lontra-skull": {
+  "title": "Lontra canadensis skull anatomy",
+  "sketchfab": "https://sketchfab.com/3d-models/lontra-canadensis-skull-anatomy-2db4e773c9f74f2cb956fbd6247ef3b8",
+  "credit": "Kristin Marsh; University of Arkansas Museum collection specimen UAMC_87_138_32; micro-CT; Avizo 2022.2",
+  "labels": [
+   [
+    "Parietal",
+    39.35,
+    -51.632,
+    50.615
+   ],
+   [
+    "Frontal",
+    68.364,
+    -56.933,
+    53.213
+   ],
+   [
+    "Temporal",
+    42.11,
+    -46.218,
+    65.738
+   ],
+   [
+    "Jugal",
+    87.267,
+    -44.626,
+    66.463
+   ],
+   [
+    "Maxilla",
+    105.776,
+    -58.157,
+    63.245
+   ],
+   [
+    "Occipital",
+    20.78,
+    -71.154,
+    62.586
+   ],
+   [
+    "Palatine",
+    75.716,
+    -66.799,
+    71.597
+   ],
+   [
+    "Premaxilla",
+    113.735,
+    -65.717,
+    68.305
+   ],
+   [
+    "Nasal",
+    96.772,
+    -66.695,
+    51.562
+   ],
+   [
+    "Incisor",
+    114.775,
+    -64.389,
+    72.024
+   ],
+   [
+    "Canine",
+    112.227,
+    -61.29,
+    74.429
+   ],
+   [
+    "Premolar",
+    93.818,
+    -58.898,
+    76.281
+   ],
+   [
+    "Molar",
+    85.204,
+    -58.017,
+    74.821
+   ],
+   [
+    "Tentorium",
+    37.163,
+    -71.21,
+    56.882
+   ],
+   [
+    "Ethmoid",
+    76.984,
+    -69.973,
+    60.039
+   ],
+   [
+    "Vomer",
+    67.703,
+    -68.995,
+    68.081
+   ],
+   [
+    "Basisphenoid",
+    55.511,
+    -70.876,
+    71.716
+   ],
+   [
+    "Presphenoid",
+    60.069,
+    -61.051,
+    70.605
+   ]
+  ]
+ }
+}

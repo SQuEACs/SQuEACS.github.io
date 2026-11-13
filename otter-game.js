@@ -188,9 +188,9 @@
   }
   function showFact(key) {
     if (G.seen[key]) return;
-    G.seen[key] = true; renderFact(key);
+    G.seen[key] = true; renderFact(key); flag("journal");
     const box = $("og-fact"); box.classList.remove("pulse"); void box.offsetWidth; box.classList.add("pulse");
-    toast("New science card: " + FACTS[key].t.replace(/^Hypothesis: /, ""));
+    toast("New science card in your Journal (J): " + FACTS[key].t.replace(/^Hypothesis: /, ""));
   }
   let toastT = 0;
   function toast(msg) { const el = $("og-toast"); el.textContent = msg; el.hidden = false; toastT = 3; }
@@ -200,8 +200,8 @@
     G.unlocked[id] = true;
     const slot = OUTFITS[id].slot;
     Object.keys(G.worn).forEach(k => { if (OUTFITS[k].slot === slot) G.worn[k] = false; });
-    G.worn[id] = true; save(); renderCloset(); jingle();
-    setTimeout(() => toast("Outfit unlocked: " + OUTFITS[id].name + "!"), 400);
+    G.worn[id] = true; save(); renderCloset(); jingle(); flag("wardrobe");
+    setTimeout(() => toast("Outfit unlocked: " + OUTFITS[id].name + "! See your Wardrobe (O)."), 400);
   }
   const BASE = { size: 50, fur: 50, ext: 50, cochlea: 50, canal: 50, brain: 50 };
   function paintTile(cv, t, worn, locked) {
@@ -318,7 +318,7 @@
     pups.forEach(p => DEX.forEach(d => {
       if (!G.dex[d.id] && d.test(p.t, p)) { G.dex[d.id] = { t: p.t }; p.newDex = d.name; found.push(d.name); }
     }));
-    if (found.length) { save(); renderDex(); setTimeout(() => { jingle(); toast((found.length > 1 ? "New otters discovered: " : "New otter discovered: ") + found.join(", ") + "!"); }, 900); }
+    if (found.length) { save(); renderDex(); flag("dex"); setTimeout(() => { jingle(); toast((found.length > 1 ? "New otters discovered: " : "New otter discovered: ") + found.join(", ") + "!"); }, 900); }
   }
 
   /* ---------- Otter drawing (shared by game and portraits) ---------- */
@@ -832,7 +832,7 @@
       b.life -= dt; b.m.position.set(b.x, b.y + Math.sin(S.t * 3) * 0.2, b.z); b.m.userData.gem.rotation.y += dt * 2;
       b.m.userData.ring.scale.setScalar(1 + Math.sin(S.t * 5) * 0.15); b.m.visible = b.life > 3 || Math.floor(S.t * 8) % 2 === 0;
       if (alive && Math.hypot(b.x - S.x, b.z - S.z) < 1.8 && Math.abs(b.y - S.y) < 2) {
-        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; save(); renderTreasure();
+        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; save(); renderTreasure(); flag("treasure");
         S.energy = clamp(S.energy + 12, 0, 100); let extra = "";
         if ((b.tr.rarity === "Rare" || b.tr.rarity === "Legendary") && S.hearts < 3) { S.hearts++; renderHearts(); extra = " +1 heart!"; }
         sfx("sparkle", 0.09); toast(`Surprise! ${b.tr.rarity} find: ${b.tr.name}!${extra}`);
@@ -892,6 +892,7 @@
 
   function loop(now) {
     if (!running) return;
+    if (S.paused) { lastT = now; requestAnimationFrame(loop); return; }
     const dt = Math.min(0.1, (now - lastT) / 1000 || 0.016); lastT = now;
     update(dt); if (running) draw3D();
     if (toastT > 0) { toastT -= dt; if (toastT <= 0) $("og-toast").hidden = true; }
@@ -1015,7 +1016,7 @@
       if (mut) mutated = true;
     }
     const heir = pups.find(p => p.fromLead) || pups[0]; heir.lead = true;
-    G.pop = pups; G.mutated = mutated; checkDex(pups);
+    G.pop = pups; G.mutated = mutated; checkDex(pups); flag("evolution"); flag("anatomy");
     G.history.push(meanTraits(G.pop));
   }
 
@@ -1207,9 +1208,42 @@
   }
   function idleLoop() { if (!running && G.screen !== "season") { drawIdle(); if (!reduce) requestAnimationFrame(idleLoop); } }
 
+  /* ---------- RPG menu: hotbar slots open game windows ---------- */
+  const modal = $("og-modal"); let openK = null, lastFocus = null;
+  const WIN_KEYS = { j: "journal", k: "anatomy", v: "evolution", o: "wardrobe", x: "dex", t: "treasure" };
+  function flag(k) { if (openK === k) return; const b = document.querySelector(`.og-slot[data-win="${k}"] .og-badge-new`); if (b) { b.hidden = false; b.parentElement.classList.add("has-new"); } }
+  function openWin(k) {
+    if (!openK) lastFocus = document.activeElement;
+    openK = k; modal.hidden = false; keys = {};
+    if (S && G.screen === "season") S.paused = true;
+    document.querySelectorAll(".og-window").forEach(w => w.hidden = w.dataset.win !== k);
+    document.querySelectorAll(".og-modal-tabs [data-win]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.win === k)));
+    const w = document.querySelector(`.og-window[data-win="${k}"]`);
+    $("og-modal-title").textContent = w.querySelector("h2").textContent;
+    $("og-modal-icon").innerHTML = document.querySelector(`.og-slot[data-win="${k}"] svg`).outerHTML;
+    const b = document.querySelector(`.og-slot[data-win="${k}"]`); b.querySelector(".og-badge-new").hidden = true; b.classList.remove("has-new");
+    if (k === "anatomy" || k === "evolution") requestAnimationFrame(updatePanels);
+    beep(520, 0.06, "triangle", 0.04);
+    $("og-close").focus({ preventScroll: true });
+  }
+  function closeWin() {
+    if (!openK) return; openK = null; modal.hidden = true; keys = {};
+    if (S && G.screen === "season") { S.paused = false; lastT = performance.now(); glc.focus({ preventScroll: true }); }
+    else if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  document.querySelectorAll(".og-slot, .og-modal-tabs [data-win]").forEach(b => b.addEventListener("click", () => openWin(b.dataset.win)));
+  $("og-close").addEventListener("click", closeWin);
+  modal.addEventListener("click", e => { if (e.target === modal) closeWin(); });
+  window.addEventListener("keydown", e => {
+    if (e.target.closest && e.target.closest("input, textarea")) return;
+    if (openK && e.key === "Escape") { e.preventDefault(); closeWin(); return; }
+    const k = WIN_KEYS[e.key.toLowerCase()];
+    if (k && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); openK === k ? closeWin() : openWin(k); }
+  });
+
   /* ---------- Input ---------- */
   const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S", "Shift", "e", "E", "q", "Q", "c", "C"];
-  window.addEventListener("keydown", e => { if (G.screen === "season" && GAME_KEYS.includes(e.key)) { keys[e.key] = true; e.preventDefault(); } });
+  window.addEventListener("keydown", e => { if (G.screen === "season" && !openK && GAME_KEYS.includes(e.key)) { keys[e.key] = true; e.preventDefault(); } });
   window.addEventListener("keyup", e => { keys[e.key] = false; });
   window.addEventListener("blur", () => { keys = {}; });
   document.querySelectorAll("[data-key]").forEach(b => {

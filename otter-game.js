@@ -55,6 +55,7 @@
     inherit:    { t: "Passing traits on", k: "Heredity and heritability", x: "Pups resemble their parents. Each pup's traits land near its parents' average, so traits that helped parents survive become more common.", h: R, l: "Our research" },
     mutation:   { t: "Brand-new variation", k: "Mutation and genetic variation", x: "Sometimes a pup is born noticeably different from both parents. Mutation supplies the variation that selection acts on.", h: R, l: "Our research" },
     drift:      { t: "Luck matters too", k: "Genetic drift (Wright, 1931)", x: "A well-suited otter did not survive this time. In small populations, chance alone can change which traits get passed on.", h: R, l: "Our research" },
+    fluct:      { t: "Some years are harder than others", k: "Fluctuating selection (Grant & Grant, 2002)", x: "In good years most animals survive. In hard years, such as droughts or long winters, only the best-suited survive, so selection is stronger. Studies of Darwin's finches showed populations shifting after droughts.", h: R, l: "Our research" },
     adapt:      { t: "One species, many forms", k: "Local adaptation and intraspecific variation", x: "Populations of one species living in different places can evolve different traits. Which forces drive that variation is the big question our lab studies.", h: "index.html#what-we-do", l: "The big question" },
     bergmann:   { t: "Hypothesis: big bodies in the cold", k: "Bergmann's rule (Bergmann, 1847)", x: "Bigger bodies lose heat more slowly for their size, so this rule predicts larger animals in colder places. We tested it in pine martens.", h: R + "#limb", l: "Limb research" },
     allen:      { t: "Hypothesis: ears and tails track climate", k: "Allen's rule (Allen, 1877)", x: "Long ears and tails shed heat; short ones conserve it. The rule predicts shorter extremities in the cold and longer ones in the heat. We tested it in pine martens.", h: R + "#limb", l: "Limb research" },
@@ -107,9 +108,9 @@
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true } };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts })); } catch (e) {} };
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true }, gallery: [], inRun: false };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; } } catch (e) {}
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30) })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 10, fur: 50 + gauss() * 10, ext: 50 + gauss() * 10, cochlea: 50 + gauss() * 10, canal: valOfDeg(84) + gauss() * 8, brain: 50 + gauss() * 10 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -414,7 +415,27 @@
     snow: "ice cave", desert: "old cottonwood", fast: "waterfall rock",
     slow: "beaver lodge", murky: "sunken boat", lake: "otter slide",
   };
-  function makeTasks(hab) {
+  const YEARS = {
+    good:   { name: "Good year",   icon: "sun",   food: 1.35, drain: 0.8, eat: -1, other: -1, pred: 1.4, surv: 0.1 },
+    normal: { name: "Normal year", icon: "water", food: 1,    drain: 1,   eat: 0,  other: 0,  pred: 1,   surv: 0 },
+    hard:   { name: "Hard year",   icon: "storm", food: 0.6,  drain: 1.3, eat: 2,  other: 1,  pred: 0.7, surv: -0.1 },
+  };
+  const YEAR_TEXT = {
+    good: { snow: "A mild winter. Fish are easy to find.", desert: "Rainy spring! The river runs full.", fast: "Gentle runoff and lots of trout.", slow: "A wet year. The marsh is full of food.", murky: "Clearer water this year. Fish are plentiful.", lake: "A warm spring brought lots of fish." },
+    hard: { snow: "A long, bitter winter. Fish are scarce.", desert: "Drought! The river is low and food is scarce.", fast: "Spring floods make the rapids wild.", slow: "A dry summer shrank the marsh.", murky: "An algae bloom left few fish.", lake: "A cold spring means fewer fish." },
+  };
+  const ALT_FOOD = { snow: ["trout", "minnow"], desert: ["crayfish", "minnow"], fast: ["trout", "minnow"], slow: ["catfish", "crayfish", "minnow"], murky: ["catfish", "crayfish"], lake: ["trout", "minnow", "crayfish"] };
+  const BASE_N = { trout: 4, minnow: 6, catfish: 3, crayfish: 5 };
+  function planSeason() {
+    const key = G.gen + ":" + G.hab;
+    if (G.plan && G.plan.key === key) return G.plan;
+    const repeat = (G.habSeasons[G.hab] || 0) > 0, r = Math.random();
+    const year = !repeat ? "normal" : r < 0.3 ? "good" : r < 0.62 ? "normal" : "hard";
+    G.plan = { key, year, tasks: makeTasks(G.hab, year, repeat) };
+    return G.plan;
+  }
+  const yr = () => YEARS[(G.plan && G.plan.year) || "normal"];
+  function makeTasks(hab, year = "normal", repeat = false) {
     const L = PLACE[hab];
     let t = {
       snow:   [["eat", "trout", 4], ["dodge", "eagle", 2], ["visit", L, 1]],
@@ -426,8 +447,15 @@
     }[hab];
     const label = ([k, what, n]) => k === "eat" ? `Eat ${n} ${what}` : k === "dodge" ? `Dodge ${n} ${what} attacks` : k === "escape" ? `Escape the ${what}` :
       k === "under" ? `Dive under ${n} logs` : k === "friends" ? `Play with ${n} otter friends` : `Find the ${what}`;
+    const Y = YEARS[year];
+    if (repeat) t = t.map(x => {
+      if (x[0] === "eat" && Math.random() < 0.6) { const opts = ALT_FOOD[hab].filter(f => f !== x[1]); const f = opts[Math.floor(Math.random() * opts.length)]; return ["eat", f, BASE_N[f]]; }
+      if (x[0] === "visit" && Math.random() < 0.4) return ["treasure", "sparkly treasure", 2];
+      return x;
+    });
     if (!G.opts.preds) t = t.map(x => ["dodge", "escape", "under"].includes(x[0]) ? ["treasure", "sparkly treasure", 1] : x);
-    const lab = x => x[0] === "treasure" ? "Grab a sparkly treasure" : label(x);
+    t = t.map(x => x[0] === "eat" ? ["eat", x[1], Math.max(2, x[2] + Y.eat)] : ["dodge", "under", "friends"].includes(x[0]) ? [x[0], x[1], clamp(x[2] + Y.other, 1, 3)] : x);
+    const lab = x => x[0] === "treasure" ? (x[2] > 1 ? `Grab ${x[2]} sparkly treasures` : "Grab a sparkly treasure") : label(x);
     return t.map(x => ({ kind: x[0], what: x[1], need: x[2], have: 0, label: lab(x) }));
   }
 
@@ -615,10 +643,11 @@
     const otter = buildOtter(me.t, G.worn); scene.add(otter);
     S = { scene, world, otter, t: 0, x: sx, z: sz, y: groundY(sx, sz) + 0.5, vy: 0, heading: Math.atan2(-sx, -sz), speed: 0,
           inWater: false, depth: 0, hearts: 3, energy: 100, inv: 0, food: 0, counts: {}, hits: 0, dead: false, cause: "", plastic: 0, plasticRebuilt: 0, starve: 0,
-          tasks: makeTasks(G.hab), items: [], bonus: [], bonusT: rand(5, 9), sndT: 0, preds: [], logs: [], friends: [], ending: 0, golden: false, camPos: new T3.Vector3(), tipT: 0 };
+          tasks: planSeason().tasks.map(t => ({ ...t, have: 0 })), items: [], bonus: [], bonusT: rand(5, 9), sndT: 0, preds: [], logs: [], friends: [], ending: 0, golden: false, camPos: new T3.Vector3(), tipT: 0 };
     S.camYaw = S.heading;
     // Food
-    Object.entries(MENU[G.hab]).forEach(([k, n]) => { for (let i = 0; i < n; i++) spawnFood(k); });
+    Object.entries(MENU[G.hab]).forEach(([k, n]) => { for (let i = 0; i < Math.round(n * yr().food); i++) spawnFood(k); });
+    if (G.plan.year !== "normal") setTimeout(() => showFact("fluct"), 4000);
     spawnFood("golden");
     // Landmark or friends
     if (G.hab === "lake") {
@@ -631,7 +660,7 @@
     }
     // Predators
     (G.opts.preds ? PREDS[G.hab] : []).forEach(p => {
-      if (p === "eagle") { const m = eagleMesh(); scene.add(m); const sh = new T3.Mesh(new T3.CircleGeometry(1.6, 16), new T3.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.0, depthWrite: false })); sh.rotation.x = -Math.PI / 2; scene.add(sh); S.preds.push({ kind: "eagle", m, sh, state: "circle", cd: rand(7, 11), a: 0, x: 0, y: 28, z: 0 }); }
+      if (p === "eagle") { const m = eagleMesh(); scene.add(m); const sh = new T3.Mesh(new T3.CircleGeometry(1.6, 16), new T3.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.0, depthWrite: false })); sh.rotation.x = -Math.PI / 2; scene.add(sh); S.preds.push({ kind: "eagle", m, sh, state: "circle", cd: rand(7, 11) * yr().pred, a: 0, x: 0, y: 28, z: 0 }); }
       if (p === "coyote") { const [x, z] = randLand(10); const m = coyoteMesh(); scene.add(m); S.preds.push({ kind: "coyote", m, state: "patrol", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, chasing: false }); }
       if (p === "gator") { const [x, z] = randWater(5); const m = gatorMesh(); scene.add(m); S.preds.push({ kind: "gator", m, state: "lurk", x, z, hx: x, hz: z, a: rand(0, 6), cd: 0, t: 0 }); }
       if (p === "logs") { for (let i = 0; i < 7; i++) { const m = logMesh(); scene.add(m); const x = rand(-60, 60); S.logs.push({ m, x, z: W.a * Math.sin(x / W.p) + rand(-W.w + 2, W.w - 2), passed: 0 }); } }
@@ -746,7 +775,7 @@
     if (G.hab === "snow") drain += Math.max(0, 70 - furE) * 0.05 + (S.inWater ? Math.max(0, 80 - furE) * 0.05 : 0) - (t.size - 50) * 0.015;
     else if (G.hab === "desert") drain += (!S.inWater ? Math.max(0, furE - 35) * 0.06 : 0) + (t.size - 50) * 0.015;
     else drain += 0.3;
-    if (alive) S.energy = clamp(S.energy - Math.max(0.6, drain) * dt, 0, 100);
+    if (alive) S.energy = clamp(S.energy - Math.max(0.6, drain) * yr().drain * dt, 0, 100);
     if (S.energy <= 0 && alive && !G.opts.preds) { if (S.tipT <= 0) { S.tipT = 6; toast("So hungry! Eat something to speed up."); } }
     else if (S.energy <= 0 && alive) { S.starve += dt; if (S.starve > 3.5) { S.starve = 0; S.inv = 0; hurt(G.hab === "snow" ? "Too cold and hungry!" : G.hab === "desert" ? "Too hot and hungry!" : "Starving!"); } }
     // Plasticity: fur responds to this season's climate within the otter's life
@@ -777,9 +806,20 @@
     if (S.place && !S.place.found && Math.hypot(S.place.x - S.x, S.place.z - S.z) < 4.5) { S.place.found = true; S.place.beacon.visible = false; bump("visit"); }
     if (S.place) S.place.beacon.material.opacity = 0.25 + Math.sin(S.t * 3) * 0.1;
     S.friends.forEach(f => {
+      if (f.met) {
+        // Friends you've met follow you in a line
+        const back = 2.6 + f.order * 2.3, side = (f.order % 2 ? 1 : -1) * 0.9;
+        const tx = S.x - Math.sin(S.heading) * back + Math.cos(S.heading) * side, tz = S.z - Math.cos(S.heading) * back - Math.sin(S.heading) * side;
+        const dx = tx - f.x, dz = tz - f.z, d = Math.hypot(dx, dz);
+        if (d > 0.3) { const sp = Math.min(d, 11 * dt * Math.min(1.6, d / 2)); f.x += dx / d * sp; f.z += dz / d * sp; f.m.rotation.y = Math.atan2(dx, dz); }
+        const wet = isWater(f.x, f.z);
+        f.m.position.set(f.x, wet ? Math.min(S.y, -0.1) + Math.sin(S.t * 2 + f.order) * 0.08 : groundY(f.x, f.z) + 0.5, f.z);
+        f.m.userData.legs.forEach((l, i) => l.rotation.x = !wet && d > 0.4 ? Math.sin(S.t * 14 + (i % 2) * Math.PI) * 0.6 : 0);
+        return;
+      }
       f.a += dt * 0.5; const nx2 = f.hx + Math.cos(f.a) * 5, nz2 = f.hz + Math.sin(f.a) * 5; if (isWater(nx2, nz2)) { f.x = nx2; f.z = nz2; }
       f.m.position.set(f.x, -0.1 + Math.sin(S.t * 2 + f.a) * 0.1, f.z); f.m.rotation.y = f.a + Math.PI;
-      if (!f.met && alive && Math.hypot(f.x - S.x, f.z - S.z) < 2.5) { f.met = true; bump("friends"); toast("New otter friend!"); showFact("social"); }
+      if (alive && Math.hypot(f.x - S.x, f.z - S.z) < 2.5) { f.met = true; f.order = S.friends.filter(x => x.met).length - 1; bump("friends"); toast("New otter friend! They'll follow you."); showFact("social"); }
     });
     // Predators
     S.inv = Math.max(0, S.inv - dt);
@@ -800,7 +840,7 @@
             if (close && exposed && alive) hurt("Grabbed by the eagle!"); else if (alive) { bump("dodge", "eagle"); toast("Dodged the eagle!"); beep(990, 0.1, "triangle", 0.05); }
             p.state = "leave"; p.timer = 2; p.sh.material.opacity = 0;
           }
-        } else if (p.state === "leave") { p.timer -= dt; p.y = lerp(p.y, 30, 0.05); if (p.timer <= 0) { p.state = "circle"; p.cd = rand(9, 14); } }
+        } else if (p.state === "leave") { p.timer -= dt; p.y = lerp(p.y, 30, 0.05); if (p.timer <= 0) { p.state = "circle"; p.cd = rand(9, 14) * yr().pred; } }
         p.m.position.set(p.x, p.y, p.z); p.m.rotation.y = Math.atan2(S.x - p.x, S.z - p.z);
         const flap = Math.sin(S.t * (p.state === "swoop" ? 4 : 9)) * 0.5; p.m.userData.wings[0].rotation.z = flap; p.m.userData.wings[1].rotation.z = -flap;
       }
@@ -947,6 +987,20 @@
     brain:    SV('<path d="M16 6 C10 4 5 8 6 14 C3 17 5 24 10 24 C12 28 16 27 16 25 C16 27 20 28 22 24 C27 24 29 17 26 14 C27 8 22 4 16 6Z" fill="#ff9fc8"/><path d="M16 6 V25 M10 12 Q13 14 11 17 M22 12 Q19 14 21 17" fill="none" stroke-width="1.6"/>'),
     body:     SV('<ellipse cx="16" cy="18" rx="12" ry="8" fill="#9a6440"/><circle cx="26" cy="12" r="5" fill="#9a6440"/>'),
   };
+  ICON.storm = SV('<path d="M7 17 Q3 17 3 13 Q3 9 8 9 Q9 4 15 4 Q21 4 22 9 Q28 9 28 14 Q28 17 24 17 Z" fill="#8a93ad"/><path d="M15 17 L11 24 L15 24 L13 30 L20 21 L16 21 L18 17" fill="#ffd23f"/>');
+  const TICON = {
+    size: ICON.body,
+    fur: SV('<path d="M5 22 Q4 12 12 10 Q14 5 19 7 Q26 7 27 14 Q30 20 25 24 L7 24 Z" fill="#a47bff"/><path d="M9 14 L8 11 M14 11 L14 7 M20 10 L22 7 M25 15 L28 13" fill="none" stroke-width="1.8"/>'),
+    ext: SV('<circle cx="10" cy="10" r="5" fill="#2ed3c6"/><path d="M14 22 Q22 22 29 13" fill="none" stroke="#2ed3c6" stroke-width="4"/><path d="M14 22 Q22 22 29 13" fill="none" stroke-width="1.2"/>'),
+    cochlea: ICON.ear,
+    canal: SV('<ellipse cx="11" cy="13" rx="5" ry="9" fill="none" stroke="#ff5fa2" stroke-width="3" transform="rotate(-25 11 13)"/><ellipse cx="21" cy="13" rx="5" ry="9" fill="none" stroke="#a47bff" stroke-width="3" transform="rotate(25 21 13)"/><circle cx="16" cy="24" r="4" fill="#e0b43a"/>'),
+    brain: ICON.brain,
+  };
+  const ARROW = {
+    up: '<svg class="og-arr" viewBox="0 0 16 16" aria-label="up"><path d="M8 2 L14 12 L2 12 Z" fill="#138a4a"/></svg>',
+    down: '<svg class="og-arr" viewBox="0 0 16 16" aria-label="down"><path d="M8 14 L14 4 L2 4 Z" fill="#c2185b"/></svg>',
+    same: '<svg class="og-arr" viewBox="0 0 16 16" aria-label="no change"><circle cx="8" cy="8" r="3.5" fill="#6b6380"/></svg>',
+  };
   const KEY = k => `<kbd class="og-key">${k}</kbd>`;
   const coarse = matchMedia("(pointer: coarse)").matches;
   function taskIcon(t) { return t.kind === "eat" ? ICON[t.what] : t.kind === "dodge" ? ICON.eagle : t.kind === "escape" ? ICON[t.what] : t.kind === "under" ? ICON.logs : t.kind === "treasure" ? ICON.gem : t.kind === "friends" ? ICON.friends : ICON.flag; }
@@ -963,7 +1017,8 @@
   }
   function screenBriefing() {
     G.screen = "brief";
-    const tasks = makeTasks(G.hab);
+    const plan = planSeason(), tasks = plan.tasks, Y = YEARS[plan.year];
+    G.back = G.history.length > 1 ? () => screenHabitat(false) : () => screenHabitat(true);
     const ESC = {
       eagle: [ICON.eagle, [ICON.dive, ICON.tree], "Dive or hide"],
       coyote: [ICON.coyote, [ICON.water], "Jump in water"],
@@ -978,8 +1033,9 @@
       : `<div class="og-ctl"><span class="og-arrows">${KEY("▲")}<span>${KEY("◀")}${KEY("▼")}${KEY("▶")}</span></span><small>Move</small></div>
          <div class="og-ctl"><span class="og-keys-row">${KEY("Space")}</span><small>Jump / swim up</small></div>
          <div class="og-ctl"><span class="og-keys-row">${KEY("Shift")}</span><small>Dive</small></div>`;
-    screen(`<div class="og-card og-wide og-brief">
+    screen(`<div class="og-card og-wide og-brief">${BACK}
       <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
+      ${plan.year !== "normal" ? `<div class="og-year og-year-${plan.year}">${ICON[Y.icon]}<b>${Y.name}!</b><span>${YEAR_TEXT[plan.year][G.hab]} ${plan.year === "hard" ? "Goals are tougher and fewer otters will survive." : "Goals are easier and more otters will survive."}</span></div>` : ""}
       <h2 class="og-h">Your mission</h2>
       <div class="og-modes"><span>${G.opts.preds ? "Predators on" : "No predators"}</span><span>${G.opts.timer ? "75-second timer" : "No timer"}</span><button type="button" class="og-link" id="og-change">Change settings</button></div>
       <ul class="og-goals">${tasks.map(t => `<li>${taskIcon(t)}<span>${t.label}</span></li>`).join("")}</ul>
@@ -1000,13 +1056,14 @@
       <p class="og-sub og-small">${G.opts.timer ? "Finish 2 goals and your otter survives. Finish all 3 for the most pups!" : "Take your time! The season ends when you finish all 3 goals, or tap End season."}</p>${(coarse || touchMode) && matchMedia("(orientation: portrait)").matches ? '<p class="og-sub og-small">📱 Tip: turn your phone sideways for a bigger view.</p>' : ""}
       <button type="button" class="og-btn" id="og-go">Start season ▶</button></div>`);
     $("og-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); startSeason(); });
-    $("og-change").addEventListener("click", () => screenSettings(screenBriefing));
+    onBack(G.back);
+    $("og-change").addEventListener("click", () => screenSettings(screenBriefing, screenBriefing));
   }
 
   /* ---------- Between seasons: selection, inheritance, mutation ---------- */
   function endSeason() {
     running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch(); document.querySelector(".og-stage").appendChild($("og-corner"));
-    showFact("fitness");
+    showFact("fitness"); G.lastYear = (G.plan && G.plan.year) || "normal";
     if (S.food >= 12) unlock("chef");
     if (S.hits === 0 && !S.quick) unlock("crown");
     if (G.hab === "snow") unlock("scarf");
@@ -1017,13 +1074,13 @@
     G.pop.forEach((o, i) => {
       if (o.lead && S.dead) { o.alive = false; return; }
       if (o.lead && done >= 2) { o.alive = true; return; }
-      o.alive = Math.random() < 0.15 + 0.8 * f[i];
+      o.alive = Math.random() < clamp(0.15 + yr().surv + 0.8 * f[i] * (G.plan && G.plan.year === "hard" ? 0.85 : 1), 0.05, 0.98);
     });
     let alive = G.pop.filter(o => o.alive);
     while (alive.length < 3) { const i = ranked.find(j => !G.pop[j].alive && !(G.pop[j].lead && S.dead)); if (i === undefined) break; G.pop[i].alive = true; alive = G.pop.filter(o => o.alive); }
     const drift = ranked.slice(0, 3).some(i => !G.pop[i].alive && !G.pop[i].lead);
     Object.assign(G, { lastFood: S.food, lastDone: done, lastAll: all, lastDead: S.dead, lastCause: S.cause, lastGolden: S.golden, drift });
-    screenSurvival(f); idleLoop();
+    G.plan = null; screenSurvival(f); idleLoop();
   }
   function breed() {
     const surv = G.pop.filter(o => o.alive);
@@ -1041,13 +1098,15 @@
     }
     const heir = pups.find(p => p.fromLead) || pups[0]; heir.lead = true;
     G.pop = pups; G.mutated = mutated; checkDex(pups); flag("evolution"); flag("anatomy");
-    G.history.push(meanTraits(G.pop));
+    G.history.push(meanTraits(G.pop)); addGallery();
   }
 
   /* ---------- Screens (DOM overlays) ---------- */
-  function screen(html) { const el = $("og-screen"); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector("button"); if (b) b.focus({ preventScroll: true }); } }
+  function screen(html) { const el = $("og-screen"); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-hab, .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
+  const BACK = '<button type="button" class="og-back" id="og-back">◀ Back</button>';
+  const onBack = fn => { const b = $("og-back"); if (b) b.addEventListener("click", () => { beep(440, 0.06, "triangle", 0.04); fn(); }); };
   function portrait(o, i, cls = "") {
-    return `<div class="og-otter ${cls}" data-i="${i}"><canvas width="140" height="96" data-p="${i}"></canvas>${o.lead ? '<span class="og-you">YOU</span>' : ""}${o.mut ? '<span class="og-mut">MUTANT</span>' : ""}${o.newDex ? '<span class="og-new">NEW!</span>' : ""}</div>`;
+    return `<div class="og-otter ${cls}" data-i="${i}"><canvas width="140" height="96" data-p="${i}"></canvas>${o.lead ? '<span class="og-you">YOU</span>' : ""}${o.mut ? '<span class="og-mut">MUTANT</span>' : ""}${o.newDex ? '<span class="og-new" title="New otter for your Otter-dex!">★</span>' : ""}</div>`;
   }
   function paintPortraits(pop, root) {
     root.querySelectorAll("canvas[data-p]").forEach(cv => {
@@ -1057,10 +1116,10 @@
     });
   }
 
-  function screenSettings(next) {
-    G.screen = "settings";
+  function screenSettings(next, back = screenTitle) {
+    G.screen = "settings"; G.back = back;
     const opt = (k, val, ic, title, sub) => `<button type="button" class="og-opt" data-k="${k}" data-v="${val}" aria-pressed="${G.opts[k] === val}">${ic}<b>${title}</b><span>${sub}</span></button>`;
-    screen(`<div class="og-card og-wide">
+    screen(`<div class="og-card og-wide">${BACK}
       <h2 class="og-h">How do you want to play?</h2>
       <h3 class="og-mini">Predators</h3>
       <div class="og-opts">${opt("preds", true, ICON.eagle, "Predators on", "Eagles, coyotes, and alligators. More challenge!")}${opt("preds", false, ICON.friends, "No predators", "Relaxed exploring, great for little kids.")}</div>
@@ -1072,6 +1131,7 @@
       document.querySelectorAll(`.og-opt[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
     }));
     $("og-set-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); next(); });
+    onBack(back);
   }
   function screenTitle() {
     G.screen = "title";
@@ -1084,20 +1144,22 @@
         <li><span><b>Survive and raise pups.</b> Traits pass to the next generation, with the occasional mutation.</span></li>
         <li><span><b>Watch the population evolve</b> to fit its habitat.</span></li>
       </ol>
-      <button type="button" class="og-btn" id="og-play">Play</button></div>`);
+      <div class="og-actions">${G.inRun && G.pop.length && G.gen <= GENS ? `<button type="button" class="og-btn" id="og-continue">Continue · Gen ${G.gen}</button><button type="button" class="og-btn ghost" id="og-play">New game</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div></div>`);
+    const cont = $("og-continue"); if (cont) cont.addEventListener("click", () => { beep(660, 0.1, "triangle"); screenBriefing(); });
     $("og-play").addEventListener("click", () => { beep(660, 0.1, "triangle"); if (window.SQ_track) window.SQ_track("play", "otter-game"); screenSettings(() => screenHabitat(true)); });
   }
   function screenHabitat(fresh) {
-    G.screen = "habitat";
-    screen(`<div class="og-card og-wide">
+    G.screen = "habitat"; G.back = fresh ? () => screenSettings(() => screenHabitat(true)) : screenBriefing;
+    screen(`<div class="og-card og-wide">${BACK}
       <h2 class="og-h">${fresh ? "Choose a home for your otters" : "Stay or move?"}</h2>
       <p class="og-sub">${fresh ? "Each habitat favors different traits." : "Moving changes which traits natural selection favors."}</p>
       <div class="og-habs">${ORDER.map(k => `<button type="button" class="og-hab og-hab-${k}${!fresh && k === G.hab ? " current" : ""}" data-h="${k}"><b>${HAB[k].name}</b><span>${HAB[k].blurb}</span>${!fresh && k === G.hab ? "<em>Current home</em>" : ""}</button>`).join("")}</div></div>`);
     document.querySelectorAll(".og-hab").forEach(b => b.addEventListener("click", () => {
       G.hab = b.dataset.h; beep(520, 0.08, "triangle");
-      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; }
+      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; if (G.gallery.length && G.gallery[G.gallery.length - 1].label) G.gallery.pop(); addGallery("Starting otters"); }
       updatePanels(); screenBriefing();
     }));
+    onBack(G.back);
   }
   function screenSurvival(f) {
     G.screen = "gen";
@@ -1105,7 +1167,7 @@
     screen(`<div class="og-card og-wide">
       <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
       <h2 class="og-h">Season over! Who survived?</h2>
-      <p class="og-sub">${G.lastDead ? `Your otter was lost. ${G.lastCause} You'll play next season as a pup from another family.` : `Your otter ate <b>${G.lastFood}</b> food and finished <b>${G.lastDone} of 3</b> goals${G.lastDone >= 2 ? ", so it survives and raises extra pups" : ""}.`} Across the population, otters whose traits suit this habitat had better odds.</p>
+      <p class="og-sub">${G.lastDead ? `Your otter was lost. ${G.lastCause} You'll play next season as a pup from another family.` : `Your otter ate <b>${G.lastFood}</b> food and finished <b>${G.lastDone} of 3</b> goals${G.lastDone >= 2 ? ", so it survives and raises extra pups" : ""}.`} Across the population, otters whose traits suit this habitat had better odds.${G.lastYear === "hard" ? " It was a hard year, so selection was stronger." : G.lastYear === "good" ? " It was a good year, so more otters made it." : ""}</p>
       <div class="og-grid" id="og-grid">${G.pop.map((o, i) => portrait(o, i)).join("")}</div>
       <p class="og-result" id="og-result" aria-live="polite"></p>
       <button type="button" class="og-btn" id="og-next" disabled>See the pups →</button></div>`);
@@ -1128,7 +1190,7 @@
     const changes = TRAITS.map(({ k, name, color }) => {
       const d = k === "canal" ? degOf(now[k]) - degOf(prev[k]) : Math.round(now[k] - prev[k]);
       const unit = k === "canal" ? "°" : "";
-      return `<li><i style="background:${color}"></i>${name}<b class="${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? "▲ +" : d < 0 ? "▼ " : "• "}${d}${unit}</b></li>`;
+      return `<li>${TICON[k]}<span>${name}</span><b class="${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? ARROW.up + "+" : d < 0 ? ARROW.down : ARROW.same}${d}${unit}</b></li>`;
     }).join("");
     screen(`<div class="og-card og-wide">
       <p class="og-badge">Generation ${G.gen + 1} is born</p>
@@ -1150,16 +1212,17 @@
     const start = G.history[0], end = G.history[G.history.length - 1];
     G.runs.push({ hab: G.hab, start: G.startHab, end }); G.runs = G.runs.slice(-4); save();
     const fmt = (k, v) => k === "canal" ? degOf(v) + "°" : Math.round(v);
-    const rows = G.runs.slice().reverse().map(r => `<tr><th>${HAB[r.hab].name}</th>${TRAITS.map(({ k }) => `<td>${fmt(k, r.end[k])}</td>`).join("")}</tr>`).join("");
+    const cell = (k, v) => { const d = k === "canal" ? degOf(v) - degOf(start[k]) : Math.round(v - start[k]); return `<td>${fmt(k, v)} <small class="${d > 2 ? "up" : d < -2 ? "down" : ""}">${d > 2 ? ARROW.up : d < -2 ? ARROW.down : ""}</small></td>`; };
+    const rows = G.runs.slice().reverse().map(r => `<tr><th>${HAB[r.hab].name}</th>${TRAITS.map(({ k }) => cell(k, r.end[k])).join("")}</tr>`).join("");
     screen(`<div class="og-card og-wide">
       <p class="og-badge">${GENS} generations complete</p>
       <h2 class="og-h">Your otters evolved!</h2>
       <p class="og-sub">Started in ${HAB[G.startHab].name}, ended in ${HAB[G.hab].name}. Compare populations from different habitats: one species, many forms.</p>
-      <div class="og-table-wrap"><table class="og-table"><thead><tr><th>Population</th>${TRAITS.map(t => `<th>${t.name}</th>`).join("")}</tr></thead>
+      <div class="og-table-wrap"><table class="og-table"><thead><tr><th>Population</th>${TRAITS.map(t => `<th><span class="og-th">${TICON[t.k]}${t.name}</span></th>`).join("")}</tr></thead>
       <tbody><tr class="start"><th>Starting otters</th>${TRAITS.map(({ k }) => `<td>${fmt(k, start[k])}</td>`).join("")}</tr>${rows}</tbody></table></div>
       <div class="og-actions"><button type="button" class="og-btn" id="og-again">Start a new population</button></div></div>`);
-    showFact("adapt");
-    $("og-again").addEventListener("click", () => screenHabitat(true));
+    showFact("adapt"); G.inRun = false;
+    $("og-again").addEventListener("click", () => screenSettings(() => screenHabitat(true)));
   }
   function checkTraitUnlocks() {
     const m = meanTraits(G.pop);
@@ -1171,8 +1234,8 @@
 
   /* ---------- Anatomy and chart panels ---------- */
   function sizeCanvas(cv) { const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); const c = cv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0); return { c, w: r.width, h: r.height }; }
-  function drawBrain(t) {
-    const { c, w, h } = sizeCanvas($("og-brain"));
+  function drawBrain(t, cv = $("og-brain")) {
+    const { c, w, h } = sizeCanvas(cv);
     c.clearRect(0, 0, w, h);
     const cx = w / 2, cy = h / 2 + 4;
     const shape = (s, fill, stroke, dash) => {
@@ -1191,8 +1254,8 @@
     c.beginPath(); c.moveTo(0, -26); c.lineTo(0, 22); c.stroke(); c.restore();
     shape(sRef, null, "rgba(255,255,255,0.6)", [4, 4]);
   }
-  function drawEar(t) {
-    const { c, w, h } = sizeCanvas($("og-ear"));
+  function drawEar(t, cv = $("og-ear")) {
+    const { c, w, h } = sizeCanvas(cv);
     c.clearRect(0, 0, w, h);
     const aq = t.cochlea / 100, turns = 1.8 + aq * 1.1, flat = 1 - aq * 0.48, grow = 0.95 + aq * 0.45;
     // Cochlea spiral
@@ -1229,6 +1292,19 @@
       c.fillStyle = color; c.beginPath(); c.arc(x, y, 3.5, 0, 7); c.fill();
     });
   }
+  function addGallery(label) {
+    const m = meanTraits(G.pop);
+    G.gallery.push({ hab: G.hab, gen: label ? 0 : G.gen + 1, label: label || "", brain: Math.round(m.brain), cochlea: Math.round(m.cochlea), canal: Math.round(m.canal) });
+    G.gallery = G.gallery.slice(-30); save();
+  }
+  function renderGallery() {
+    const box = $("og-gallery"); if (!box) return;
+    if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Play a season to start collecting brains and inner ears.</p>'; return; }
+    box.innerHTML = G.gallery.slice().reverse().map((g, i) => `<figure class="og-gtile og-g-${g.hab}"><div><canvas data-gi="${i}" data-kind="brain"></canvas><canvas data-gi="${i}" data-kind="ear"></canvas></div>
+      <figcaption><b>${g.label || "Gen " + g.gen} · ${HAB[g.hab].name}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`).join("");
+    const list = G.gallery.slice().reverse();
+    box.querySelectorAll("canvas[data-gi]").forEach(cv => { const g = list[+cv.dataset.gi]; (cv.dataset.kind === "brain" ? drawBrain : drawEar)(g, cv); });
+  }
   function updatePanels() {
     const pop = G.pop.length ? G.pop : newPopulation(), m = meanTraits(pop);
     drawBrain(m); drawEar(m); drawChart();
@@ -1253,8 +1329,10 @@
   document.querySelector(".og-stage").appendChild(modal);   // so menus also show in full screen
   const WIN_KEYS = { j: "journal", k: "anatomy", v: "evolution", o: "wardrobe", x: "dex", t: "treasure" };
   function flag(k) { if (openK === k) return; const b = document.querySelector(`.og-slot[data-win="${k}"] .og-badge-new`); if (b) { b.hidden = false; b.parentElement.classList.add("has-new"); } $("og-bag").classList.add("has-new"); }
-  function openWin(k) {
-    if (!openK) lastFocus = document.activeElement;
+  let winHist = [];
+  function openWin(k, fromBack) {
+    if (!openK) { lastFocus = document.activeElement; winHist = []; }
+    else if (!fromBack && openK !== k) winHist.push(openK);
     openK = k; modal.hidden = false; keys = {};
     if (S && G.screen === "season") S.paused = true;
     document.querySelectorAll(".og-window").forEach(w => w.hidden = w.dataset.win !== k);
@@ -1263,21 +1341,23 @@
     $("og-modal-title").textContent = w.querySelector("h2").textContent;
     $("og-modal-icon").innerHTML = document.querySelector(`.og-slot[data-win="${k}"] svg`).outerHTML;
     const b = document.querySelector(`.og-slot[data-win="${k}"]`); b.querySelector(".og-badge-new").hidden = true; b.classList.remove("has-new"); $("og-bag").classList.toggle("has-new", !!document.querySelector(".og-slot.has-new"));
-    if (k === "anatomy" || k === "evolution") requestAnimationFrame(updatePanels);
+    if (k === "anatomy" || k === "evolution") requestAnimationFrame(() => { updatePanels(); if (k === "anatomy") renderGallery(); });
     beep(520, 0.06, "triangle", 0.04);
     $("og-close").focus({ preventScroll: true });
   }
   function closeWin() {
     if (!openK) return; openK = null; modal.hidden = true; keys = {};
-    if (S && G.screen === "season") { S.paused = false; lastT = performance.now(); glc.focus({ preventScroll: true }); }
+    if (S && G.screen === "season") { if (!$("og-screen").querySelector(".og-pause")) { S.paused = false; lastT = performance.now(); glc.focus({ preventScroll: true }); } }
     else if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
   }
   document.querySelectorAll(".og-slot, .og-modal-tabs [data-win]").forEach(b => b.addEventListener("click", () => openWin(b.dataset.win)));
   $("og-close").addEventListener("click", closeWin);
+  $("og-win-back").addEventListener("click", () => { const prev = winHist.pop(); prev ? openWin(prev, true) : closeWin(); });
   modal.addEventListener("click", e => { if (e.target === modal) closeWin(); });
   window.addEventListener("keydown", e => {
     if (e.target.closest && e.target.closest("input, textarea")) return;
     if (openK && e.key === "Escape") { e.preventDefault(); closeWin(); return; }
+    if (e.key === "Escape") { e.preventDefault(); goHome(); return; }
     const k = WIN_KEYS[e.key.toLowerCase()];
     if (k && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); openK === k ? closeWin() : openWin(k); }
   });
@@ -1334,6 +1414,33 @@
   }
   $("og-fs").addEventListener("click", () => setFull(!stage.classList.contains("og-fs-on")));
   document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && stage.classList.contains("og-fs-on")) setFull(false); });
+
+  /* ---------- Main menu button and pause ---------- */
+  function quitSeason() {
+    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch();
+    document.querySelector(".og-stage").appendChild($("og-corner"));
+    if (G.habSeasons[G.hab]) G.habSeasons[G.hab]--;
+    S = null; screenTitle(); idleLoop();
+  }
+  function goHome() {
+    if (openK) closeWin();
+    if (G.screen === "season" && S) {
+      if (S.paused && G.screen === "season" && $("og-screen").querySelector(".og-pause")) { resume(); return; }
+      S.paused = true; keys = {};
+      screen(`<div class="og-card og-pause"><h2 class="og-h">Paused</h2>
+        <div class="og-actions og-stack"><button type="button" class="og-btn" id="og-resume">▶ Resume</button>
+        <button type="button" class="og-btn ghost" id="og-pmenu">🎒 Open backpack</button>
+        <button type="button" class="og-btn ghost" id="og-quit">⌂ Main menu</button></div>
+        <p class="og-sub og-small">Going to the main menu skips this season. Your population stays saved.</p></div>`);
+      $("og-resume").addEventListener("click", resume);
+      $("og-pmenu").addEventListener("click", () => openWin(document.querySelector(".og-slot.has-new")?.dataset.win || "journal"));
+      $("og-quit").addEventListener("click", quitSeason);
+      return;
+    }
+    if (G.screen !== "title") { beep(440, 0.06, "triangle", 0.04); screenTitle(); }
+  }
+  function resume() { if (!S) return; screen(""); S.paused = false; lastT = performance.now(); glc.focus({ preventScroll: true }); }
+  $("og-home").addEventListener("click", goHome);
 
   /* ---------- Input ---------- */
   const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S", "Shift", "e", "E", "q", "Q", "c", "C"];

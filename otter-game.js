@@ -79,10 +79,24 @@
     labcoat:    { name: "SQuEACs lab coat", slot: "body", hint: "Reach generation 8." },
   };
 
+  /* ---------- Otter Collection: offspring phenotypes to discover ---------- */
+  const DEX = [
+    { id: "classic",  name: "Classic River Otter", hint: "Raise any pup with middle-of-the-road traits.", why: "Average in every trait, like the starting population.", test: t => TRAITS.every(({ k }) => k === "canal" || (t[k] >= 38 && t[k] <= 62)) },
+    { id: "mutant",   name: "Mighty Mutant",       hint: "Raise a pup born with a mutation.",          why: "Carries a new mutation that neither parent had.", test: (t, p) => p.mut },
+    { id: "fluff",    name: "Fluffball",           hint: "Evolve very thick fur.",                     why: "Fur thickness 80 or more.", test: t => t.fur >= 80 },
+    { id: "giant",    name: "Snow Giant",          hint: "Big body and thick fur. Try the Snowy North.", why: "Large body and thick fur hold in heat (Bergmann's rule).", test: t => t.size >= 70 && t.fur >= 70 },
+    { id: "sprinter", name: "Desert Sprinter",     hint: "Small, thin-furred, long ears and tail. Try the Desert River.", why: "Small body, thin fur, and long extremities shed heat (Allen's rule).", test: t => t.size <= 36 && t.fur <= 32 && t.ext >= 66 },
+    { id: "racer",    name: "Rapids Racer",        hint: "Canals near right angles. Try the Fast Mountain River.", why: "Canal angle 90° or more for sensing quick turns.", test: t => degOf(t.canal) >= 90 },
+    { id: "drifter",  name: "Marsh Drifter",       hint: "Narrow canal angle. Try the Slow Marsh Stream.", why: "Canal angle 77° or less, where calm water relaxes selection.", test: t => degOf(t.canal) <= 77 },
+    { id: "listener", name: "Mud Listener",        hint: "Flat, long cochlea. Try the Murky Pond.", why: "Cochlea score 82 or more for hearing in murky water.", test: t => t.cochlea >= 82 },
+    { id: "thinker",  name: "Big Thinker",         hint: "Evolve a big brain. Try the Deep Clear Lake.", why: "Brain size 72 or more.", test: t => t.brain >= 72 },
+    { id: "saver",    name: "Energy Saver",        hint: "Evolve a small brain where food is scarce.", why: "Brain size 32 or less saves energy (expensive tissue hypothesis).", test: t => t.brain <= 32 },
+  ];
+
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {} };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4) })); } catch (e) {} };
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {} };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; } } catch (e) {}
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 10, fur: 50 + gauss() * 10, ext: 50 + gauss() * 10, cochlea: 50 + gauss() * 10, canal: valOfDeg(84) + gauss() * 8, brain: 50 + gauss() * 10 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -145,17 +159,47 @@
     G.worn[id] = true; save(); renderCloset(); jingle();
     setTimeout(() => toast("Outfit unlocked: " + OUTFITS[id].name + "!"), 400);
   }
+  const BASE = { size: 50, fur: 50, ext: 50, cochlea: 50, canal: 50, brain: 50 };
+  function paintTile(cv, t, worn, locked) {
+    const c = cv.getContext("2d"); c.clearRect(0, 0, cv.width, cv.height); c.save();
+    drawOtter(c, 64, 94, t, { k: 1.0, worn: worn || {} });
+    if (locked) {
+      c.globalCompositeOperation = "source-in"; c.fillStyle = "#2b2540"; c.fillRect(0, 0, cv.width, cv.height);
+      c.globalCompositeOperation = "source-over"; c.fillStyle = "#ff5fa2"; c.font = "700 34px Fredoka, Arial, sans-serif"; c.textAlign = "center"; c.fillText("?", 70, 62);
+    }
+    c.restore();
+  }
+  function tile(id, name, sub, unlocked, extra = "") {
+    const tag = unlocked && extra.includes("data-wear") ? "button" : "div";
+    return `<${tag} ${tag === "button" ? 'type="button" ' : ""}class="og-tile${unlocked ? "" : " locked"}" data-id="${id}" ${extra}>
+      <canvas width="140" height="100" data-tile="${id}" aria-hidden="true"></canvas>
+      <b>${unlocked ? name : "???"}</b><span>${sub}</span></${tag}>`;
+  }
   function renderCloset() {
     const box = $("og-closet");
     box.innerHTML = Object.entries(OUTFITS).map(([id, o]) => G.unlocked[id]
-      ? `<button type="button" class="outfit" data-id="${id}" aria-pressed="${!!G.worn[id]}">${o.name}</button>`
-      : `<span class="outfit locked"><b>Locked</b> ${o.hint}</span>`).join("");
-    box.querySelectorAll("button.outfit").forEach(b => b.addEventListener("click", () => {
+      ? tile(id, o.name, G.worn[id] ? "Wearing · tap to remove" : "Tap to wear", true, `data-wear aria-pressed="${!!G.worn[id]}"`)
+      : tile(id, o.name, o.hint, false)).join("");
+    box.querySelectorAll("canvas[data-tile]").forEach(cv => { const id = cv.dataset.tile; paintTile(cv, BASE, { [id]: true }, !G.unlocked[id]); });
+    box.querySelectorAll("button.og-tile").forEach(b => b.addEventListener("click", () => {
       const id = b.dataset.id, slot = OUTFITS[id].slot, on = !G.worn[id];
       Object.keys(G.worn).forEach(k => { if (OUTFITS[k].slot === slot) G.worn[k] = false; });
       G.worn[id] = on; save(); renderCloset(); if (G.screen !== "season") drawIdle();
     }));
     $("og-outfit-count").textContent = `${Object.keys(OUTFITS).filter(k => G.unlocked[k]).length} of ${Object.keys(OUTFITS).length}`;
+  }
+  function renderDex() {
+    const box = $("og-dex");
+    box.innerHTML = DEX.map(d => G.dex[d.id] ? tile(d.id, d.name, d.why, true) : tile(d.id, d.name, d.hint, false)).join("");
+    box.querySelectorAll("canvas[data-tile]").forEach(cv => { const d = G.dex[cv.dataset.tile]; paintTile(cv, d ? d.t : BASE, {}, !d); });
+    $("og-dex-count").textContent = `${DEX.filter(d => G.dex[d.id]).length} of ${DEX.length}`;
+  }
+  function checkDex(pups) {
+    const found = [];
+    pups.forEach(p => DEX.forEach(d => {
+      if (!G.dex[d.id] && d.test(p.t, p)) { G.dex[d.id] = { t: p.t }; p.newDex = d.name; found.push(d.name); }
+    }));
+    if (found.length) { save(); renderDex(); setTimeout(() => { jingle(); toast((found.length > 1 ? "New otters discovered: " : "New otter discovered: ") + found.join(", ") + "!"); }, 900); }
   }
 
   /* ---------- Otter drawing (shared by game and portraits) ---------- */
@@ -402,14 +446,14 @@
       if (mut) mutated = true;
     }
     const heir = pups.find(p => p.fromLead) || pups[0]; heir.lead = true;
-    G.pop = pups; G.mutated = mutated;
+    G.pop = pups; G.mutated = mutated; checkDex(pups);
     G.history.push(meanTraits(G.pop));
   }
 
   /* ---------- Screens (DOM overlays) ---------- */
   function screen(html) { const el = $("og-screen"); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector("button"); if (b) b.focus({ preventScroll: true }); } }
   function portrait(o, i, cls = "") {
-    return `<div class="og-otter ${cls}" data-i="${i}"><canvas width="140" height="96" data-p="${i}"></canvas>${o.lead ? '<span class="og-you">YOU</span>' : ""}${o.mut ? '<span class="og-mut">MUTATION</span>' : ""}</div>`;
+    return `<div class="og-otter ${cls}" data-i="${i}"><canvas width="140" height="96" data-p="${i}"></canvas>${o.lead ? '<span class="og-you">YOU</span>' : ""}${o.mut ? '<span class="og-mut">MUTANT</span>' : ""}${o.newDex ? '<span class="og-new">NEW!</span>' : ""}</div>`;
   }
   function paintPortraits(pop, root) {
     root.querySelectorAll("canvas[data-p]").forEach(cv => {
@@ -607,5 +651,5 @@
   $("og-mute").addEventListener("click", e => { muted = !muted; e.currentTarget.setAttribute("aria-pressed", String(muted)); e.currentTarget.textContent = muted ? "Sound off" : "Sound on"; canvas.focus({ preventScroll: true }); });
   window.addEventListener("resize", () => { resize(); updatePanels(); if (!running) drawIdle(); });
 
-  resize(); renderCloset(); updatePanels(); screenTitle(); idleLoop();
+  resize(); renderCloset(); renderDex(); updatePanels(); screenTitle(); idleLoop();
 })();

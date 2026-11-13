@@ -1003,3 +1003,12 @@ body.og-noscroll { overflow: hidden; }
 .og-gtile canvas { height: 6.2rem; }
 .og-new { top: auto; right: 3px; bottom: 3px; width: 1.25rem; height: 1.25rem; padding: 0; display: grid; place-items: center; font-size: 0.75rem; border-radius: 50%; background: #3ddc6f; }
 .og-otter:has(.og-new) { box-shadow: 0 0 0 3px #3ddc6f; }
+/* Trait pictures in change list and summary */
+.og-changes-pics { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.og-changes-pics li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.4rem; }
+.og-cname { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+.og-cmp { display: flex; align-items: center; gap: 0.15rem; }
+.og-cmp canvas { width: 3.4rem; height: 2.7rem; background: #1b1530; border-radius: 8px; border: 2px solid #0b0a10; }
+.og-cmp i { font-style: normal; font-weight: 700; color: #7a3fd0; font-size: 0.8rem; }
+.og-tcan { display: block; width: 3.6rem; height: 2.8rem; margin: 0 auto 0.15rem; background: #1b1530; border-radius: 8px; }
+.og-table td span { display: block; }

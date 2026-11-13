@@ -1262,7 +1262,8 @@
     const changes = TRAITS.map(({ k, name, color }) => {
       const d = k === "canal" ? degOf(now[k]) - degOf(prev[k]) : Math.round(now[k] - prev[k]);
       const unit = k === "canal" ? "°" : "";
-      return `<li>${TICON[k]}<span>${name}</span><b class="${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? ARROW.up + "+" : d < 0 ? ARROW.down : ARROW.same}${d}${unit}</b></li>`;
+      const start = G.history[0][k];
+      return `<li><span class="og-cname">${TICON[k]}${name}</span><span class="og-cmp"><canvas data-tk="${k}" data-tv="${start}" title="Starting otters"></canvas><i aria-hidden="true">▸</i><canvas data-tk="${k}" data-tv="${now[k]}" title="Now"></canvas></span><b class="${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? ARROW.up + "+" : d < 0 ? ARROW.down : ARROW.same}${d}${unit}</b></li>`;
     }).join("");
     screen(`<div class="og-card og-wide">
       <p class="og-badge">Generation ${G.gen + 1} is born</p>
@@ -1270,10 +1271,11 @@
       <p class="og-sub">Each pup inherits a blend of its parents' traits.${G.mutated ? " A few carry new mutations." : ""}</p>
       <div class="og-grid" id="og-grid">${G.pop.map((o, i) => portrait(o, i)).join("")}</div>
       <h3 class="og-h3">How the population changed</h3>
-      <ul class="og-changes">${changes}</ul>
+      <p class="og-sub og-small">Pictures compare the starting otters (left) with this generation (right). Numbers show the change since last generation.</p>
+      <ul class="og-changes og-changes-pics">${changes}</ul>
       <div class="og-actions"><button type="button" class="og-btn" id="og-next">${G.gen + 1 > GENS ? "See your results →" : "Play next season →"}</button>
       ${G.gen + 1 <= GENS ? '<button type="button" class="og-btn ghost" id="og-move">Move to a new habitat</button>' : ""}</div></div>`);
-    paintPortraits(G.pop, $("og-grid"));
+    paintPortraits(G.pop, $("og-grid")); paintTraits($("og-screen"));
     showFact("inherit"); if (G.mutated) setTimeout(() => showFact("mutation"), 600);
     G.gen++; updatePanels(); checkTraitUnlocks();
     $("og-next").addEventListener("click", () => { beep(660, 0.08, "triangle"); G.gen > GENS ? screenSummary() : screenBriefing(); });
@@ -1284,16 +1286,16 @@
     const start = G.history[0], end = G.history[G.history.length - 1];
     G.runs.push({ hab: G.hab, start: G.startHab, end }); G.runs = G.runs.slice(-4); save();
     const fmt = (k, v) => k === "canal" ? degOf(v) + "°" : Math.round(v);
-    const cell = (k, v) => { const d = k === "canal" ? degOf(v) - degOf(start[k]) : Math.round(v - start[k]); return `<td>${fmt(k, v)} <small class="${d > 2 ? "up" : d < -2 ? "down" : ""}">${d > 2 ? ARROW.up : d < -2 ? ARROW.down : ""}</small></td>`; };
+    const cell = (k, v) => { const d = k === "canal" ? degOf(v) - degOf(start[k]) : Math.round(v - start[k]); return `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${v}"></canvas><span>${fmt(k, v)} <small class="${d > 2 ? "up" : d < -2 ? "down" : ""}">${d > 2 ? ARROW.up : d < -2 ? ARROW.down : ""}</small></span></td>`; };
     const rows = G.runs.slice().reverse().map(r => `<tr><th>${HAB[r.hab].name}</th>${TRAITS.map(({ k }) => cell(k, r.end[k])).join("")}</tr>`).join("");
     screen(`<div class="og-card og-wide">
       <p class="og-badge">${GENS} generations complete</p>
       <h2 class="og-h">Your otters evolved!</h2>
       <p class="og-sub">Started in ${HAB[G.startHab].name}, ended in ${HAB[G.hab].name}. Compare populations from different habitats: one species, many forms.</p>
       <div class="og-table-wrap"><table class="og-table"><thead><tr><th>Population</th>${TRAITS.map(t => `<th><span class="og-th">${TICON[t.k]}${t.name}</span></th>`).join("")}</tr></thead>
-      <tbody><tr class="start"><th>Starting otters</th>${TRAITS.map(({ k }) => `<td>${fmt(k, start[k])}</td>`).join("")}</tr>${rows}</tbody></table></div>
+      <tbody><tr class="start"><th>Starting otters</th>${TRAITS.map(({ k }) => `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${start[k]}"></canvas><span>${fmt(k, start[k])}</span></td>`).join("")}</tr>${rows}</tbody></table></div>
       <div class="og-actions"><button type="button" class="og-btn" id="og-again">Start a new population</button></div></div>`);
-    showFact("adapt"); G.inRun = false;
+    paintTraits($("og-screen")); showFact("adapt"); G.inRun = false;
     $("og-again").addEventListener("click", () => screenSettings(() => screenHabitat(true)));
   }
   function checkTraitUnlocks() {
@@ -1306,9 +1308,10 @@
 
   /* ---------- Anatomy and chart panels ---------- */
   function sizeCanvas(cv) { const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); const c = cv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0); return { c, w: r.width, h: r.height }; }
-  function drawBrain(t, cv = $("og-brain")) {
-    const { c, w, h } = sizeCanvas(cv);
-    c.clearRect(0, 0, w, h);
+  // Drawings use a 150 x 120 logical canvas, scaled to fit any size
+  function fitCanvas(cv) { const o = sizeCanvas(cv); o.c.clearRect(0, 0, o.w, o.h); const k = Math.min(o.w / 150, o.h / 120) || 1; o.c.translate((o.w - 150 * k) / 2, (o.h - 120 * k) / 2); o.c.scale(k, k); return { c: o.c, w: 150, h: 120, k }; }
+  function drawBrain(t, cv = $("og-brain"), opts = {}) {
+    const { c, w, h } = fitCanvas(cv);
     const cx = w / 2, cy = h / 2 + 4;
     const shape = (s, fill, stroke, dash) => {
       c.save(); c.translate(cx, cy); c.scale(s, s); c.setLineDash(dash || []);
@@ -1324,29 +1327,42 @@
     const g = 2 + Math.floor(t.brain / 22);
     for (let i = 0; i < g; i++) { const yy = -18 + i * (40 / g); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(sd * 4, yy); c.quadraticCurveTo(sd * 16, yy - 5, sd * 27, yy + 2); c.stroke(); }); }
     c.beginPath(); c.moveTo(0, -26); c.lineTo(0, 22); c.stroke(); c.restore();
-    shape(sRef, null, "rgba(255,255,255,0.6)", [4, 4]);
+    if (opts.ref !== false) shape(sRef, null, "rgba(255,255,255,0.6)", [4, 4]);
   }
-  function drawEar(t, cv = $("og-ear")) {
-    const { c, w, h } = sizeCanvas(cv);
-    c.clearRect(0, 0, w, h);
+  function drawEar(t, cv = $("og-ear"), opts = {}) {
+    const { c, w, h, k } = fitCanvas(cv);
     const aq = t.cochlea / 100, turns = 1.8 + aq * 1.1, flat = 1 - aq * 0.48, grow = 0.95 + aq * 0.45;
+    const only = opts.only;
     // Cochlea spiral
-    c.save(); c.translate(w * 0.28, h * 0.6); c.scale(1, flat);
+    if (only !== "canals") {
+    c.save(); if (only === "cochlea") { c.translate(w / 2, h / 2); c.scale(1.45, 1.45 * flat); } else { c.translate(w * 0.28, h * 0.6); c.scale(1, flat); }
     c.strokeStyle = "#ffcc4d"; c.lineWidth = 5; c.lineCap = "round"; c.beginPath();
     for (let a = 0; a <= turns * Math.PI * 2; a += 0.08) { const r = 3 + a * grow; const x = Math.cos(a) * r, y = Math.sin(a) * r; a ? c.lineTo(x, y) : c.moveTo(x, y); }
     c.stroke(); c.restore();
+    }
+    if (only === "cochlea") return;
     // Vestibule
-    const vx = w * 0.72, vy = h * 0.66;
+    const vx = only === "canals" ? w / 2 : w * 0.72, vy = only === "canals" ? h * 0.8 : h * 0.66;
+    if (only === "canals") { c.translate(vx, vy); c.scale(1.35, 1.35); c.translate(-vx, -vy); }
     c.fillStyle = "#e0b43a"; c.beginPath(); c.ellipse(vx, vy, 16, 12, 0, 0, 7); c.fill();
-    c.strokeStyle = "#e0b43a"; c.lineWidth = 6; c.beginPath(); c.moveTo(w * 0.28, h * 0.6); c.lineTo(vx - 14, vy); c.stroke();
+    if (!only) { c.strokeStyle = "#e0b43a"; c.lineWidth = 6; c.beginPath(); c.moveTo(w * 0.28, h * 0.6); c.lineTo(vx - 14, vy); c.stroke(); }
     // Canals: anterior and posterior separated by the canal angle
     const deg = degOf(t.canal), half = deg / 2 * Math.PI / 180;
     const canal = (rot, col) => { c.save(); c.translate(vx, vy - 8); c.rotate(rot); c.strokeStyle = col; c.lineWidth = 5; c.beginPath(); c.ellipse(0, -20, 9, 20, 0, Math.PI * 0.55, Math.PI * 2.45); c.stroke(); c.restore(); };
     canal(-half, "#ff5fa2"); canal(half, "#a47bff");
     c.save(); c.translate(vx + 16, vy + 4); c.strokeStyle = "#2ed3c6"; c.lineWidth = 4; c.beginPath(); c.ellipse(0, 0, 18, 7, 0, Math.PI * 0.75, Math.PI * 2.6); c.stroke(); c.restore();
     c.strokeStyle = "rgba(255,255,255,0.75)"; c.lineWidth = 1.2; c.beginPath(); c.arc(vx, vy - 8, 18, -Math.PI / 2 - half, -Math.PI / 2 + half); c.stroke();
-    c.fillStyle = "#fff"; c.font = "700 12px Fredoka, Arial, sans-serif"; c.textAlign = "center"; c.fillText(deg + "°", vx, vy - 52); c.textAlign = "left";
+    if (!opts.noLabel && k > 0.45) { c.fillStyle = "#fff"; c.font = "700 12px Fredoka, Arial, sans-serif"; c.textAlign = "center"; c.fillText(deg + "°", vx, vy - 52); c.textAlign = "left"; }
   }
+  // Small picture of one trait: brain, cochlea, and canals use the anatomy drawings; body traits use the otter
+  function paintTrait(cv, k, v) {
+    if (k === "brain") return drawBrain({ brain: v }, cv, { ref: false });
+    if (k === "cochlea") return drawEar({ cochlea: v, canal: 50 }, cv, { only: "cochlea" });
+    if (k === "canal") return drawEar({ cochlea: 50, canal: v }, cv, { only: "canals", noLabel: true });
+    const { c } = fitCanvas(cv); c.fillStyle = "#e6f6fb"; c.fillRect(-60, -60, 270, 240);
+    drawOtter(c, 64, 112, { size: 50, fur: 50, ext: 50, brain: 50, cochlea: 50, canal: 50, [k]: v }, { k: 1.45 });
+  }
+  function paintTraits(root) { root.querySelectorAll("canvas[data-tk]").forEach(cv => paintTrait(cv, cv.dataset.tk, +cv.dataset.tv)); }
   function drawChart() {
     const { c, w, h } = sizeCanvas($("og-chart"));
     c.clearRect(0, 0, w, h);

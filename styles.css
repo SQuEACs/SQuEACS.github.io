@@ -708,3 +708,7 @@ section > .wrap { padding-block: 4.5rem; }
 .game-note { font-size: 0.8125rem; color: var(--muted); max-width: 52rem; }
 @media (prefers-reduced-motion: reduce) { .game-panel.fact.pulse { animation: none; } .bar i { transition: none; } }
 .os-game { grid-template-columns: minmax(0, 1fr); background: linear-gradient(110deg, rgba(46,211,198,0.14), rgba(164,123,255,0.14)); }
+.fact-log { margin-top: 0.4rem; padding-top: 0.8rem; border-top: 1px dashed var(--line); display: grid; gap: 0.5rem; }
+.fact-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.fact-chip { font: 500 0.75rem/1.2 var(--body); padding: 0.35rem 0.6rem; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--ink); color: #d6d0e2; cursor: pointer; }
+.fact-chip[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }

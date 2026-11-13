@@ -29,6 +29,9 @@
     cold:  { title: "Built for the cold", text: "Bergmann's rule predicts bigger, rounder bodies in cold places, and Allen's rule predicts shorter ears and tails that lose less heat. We tested both rules in pine martens.", href: "research.html#limb", link: "Limb research" },
     warm:  { title: "Shedding heat", text: "In warm places the predictions flip: leaner bodies and longer tails help shed heat. Climate can shape a species differently from one population to the next.", href: "research.html#limb", link: "Limb research" },
     water: { title: "Keeping your balance", text: "Diving and turning underwater challenge balance. The semicircular canals of the inner ear sense head rotation, and we study how they vary among river otters living in different environments.", href: "research.html#inner-ear", link: "Inner ear research" },
+    brainDiet:   { title: "Hypothesis: diet quality and brain size", text: "Brain tissue is energy-hungry. One hypothesis we test is that energy-rich diets, like a steady supply of fish, help animals afford larger brains. Our work across carnivorans suggests the link differs from one group to another.", href: "research.html#brain", link: "Brain research" },
+    brainHabitat:{ title: "Hypothesis: complex habitats and brain size", text: "Moving through forests, waterways, and three-dimensional underwater space may demand more brainpower. We test whether animals from more complex environments have larger brains by comparing endocasts across populations.", href: "research.html#brain", link: "Brain research" },
+    brainSocial: { title: "Hypothesis: sociality and brain size", text: "The social brain hypothesis proposes that keeping track of others favors larger brains. We test whether social behavior helps explain brain size and shape among musteloids, from solitary mink to more social otters.", href: "research.html#brain", link: "Brain research" },
     size:  { title: "One species, many shapes", text: "Your otter now looks different from where it started. Populations of the same species vary like this, and our lab asks which forces drive that variation.", href: "index.html#what-we-do", link: "The big question" },
   };
 
@@ -40,15 +43,24 @@
     goggles:    { name: "Swim goggles",     slot: "eyes", hint: "Dive deep and swim a lot." },
     chef:       { name: "Chef's hat",       slot: "hat",  hint: "Eat 8 fish." },
     crown:      { name: "Crayfish crown",   slot: "hat",  hint: "Eat 5 crayfish." },
+    gradcap:    { name: "Thinking cap",     slot: "hat",  hint: "Grow a big brain." },
     labcoat:    { name: "SQuEACs lab coat", slot: "body", hint: "Unlock every other outfit." },
   };
 
   /* ---------- State ---------- */
+  let friends = [];
+  function makeFriends() {
+    return [
+      { x: 2450, y: GROUND, swim: false, color: "#2ed3c6", phase: 0 },
+      { x: 3750, y: GROUND + 4, swim: true, color: "#a47bff", phase: 1.5 },
+      { x: 4150, y: GROUND + 4, swim: true, color: "#ff5fa2", phase: 3 },
+    ];
+  }
   let st, items, flakes, keys = {}, running = false, lastT = 0, toastTimer = 0;
   function freshState() {
     return {
       x: 300, y: GROUND, vx: 0, vy: 0, face: 1, onGround: true, swimming: false, diving: false,
-      mass: 30, fur: 40, jaw: 20, balance: 10,
+      mass: 30, fur: 40, jaw: 20, balance: 10, brain: 20, habitat: 0, social: 0, visited: {},
       fish: 0, crayfish: 0, seen: {}, unlocked: {}, worn: {}, t: 0,
     };
   }
@@ -108,16 +120,24 @@
     const keep = st ? { unlocked: st.unlocked, worn: st.worn } : null;
     st = freshState();
     if (keepOutfits && keep) { st.unlocked = keep.unlocked; st.worn = keep.worn; } else loadSaved();
-    items = makeItems(); flakes = makeFlakes();
+    items = makeItems(); flakes = makeFlakes(); friends = makeFriends();
     updatePanel(true); renderCloset();
   }
 
+  function renderFact(key) {
+    const f = FACTS[key];
+    const found = Object.keys(FACTS).filter(k => st.seen[k]);
+    const box = document.getElementById("otter-fact");
+    box.innerHTML = `<p class="label">Did you know?</p><h3>${f.title}</h3><p>${f.text}</p><a href="${f.href}">${f.link} →</a>
+      <div class="fact-log"><p class="label">Facts found: ${found.length} of ${Object.keys(FACTS).length}</p>
+      <div class="fact-chips">${found.map(k => `<button type="button" class="fact-chip" data-fact="${k}" aria-pressed="${k === key}">${(t => t.charAt(0).toUpperCase() + t.slice(1))(FACTS[k].title.replace(/^Hypothesis: /, ""))}</button>`).join("")}</div></div>`;
+    box.querySelectorAll(".fact-chip").forEach(b => b.addEventListener("click", () => renderFact(b.dataset.fact)));
+  }
   function showFact(key) {
     if (st.seen[key]) return;
     st.seen[key] = true;
-    const f = FACTS[key];
+    renderFact(key);
     const box = document.getElementById("otter-fact");
-    box.innerHTML = `<p class="label">Did you know?</p><h3>${f.title}</h3><p>${f.text}</p><a href="${f.href}">${f.link} →</a>`;
     box.classList.remove("pulse"); void box.offsetWidth; box.classList.add("pulse");
   }
   function toast(msg) {
@@ -188,6 +208,27 @@
         burst(it.x, iy, it.type === "fish" ? "#2ed3c6" : "#ff8a5c");
       }
     }
+    // Brain: three hypotheses (diet quality, habitat complexity, sociality)
+    st.visited[z] = true;
+    if (z === "forest") st.habitat = clamp(st.habitat + 4 * dt, 0, 100);
+    if (st.diving) st.habitat = clamp(st.habitat + 5 * dt, 0, 100);
+    st.habitat = clamp(st.habitat - 0.3 * dt, Object.keys(st.visited).length * 10, 100);
+    let near = false;
+    friends.forEach(f => {
+      if (f.swim) f.x = f.x0 === undefined ? (f.x0 = f.x) : f.x0 + Math.sin(st.t * 0.6 + f.phase) * 60;
+      if (Math.abs(f.x - st.x) < 80 && Math.abs(f.y - st.y) < 50) { near = true; if (!reduceMotion && Math.random() < 0.12) parts.push({ x: (f.x + st.x) / 2, y: st.y - 40, vx: (Math.random() - 0.5), vy: -1, life: 0.9, c: "#ff5fa2", heart: true }); }
+    });
+    st.social = clamp(st.social + (near ? 14 : -0.6) * dt, 0, 100);
+    const eaten = st.fish + st.crayfish;
+    const dietQ = eaten ? (st.fish / eaten) * 100 * Math.min(1, eaten / 6) : 0;
+    st.dietQ = dietQ;
+    const brainTarget = 15 + 0.3 * dietQ + 0.3 * st.habitat + 0.3 * st.social;
+    st.brain = clamp(lerp(st.brain, brainTarget, 0.6 * dt), 0, 100);
+    if (st.fish >= 3 && dietQ > 55) showFact("brainDiet");
+    if (st.habitat > 50) showFact("brainHabitat");
+    if (near) showFact("brainSocial");
+    if (st.brain >= 68) unlock("gradcap");
+
     // Facts and unlocks
     if (st.fur > 68) showFact("cold");
     if (st.fur < 18) showFact("warm");
@@ -270,8 +311,9 @@
       ctx.fillStyle = "rgba(255,255,255,0.85)";
       flakes.forEach(f => { if (f.x > camX - 10 && f.x < camX + viewW + 10) { ctx.beginPath(); ctx.arc(f.x, f.y, f.s, 0, 7); ctx.fill(); } });
     }
+    friends.forEach(f => { if (f.x > camX - 80 && f.x < camX + viewW + 80) drawFriend(f); });
     drawOtter();
-    parts.forEach(p => { ctx.globalAlpha = Math.max(0, p.life / 0.6); ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 3, 3); });
+    parts.forEach(p => { ctx.globalAlpha = Math.max(0, Math.min(1, p.life / 0.6)); ctx.fillStyle = p.c; if (p.heart) heart(p.x, p.y, 5); else ctx.fillRect(p.x, p.y, 3, 3); });
     ctx.globalAlpha = 1;
     ctx.restore();
   }
@@ -305,6 +347,29 @@
     ctx.fillStyle = snowy ? "#2f5a4a" : "#1f4d35";
     for (let i = 0; i < 3; i++) { const w = 26 - i * 6, ty = y - 12 - i * h * 0.28; ctx.beginPath(); ctx.moveTo(x - w, ty); ctx.lineTo(x + w, ty); ctx.lineTo(x, ty - h * 0.42); ctx.fill(); }
     if (snowy) { ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.moveTo(x - 8, y - 12 - h * 0.62); ctx.lineTo(x + 8, y - 12 - h * 0.62); ctx.lineTo(x, y - 12 - h * 0.98); ctx.fill(); }
+  }
+  function heart(x, y, r) {
+    ctx.beginPath(); ctx.moveTo(x, y + r * 0.9);
+    ctx.bezierCurveTo(x - r * 1.6, y - r * 0.2, x - r * 0.6, y - r * 1.4, x, y - r * 0.4);
+    ctx.bezierCurveTo(x + r * 0.6, y - r * 1.4, x + r * 1.6, y - r * 0.2, x, y + r * 0.9); ctx.fill();
+  }
+  function drawFriend(f) {
+    const L = 62, H = 22, face = Math.sin(st.t * 0.6 + f.phase) > 0 ? 1 : -1;
+    const by = f.swim ? GROUND + 2 + Math.sin(st.t * 2 + f.phase) * 2 : f.y - 7 - H / 2;
+    ctx.save(); ctx.translate(f.x, by); ctx.scale(f.swim ? face : (st.x > f.x ? 1 : -1), 1);
+    ctx.fillStyle = "#4e2e1a";
+    ctx.beginPath(); ctx.moveTo(-L * 0.45, -2); ctx.quadraticCurveTo(-L * 0.8, 4, -L * 0.95, 9); ctx.quadraticCurveTo(-L * 0.7, 10, -L * 0.45, 6); ctx.fill();
+    if (!f.swim) [[-L * 0.3], [-L * 0.15], [L * 0.22], [L * 0.35]].forEach(([lx]) => ctx.fillRect(lx - 3, H * 0.3, 6, 9));
+    ctx.fillStyle = "#8a5634"; ctx.beginPath(); ctx.ellipse(0, 0, L / 2, H / 2, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#d7ad80"; ctx.beginPath(); ctx.ellipse(L * 0.05, H * 0.2, L * 0.3, H * 0.2, 0, 0, 7); ctx.fill();
+    const hx = L * 0.5, hy = -H * 0.32, hr = 10;
+    ctx.fillStyle = "#8a5634"; ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
+    ctx.fillStyle = "#d7ad80"; ctx.beginPath(); ctx.ellipse(hx + hr * 0.45, hy + hr * 0.35, 5, 4, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#4e2e1a"; ctx.beginPath(); ctx.arc(hx - hr * 0.35, hy - hr * 0.85, 3.5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#0b0a10"; ctx.beginPath(); ctx.arc(hx + hr * 0.3, hy - hr * 0.2, 1.8, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx + hr * 0.95, hy + hr * 0.15, 2.2, 0, 7); ctx.fill();
+    ctx.fillStyle = f.color; ctx.fillRect(hx - hr * 0.9, hy + hr * 0.55, hr * 1.3, 4);
+    ctx.restore();
   }
   function drawFish(x, y, dir) {
     ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
@@ -372,7 +437,7 @@
       ctx.fillStyle = "#ff5fa2"; ctx.fillRect(L * 0.02, -H * 0.12, 6, 5);
     }
     // Head
-    const hx = L * 0.5, hy = -H * 0.32, hr = 10 + st.mass * 0.05;
+    const hx = L * 0.5, hy = -H * 0.32, hr = 9 + st.mass * 0.04 + st.brain * 0.05;
     ctx.fillStyle = fur; ctx.beginPath(); ctx.arc(hx, hy, hr, 0, 7); ctx.fill();
     // Cheeks grow with jaw muscles
     const cheek = 3 + st.jaw * 0.07;
@@ -412,6 +477,10 @@
     } else if (st.worn.chef) {
       ctx.fillStyle = "#ffffff"; ctx.fillRect(hx - hr * 0.6, hy - hr * 1.5, hr * 1.2, hr * 0.8);
       ctx.beginPath(); ctx.arc(hx - hr * 0.35, hy - hr * 1.6, hr * 0.42, 0, 7); ctx.arc(hx + hr * 0.35, hy - hr * 1.6, hr * 0.42, 0, 7); ctx.fill();
+    } else if (st.worn.gradcap) {
+      ctx.fillStyle = "#15121e"; ctx.fillRect(hx - hr * 0.55, hy - hr * 1.05, hr * 1.1, hr * 0.35);
+      ctx.beginPath(); ctx.moveTo(hx - hr * 1.05, hy - hr * 1.1); ctx.lineTo(hx, hy - hr * 1.45); ctx.lineTo(hx + hr * 1.05, hy - hr * 1.1); ctx.lineTo(hx, hy - hr * 0.8); ctx.fill();
+      ctx.strokeStyle = "#ff5fa2"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx, hy - hr * 1.12); ctx.lineTo(hx + hr * 0.95, hy - hr * 0.95); ctx.lineTo(hx + hr * 0.95, hy - hr * 0.55); ctx.stroke();
     } else if (st.worn.crown) {
       ctx.fillStyle = "#ffb347"; ctx.beginPath();
       ctx.moveTo(hx - hr * 0.6, hy - hr * 0.75); ctx.lineTo(hx - hr * 0.6, hy - hr * 1.35); ctx.lineTo(hx - hr * 0.3, hy - hr * 1.0);
@@ -430,6 +499,7 @@
     ["ext", "Ear and tail length", () => 100 - st.fur * 0.8],
     ["jaw", "Jaw muscles", () => st.jaw],
     ["balance", "Balance (inner ear)", () => st.balance],
+    ["brain", "Brain size", () => st.brain],
   ];
   function updatePanel(build) {
     const box = document.getElementById("otter-traits");

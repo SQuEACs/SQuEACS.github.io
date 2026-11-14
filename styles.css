@@ -1208,3 +1208,13 @@ body.tg-big .og-sub.og-small { font-size: 1em; }
 .og-meta a { font-weight: 600; }
 .fact-chip.locked { opacity: .55; cursor: default; border-style: dashed; }
 body.tg-big .og-meta { font-size: 1.22em; line-height: 1.5; }
+/* Home: free science games */
+.home-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.2rem; margin-top: 1.2rem; }
+.home-game { display: grid; grid-template-rows: auto 1fr; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 14px; overflow: hidden; color: var(--fg); text-decoration: none; transition: transform 0.15s, border-color 0.15s; }
+.home-game:hover { transform: translateY(-3px); border-color: var(--pink); }
+.home-game img { width: 100%; height: auto; aspect-ratio: 1200 / 630; object-fit: cover; display: block; }
+.home-game > div { display: grid; gap: 0.6rem; align-content: start; padding: 1rem 1.1rem 1.2rem; }
+.home-game h3 { font-size: var(--step-1, 1.3rem); }
+.home-game p { color: #d6d0e2; }
+.home-game .btn { justify-self: start; }
+@media (prefers-reduced-motion: reduce) { .home-game { transition: none; } }

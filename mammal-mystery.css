@@ -86,7 +86,7 @@
 .mm-zoom.mm-pic { background: #fff; display: grid; place-items: center; }
 .mm-zoom.mm-pic svg { width: 120%; height: auto; max-width: none; }
 .mm-zoom.mm-foodclue svg { width: 80%; }
-.mm-shadow svg { filter: brightness(0) opacity(.82); }
+.mm-shadow svg > g[data-part] { filter: brightness(0) opacity(.85); }
 .mm-hear { position: absolute; left: -6px; bottom: -6px; width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--mm-ink); background: #fff; padding: 7px; box-shadow: 0 3px 0 var(--mm-ink); z-index: 2; }
 .mm-hear svg { width: 100%; height: 100%; }
 .mm-hear.sm { position: static; width: 40px; height: 40px; padding: 5px; flex: none; }
@@ -155,7 +155,8 @@
 .mm-tip { cursor: pointer; transition: opacity .2s; } .mm-tip.dim { opacity: .25; }
 
 /* case file popup */
-.mm-pop { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; padding: .8rem; background: rgba(42,34,51,.55); overflow-y: auto; }
+.mm-pop { position: absolute; inset: 0; z-index: 8; display: grid; align-items: start; justify-items: center; padding: .8rem; background: rgba(42,34,51,.55); overflow-y: auto; }
+.mm-pop > * { margin-block: auto; }
 .mm-file { position: relative; width: min(100%, 56rem); background: #f7dfa6; border: 4px solid var(--mm-ink); border-radius: 8px 22px 22px 22px; box-shadow: 0 10px 0 var(--mm-ink); padding: 1.2rem 1.2rem 1rem; animation: mm-pop .4s cubic-bezier(.3,1.4,.5,1); }
 .mm-file-tab { position: absolute; top: -36px; left: -4px; display: flex; align-items: center; gap: .4rem; background: #f7dfa6; border: 4px solid var(--mm-ink); border-bottom: 0; border-radius: 14px 14px 0 0; padding: .25rem .9rem; font: 700 1rem/1 var(--mm-font); letter-spacing: .08em; }
 .mm-file-tab svg { width: 26px; height: 26px; }
@@ -164,7 +165,8 @@
 .mm-photo img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; z-index: 1; }
 .mm-photo figcaption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; background: rgba(0,0,0,.55); color: #fff; font: 400 .7rem/1.3 var(--body, sans-serif); padding: .2rem .4rem; }
 .mm-photo figcaption a { color: #fff; }
-.mm-photo-fallback { width: 86%; height: 86%; }
+.mm-photo-fallback { width: 100%; height: 100%; }
+.mm-nophoto .mm-photo-fallback { position: absolute; inset: 0; }
 .mm-file-text h3 { margin: 0 0 .3rem; font: 700 clamp(1.7rem, 4vw, 2.4rem)/1.05 var(--mm-font); color: var(--mm-ink); }
 .mm-where { display: flex; align-items: center; gap: .6rem; margin: 0 0 .6rem; font: 600 1.05rem/1.2 var(--mm-font); }
 .mm-where svg { width: 66px; height: auto; border: 3px solid var(--mm-ink); border-radius: 8px; flex: none; }
@@ -175,13 +177,15 @@
 @media (max-width: 640px) { .mm-file-body { grid-template-columns: 1fr; } .mm-photo { max-width: 320px; justify-self: center; width: 100%; } .mm-file { margin-bottom: 1.5rem; } }
 
 /* teacher panel */
-.mm-teacher { display: grid; gap: .8rem; max-width: 30rem; font: 500 1.05rem/1.3 var(--mm-font); }
+.mm-teacher { display: grid; grid-template-columns: minmax(0, 1fr); gap: .6rem; max-width: 32rem; font: 500 1.05rem/1.3 var(--mm-font); }
 .mm-teacher h3 { margin: 0; font: 700 1.6rem/1 var(--mm-font); }
 .mm-teacher label { display: grid; gap: .3rem; }
 .mm-teacher label.mm-check { display: flex; align-items: center; gap: .5rem; }
 .mm-teacher input[type="checkbox"] { width: 24px; height: 24px; }
 .mm-teacher select { font: 500 1.05rem var(--mm-font); padding: .45rem; border: 3px solid var(--mm-ink); border-radius: 10px; background: #fff; color: var(--mm-ink); }
 .mm-t-note { font-size: .9rem; margin: 0; }
+.mm-t-voice { display: flex; gap: .5rem; align-items: center; }
+.mm-t-voice select { flex: 1; min-width: 0; width: 100%; }
 
 /* confetti */
 .mm-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 9; }

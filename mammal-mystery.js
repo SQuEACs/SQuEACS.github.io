@@ -9,15 +9,42 @@
    ============================================================ */
 (function () {
   const ART = window.MM_ART, D = window.MM_DATA;
+  // Picture behind an animal: rabbits get a meadow, kangaroos the outback, others their habitat.
+  const sceneOf = id => D.ANIMALS[id].scene || D.ANIMALS[id].hab;
   const CL = !!window.MM_CLASSROOM;
   const $ = id => document.getElementById(id);
   const root = $("mm-stage"); if (!root) return;
   const view = $("mm-view"), cap = $("mm-cap"), pop = $("mm-pop");
   const SAVE_KEY = CL ? "squeacs-mammal-mystery-classroom" : "squeacs-mammal-mystery";
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // Say it a different way each time: deal phrases from a shuffled pile, never the same one twice in a row.
+  const piles = {}, lastSaid = {};
+  function vary(key, list) {
+    let p = piles[key];
+    if (!p || !p.length) { p = piles[key] = shuffle(list); if (p.length > 1 && p[p.length - 1] === lastSaid[key]) p.unshift(p.pop()); }
+    return (lastSaid[key] = p.pop());
+  }
+  const PH = {
+    yes: ["Yes!", "You got it!", "That's right!", "Hooray!", "Wow, yes!", "Nice work!", "Great spotting!"],
+    solved: ["Mystery solved!", "Case closed!", "You cracked the case!", "Another mystery solved!", "Super sleuthing!"],
+    toGuide: ["It's going in your field guide.", "I'll add it to your field guide.", "A new page for your field guide!", "Your field guide just got bigger!"],
+    notIt: ["Not this time!", "Hmm, not quite.", "Good guess, but no.", "Nope, keep looking!", "Close, but not this one."],
+    moreClue: ["Here's another clue.", "Let's hear another clue.", "Listen for the next clue.", "Here comes another clue."],
+    first: ["Clue one.", "Here's your first clue.", "First clue!", "Listen closely. Clue one."],
+    next: ["Next clue.", "Another clue!", "Here's a new clue.", "Ooh, one more clue.", "Listen to this one."],
+    last: ["Last clue!", "Here's the very last clue!", "Final clue!", "One last clue!"],
+    who: ["Who am I?", "Who could it be?", "Which animal is it?", "Can you guess who I am?", "Who's hiding?"],
+    newCase: ["Here's a new mystery!", "Another animal is hiding!", "Ready, detective? New mystery!", "Shh! Someone new is hiding.", "On to the next case!", "Grab your magnifying glass. New mystery!"],
+    tryAgain: ["Try again!", "Give it another try!", "Have another go!", "You can do it. Try again!"],
+    done: ["Great job!", "Super detective work!", "You did it!", "Fantastic!", "Way to go!"],
+    lastLook: ["Look for the animal that matches all the clues!", "Think about every clue. Which animal fits them all?", "Which animal matches all the clues? Take a look!"],
+    endStart: ["Great detective work!", "What a detective you are!", "Wonderful work, detective!", "You were amazing!"],
+    pretty: ["Beautiful", "What a colorful", "I love your", "Gorgeous", "What a wonderful"],
+  };
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const nm = id => D.ANIMALS[id].name;
   const the = id => "the " + nm(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   /* ---------- saved progress ---------- */
@@ -32,13 +59,29 @@
   /* ---------- voice ---------- */
   const SY = "speechSynthesis" in window ? window.speechSynthesis : null;
   let voice = null, sayToken = 0;
+  // Rank the device's English voices so the friendliest, most natural one wins.
+  // Warm voices by platform: Apple Ava/Zoe/Samantha (Enhanced or Premium), Microsoft Natural voices (Edge),
+  // Google voices (Chrome and Android). Joke voices and robotic engines are pushed to the bottom.
+  const WARM = [/\bava\b/i, /\bzoe\b/i, /\bjenny\b/i, /\bemma\b/i, /\baria\b/i, /\bana\b/i, /\bsamantha\b/i, /\ballison\b/i, /\bsusan\b/i, /\bkaren\b/i, /\bmoira\b/i, /\bsonia\b/i, /\blibby\b/i, /\bmichelle\b/i, /google us english/i, /google uk english female/i];
+  const SILLY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|fred|ralph|junior|kathy|grandpa|grandma|rocko|shelley|flo|eddy|reed|sandy|espeak|compact/i;
+  function voiceScore(v) {
+    const n = v.name; let sc = 0;
+    const w = WARM.findIndex(p => p.test(n)); if (w >= 0) sc += 60 - w * 2;
+    if (/natural|neural|premium|enhanced|online/i.test(n)) sc += 40;
+    if (/^en[-_]us/i.test(v.lang)) sc += 8; else if (/^en[-_](gb|au|ie|ca|nz)/i.test(v.lang)) sc += 5;
+    if (/google/i.test(n)) sc += 10;
+    if (v.localService === false) sc += 4;
+    if (SILLY.test(n)) sc -= 200;
+    if (/\bmale\b|daniel|david|mark|guy|alex|aaron|arthur|tom\b|james|george|ryan|eric|roger|christopher|andrew|brian/i.test(n)) sc -= 6;
+    return sc;
+  }
+  let voices = [];
   function pickVoice() {
     if (!SY) return;
-    const vs = SY.getVoices().filter(v => /^en(-|_|$)/i.test(v.lang));
-    const pref = [/samantha/i, /aria/i, /jenny/i, /google us english/i, /natural/i, /en-us/i];
-    for (const p of pref) { const v = vs.find(x => p.test(x.name) || p.test(x.lang)); if (v) { voice = v; return; } }
-    voice = vs[0] || null;
+    voices = SY.getVoices().filter(v => /^en(-|_|$)/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+    voice = (S.opts.voice && voices.find(v => v.name === S.opts.voice)) || voices[0] || null;
   }
+  const isNatural = () => !!voice && /natural|neural|premium|enhanced|online|google/i.test(voice.name);
   if (SY) { pickVoice(); SY.addEventListener && SY.addEventListener("voiceschanged", pickVoice); }
   function stopTalk() { sayToken++; if (SY) SY.cancel(); }
   // Say one line. Resolves when it finishes (or is interrupted). Captions show the words for grown-ups.
@@ -52,8 +95,9 @@
       const u = new SpeechSynthesisUtterance(text.replace(/ossicones/g, "OSS-ih-cones"));
       if (voice) u.voice = voice;
       u.lang = (voice && voice.lang) || "en-US";
-      u.rate = (S.opts.slow ? 0.78 : G() === "pk" ? 0.88 : 0.95);
-      u.pitch = 1.08;
+      // Gentle, unhurried story-time pace. Natural voices sound best at their own pitch; older voices get a small lift.
+      u.rate = S.opts.slow ? 0.76 : G() === "pk" ? 0.86 : 0.92;
+      u.pitch = isNatural() ? 1.0 : 1.06;
       let done = false; const fin = () => { if (!done) { done = true; res(); } };
       u.onend = fin; u.onerror = fin;
       setTimeout(fin, 2500 + text.length * 110);   // some browsers never fire onend
@@ -128,7 +172,7 @@
         <h2 class="mm-logo"><span>Mammal</span> <span>Mystery</span></h2>
         <div class="mm-title-row">${["lion", "panda", "fox", "elephant", "kangaroo"].map(id => `<span class="mm-mini">${ART.animal(id, { face: true })}</span>`).join("")}</div>
         ${btn("mm-big mm-go", 'id="mm-play" aria-label="Play"', `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M13 8 L32 20 L13 32 Z" fill="#0b0a10"/></svg>`)}
-        ${CL ? btn("mm-gear", 'id="mm-gear" aria-label="Teacher settings: press and hold"', ART.icon("gear")) : ""}
+        ${btn("mm-gear", `id="mm-gear" aria-label="${CL ? "Teacher" : "Grown-up"} settings: press and hold"`, ART.icon("gear"))}
       </div>`);
     $("mm-play").addEventListener("click", () => {
       sfx.tap();
@@ -136,7 +180,7 @@
       if (CL && S.opts.lock) { S.grade = S.opts.lock; save(); return menu(true); }
       S.grade ? menu(true) : grades();
     });
-    if (CL) holdToOpen($("mm-gear"), teacherPanel);
+    holdToOpen($("mm-gear"), teacherPanel);
   }
 
   /* ---------- grade picker ---------- */
@@ -196,7 +240,7 @@
       </div>`);
     view.querySelectorAll(".mm-suspect").forEach(b => b.addEventListener("click", () => guess(b)));
     $("mm-more").addEventListener("click", () => { sfx.tap(); nextClue(); });
-    const intro = R.i === 0 ? (g === "pk" ? "Mystery time! An animal is hiding. Listen to the clue, then tap the animal you think it is." : "Mystery time! An animal is hiding. Listen to each clue, then tap the animal that matches.") : pick(["Here's a new mystery!", "Another animal is hiding!", "Ready, detective? New mystery!"]);
+    const intro = R.i === 0 ? (g === "pk" ? "Mystery time! An animal is hiding. Listen to the clue, then tap the animal you think it is." : "Mystery time! An animal is hiding. Listen to each clue, then tap the animal that matches.") : vary("newCase", PH.newCase);
     say(intro).then(ok => { if (ok) nextClue(); });
   }
   function dots() { const c = R.c; $("mm-dots").innerHTML = c.clues.map((_, i) => `<i class="${i < c.shown ? "on" : ""}"></i>`).join(""); $("mm-more").disabled = c.shown >= c.clues.length || c.done; }
@@ -207,10 +251,10 @@
       if (arg === "fur") { const L = ART.SPEC[id].L; x = L.bx - 60; y = L.by - 60; w = 120; h = 120; }
       if (arg !== "fur" && w > h * 1.6) w = w / 2;   // a pair (eyes, ears, paws): zoom on one
       const s = Math.max(w, h) * 1.5 + 24, cx = x + w / 2, cy = y + h / 2;
-      return `<div class="mm-zoom">${ART.animal(id, { vb: `${(cx - s / 2).toFixed(1)} ${(cy - s / 2).toFixed(1)} ${s.toFixed(1)} ${s.toFixed(1)}`, label: "A close-up clue" })}</div>`;
+      return `<div class="mm-zoom">${ART.animal(id, { hab: sceneOf(id), vb: `${(cx - s / 2).toFixed(1)} ${(cy - s / 2).toFixed(1)} ${s.toFixed(1)} ${s.toFixed(1)}`, label: "A close-up clue" })}</div>`;
     }
-    if (type === "shadow") return `<div class="mm-zoom mm-shadow">${ART.animal(id, { label: "The animal's shadow" })}</div>`;
-    if (type === "hab") return `<div class="mm-zoom mm-pic">${ART.habitat(arg)}</div>`;
+    if (type === "shadow") return `<div class="mm-zoom mm-shadow">${ART.animal(id, { hab: sceneOf(id), label: "The animal's shadow" })}</div>`;
+    if (type === "hab") return `<div class="mm-zoom mm-pic">${ART.habitat(D.ANIMALS[id].hab === arg ? sceneOf(id) : arg)}</div>`;
     if (type === "teeth") return `<div class="mm-zoom mm-pic">${ART.teeth(id)}</div>`;
     if (type === "food") return `<div class="mm-zoom mm-pic mm-foodclue">${ART.food(arg)}</div>`;
     return "";
@@ -222,8 +266,8 @@
     lens.innerHTML = `<div class="mm-clue-card new">${clueArt(c.id, cl)}<button type="button" class="mm-hear" aria-label="Hear the clue again">${ART.icon("speaker")}</button></div>`;
     lens.querySelector(".mm-hear").addEventListener("click", () => say(cl[2]));
     dots(); sfx.clue();
-    const word = c.shown === 1 ? "Clue one." : c.shown === c.clues.length ? "Last clue!" : "Next clue.";
-    prompt(`${word} ${cl[2]} Who am I?`);
+    const word = c.shown === 1 ? vary("first", PH.first) : c.shown === c.clues.length ? vary("last", PH.last) : vary("next", PH.next);
+    prompt(`${word} ${cl[2]} ${vary("who", PH.who)}`);
   }
   async function guess(b) {
     const c = R.c; if (c.done || b.classList.contains("nope")) return;
@@ -233,16 +277,16 @@
       R.stars++;
       const first = !S.found[id]; S.found[id] = S.found[id] || G(); save(); renderBar();
       view.querySelector(".mm-cluebox").insertAdjacentHTML("beforeend", `<div class="mm-stamp" aria-hidden="true">SOLVED!</div>`);
-      await say(`Yes! It's ${the(id)}! Mystery solved!${first ? " It's going in your field guide." : ""}`);
+      await say(`${vary("yes", PH.yes)} It's ${the(id)}! ${vary("solved", PH.solved)}${first ? " " + vary("toGuide", PH.toGuide) : ""}`);
       if (screenName === "case" && R.c === c) caseFile(id, afterFile);
       return;
     }
     c.wrong++; sfx.no(); b.classList.add("nope"); b.setAttribute("aria-label", nm(id) + ", not this one");
     const more = c.shown < c.clues.length;
-    const ok = await say(`That's ${the(id)}. Not this time!${more ? " Here's another clue." : ""}`);
+    const ok = await say(`That's ${the(id)}. ${vary("notIt", PH.notIt)}${more ? " " + vary("moreClue", PH.moreClue) : ""}`);
     if (!ok || c.done) return;
     if (more) nextClue();
-    else { view.querySelector(`.mm-suspect[data-id="${c.id}"]`).classList.add("hint"); prompt("Look for the animal that matches all the clues!"); }
+    else { view.querySelector(`.mm-suspect[data-id="${c.id}"]`).classList.add("hint"); prompt(vary("lastLook", PH.lastLook)); }
   }
   function afterFile() {
     const g = G(), id = R.c.id;
@@ -261,7 +305,7 @@
       <div class="mm-row">${btn("mm-big mm-again", 'id="mm-again" aria-label="Play again"', ART.icon("replay"))}${btn("mm-big mm-tog", 'id="mm-toguide" aria-label="Field guide"', ART.icon("folder"))}</div></div>`);
     confetti(view);
     const n = Object.keys(S.found).length;
-    prompt(`Great detective work! You solved ${R.list.length} mysteries. Your field guide has ${n} of ${D.IDS.length} animals. ${n < D.IDS.length ? "Play again to find them all!" : "You found every animal!"}`);
+    prompt(`${vary("endStart", PH.endStart)} You solved ${R.list.length} mysteries. Your field guide has ${n} of ${D.IDS.length} animals. ${n < D.IDS.length ? "Play again to find them all!" : "You found every animal!"}`);
     $("mm-again").addEventListener("click", () => { sfx.tap(); startRound(); });
     $("mm-toguide").addEventListener("click", () => { sfx.tap(); guide(); });
   }
@@ -271,7 +315,7 @@
     const a = D.ANIMALS[id], g = G(), facts = a.facts[g], ph = D.PHOTOS[id];
     const pic = ph && ph.src
       ? `<figure class="mm-photo"><img src="${ph.src}" alt="Photo of a ${a.name}" onerror="this.parentNode.classList.add('mm-nophoto');this.remove()"><figcaption>${ph.credit}</figcaption>${ART.animal(id, { cls: "mm-photo-fallback", label: a.name })}</figure>`
-      : `<figure class="mm-photo mm-nophoto">${ART.animal(id, { cls: "mm-photo-fallback", label: a.name })}</figure>`;
+      : `<figure class="mm-photo mm-nophoto">${ART.animal(id, { cls: "mm-photo-fallback", hab: sceneOf(id), label: a.name })}</figure>`;
     pop.innerHTML = `
       <div class="mm-file" role="dialog" aria-modal="true" aria-labelledby="mm-file-name">
         <div class="mm-file-tab">${ART.icon("folder")}<span>FIELD GUIDE</span></div>
@@ -279,7 +323,7 @@
           ${pic}
           <div class="mm-file-text">
             <h3 id="mm-file-name">${cap1(a.name)}</h3>
-            <p class="mm-where">${ART.habitat(a.hab)}<span>${a.where}</span></p>
+            <p class="mm-where">${ART.habitat(sceneOf(id))}<span>${a.where}</span></p>
             <ul class="mm-facts">${facts.map((f, i) => `<li data-i="${i}"><button type="button" class="mm-hear sm" aria-label="Hear this fact">${ART.icon("speaker")}</button><span>${f}</span></li>`).join("")}</ul>
           </div>
         </div>
@@ -299,9 +343,9 @@
     const a = D.ANIMALS[id];
     const parts = shuffle([...new Set(a.clues.k.filter(c => c[0] === "part" && c[1] !== "fur").map(c => c[1]))]).slice(0, 2);
     let k = 0, miss = 0;
-    show("parts", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<p class="mm-q">Detective check!</p></div><div class="mm-bigpic" id="mm-bigpic">${ART.animal(id, { shadow: true })}</div></div>`);
+    show("parts", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<p class="mm-q">Detective check!</p></div><div class="mm-bigpic" id="mm-bigpic">${ART.animal(id, { hab: sceneOf(id) })}</div></div>`);
     const svg = view.querySelector("#mm-bigpic svg");
-    const ask = () => prompt(`Detective check! Can you tap ${the(id)}'s ${partWord(id, parts[k])}?`);
+    const ask = () => { const w = `${the(id)}'s ${partWord(id, parts[k])}`; prompt(vary("ask", [`Detective check! Can you tap ${w}?`, `Can you find ${w}? Give a tap!`, `Show me ${w}!`, `Point to ${w} with your finger!`])); };
     ask();
     svg.addEventListener("click", async e => {
       const g = e.target.closest("[data-part]"); if (!g || k >= parts.length) return;
@@ -309,13 +353,13 @@
       if (got === want) {
         sfx.yes(); svg.querySelectorAll(`[data-part="${want}"]`).forEach(x => x.classList.add("mm-glow")); miss = 0;
         k++;
-        const ok = await say(`Yes! ${cap1(partWord(id, want))}. ${cap1(a.name)}s have ${a.partWhy[want] || "these"}.`);
+        const ok = await say(`${vary("yes", PH.yes)} ${cap1(partWord(id, want))}. ${cap1(a.name)}s have ${a.partWhy[want] || "these"}.`);
         if (!ok) return;
         if (k < parts.length) { svg.querySelectorAll(".mm-glow").forEach(x => x.classList.remove("mm-glow")); ask(); }
-        else { confetti(view); await say("Great job!"); if (screenName === "parts") nextCaseOrEnd(); }
+        else { confetti(view); await say(vary("done", PH.done)); if (screenName === "parts") nextCaseOrEnd(); }
       } else {
         sfx.no(); miss++;
-        await say(`That's the ${partWord(id, got)}. Find the ${partWord(id, want)}!`);
+        await say(vary("partNo", [`That's the ${partWord(id, got)}. Find the ${partWord(id, want)}!`, `Oops, that's the ${partWord(id, got)}. Look for the ${partWord(id, want)}!`, `That's the ${partWord(id, got)}. Can you spot the ${partWord(id, want)}?`]));
         if (miss >= 2) svg.querySelectorAll(`[data-part="${want}"]`).forEach(x => x.classList.add("mm-pulse"));
       }
     });
@@ -327,8 +371,8 @@
     const a = D.ANIMALS[id];
     const opts = shuffle([a.hab].concat(shuffle(Object.keys(ART.HAB_NAMES).filter(h => h !== a.hab)).slice(0, 2)));
     show("home", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<span class="mm-mini big">${ART.animal(id, { face: true })}</span></div>
-      <div class="mm-choices">${opts.map(h => btn("mm-choice", `data-h="${h}" aria-label="${ART.HAB_NAMES[h]}"`, ART.habitat(h))).join("")}</div></div>`);
-    prompt(`Where does ${the(id)} live? Tap its home.`);
+      <div class="mm-choices">${opts.map(h => btn("mm-choice", `data-h="${h}" aria-label="${ART.HAB_NAMES[h]}"`, ART.habitat(h === a.hab ? sceneOf(id) : h))).join("")}</div></div>`);
+    prompt(vary("where", [`Where does ${the(id)} live? Tap its home.`, `Which home belongs to ${the(id)}? Tap it!`, `Help ${the(id)} get home! Tap where it lives.`]));
     let busy = false;
     view.querySelectorAll(".mm-choice").forEach(b => b.addEventListener("click", async () => {
       if (busy || b.classList.contains("nope")) return;
@@ -336,11 +380,11 @@
       if (h === a.hab) {
         busy = true; sfx.yes(); b.classList.add("yes"); confetti(view);
         const habClue = a.clues.g1.find(c => c[0] === "hab");
-        const ok = await say(`Yes! ${cap1(the(id))} lives in the ${ART.HAB_NAMES[h].toLowerCase()}. ${habClue ? habClue[2].replace(/^I /, "It ").replace(/\bmy\b/g, "its").replace(/\bI\b/g, "it").replace(/\bme\b/g, "it") : ""}`);
+        const ok = await say(`${vary("yes", PH.yes)} ${cap1(the(id))} lives in the ${ART.HAB_NAMES[h].toLowerCase()}. ${habClue ? habClue[2].replace(/^I /, "It ").replace(/\bmy\b/g, "its").replace(/\bI\b/g, "it").replace(/\bme\b/g, "it") : ""}`);
         if (ok && screenName === "home") nextCaseOrEnd();
       } else {
         sfx.no(); b.classList.add("nope");
-        say(`Hmm, not the ${ART.HAB_NAMES[h].toLowerCase()}. Try again!`);
+        say(`${vary("habNo", ["Hmm, not the", "It doesn't live in the", "Not the"])} ${ART.HAB_NAMES[h].toLowerCase()}. ${vary("tryAgain", PH.tryAgain)}`);
       }
     }));
   }
@@ -350,18 +394,18 @@
     const a = D.ANIMALS[id];
     show("diet", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<span class="mm-mini big">${ART.animal(id, { face: true })}</span></div>
       <div class="mm-choices">${["meat", "plants", "both"].map(k => btn("mm-choice mm-diet", `data-d="${k}" aria-label="${D.DIET[k].word}: ${D.DIET[k].kid}"`, `${ART.food(k)}<b>${cap1(D.DIET[k].word)}</b><small>${D.DIET[k].kid}</small>`)).join("")}</div></div>`);
-    prompt(`What does ${the(id)} eat? Meat makes it a carnivore. Plants make it an herbivore. Both make it an omnivore.`);
+    prompt(`${vary("eat", [`What does ${the(id)} eat?`, `Detective question: what does ${the(id)} eat?`, `Think about the teeth. What does ${the(id)} eat?`])} Meat makes it a carnivore. Plants make it an herbivore. Both make it an omnivore.`);
     view.querySelectorAll(".mm-diet").forEach(b => b.addEventListener("click", async () => {
       if (b.classList.contains("nope")) return;
       const d = b.dataset.d;
       if (d === a.diet) {
         sfx.yes(); b.classList.add("yes"); confetti(view);
         const extra = id === "panda" ? " Pandas eat like herbivores, even though they belong to the carnivoran group!" : "";
-        const ok = await say(`Yes! ${cap1(a.name)}s eat ${d === "both" ? "plants and animals" : d}, so they are ${D.DIET[d].word}s.${extra}`);
+        const ok = await say(`${vary("yes", PH.yes)} ${cap1(a.name)}s eat ${d === "both" ? "plants and animals" : d}, so they are ${D.DIET[d].word}s.${extra}`);
         if (ok && screenName === "diet") nextCaseOrEnd();
       } else {
         sfx.no(); b.classList.add("nope");
-        say(`Not quite. Look at the teeth clue again in your mind. Try again!`);
+        say(vary("dietNo", ["Not quite. Think about the teeth clue. Try again!", "Hmm, what kind of teeth did it have? Try again!", "Almost! Remember the teeth clue and have another go.", "Not that one. Sharp teeth tear meat, flat teeth grind plants. Try again!"]));
       }
     }));
   }
@@ -439,7 +483,7 @@
     $("mm-clear").addEventListener("click", () => { sfx.tap(); shapes.forEach(el => paint(el, "#ffffff")); S.art[id] = {}; save(); say("Fresh page!"); colorPage(id); });
     $("mm-color-done").addEventListener("click", async () => {
       sfx.win(); confetti(view);
-      const ok = await say(`Beautiful ${nm(id)}! ${D.ANIMALS[id].facts.pk[0]}`);
+      const ok = await say(`${vary("pretty", PH.pretty)} ${nm(id)}! ${D.ANIMALS[id].facts.pk[0]}`);
       if (ok && screenName === "color") colorPick();
     });
   }
@@ -476,7 +520,7 @@
     if (right) { F.right++; sfx.yes(); confetti(view); } else sfx.no();
     const t = $("mm-mtree"); t.innerHTML = miniTree(q); t.hidden = false;
     view.querySelectorAll("#mm-fam .mm-suspect").forEach(x => x.classList.add(q.pair.includes(x.dataset.id) ? "yes" : "dim"));
-    const ok = await say(`${right ? "Yes!" : "Good try! The closer cousins are " + the(q.pair[0]) + " and " + the(q.pair[1]) + "."} ${q.why}`);
+    const ok = await say(`${right ? vary("yes", PH.yes) : vary("goodTry", ["Good try!", "Nice thinking!", "Ooh, tricky one!"]) + " The closer cousins are " + the(q.pair[0]) + " and " + the(q.pair[1]) + "."} ${q.why}`);
     if (!ok) return;
     $("mm-mtree").insertAdjacentHTML("beforeend", btn("mm-big mm-go", 'id="mm-fam-next" aria-label="Next"', ART.icon("next")));
     $("mm-fam-next").addEventListener("click", () => {
@@ -542,22 +586,29 @@
     const o = S.opts;
     const gOpts = [["", "Children choose"]].concat(Object.entries(D.GRADES).map(([k, g]) => [k, g.say]));
     pop.innerHTML = `<div class="mm-file mm-teacher" role="dialog" aria-modal="true" aria-labelledby="mm-t-h">
-      <h3 id="mm-t-h">Teacher settings</h3>
-      <label>Grade<select id="mm-t-lock">${gOpts.map(([k, t]) => `<option value="${k}" ${o.lock === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-      <label>Mysteries per round<select id="mm-t-cases">${[[0, "Grade default"], [3, "3"], [5, "5"], [8, "8"], [12, "All 12"]].map(([k, t]) => `<option value="${k}" ${+o.cases === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <h3 id="mm-t-h">${CL ? "Teacher" : "Grown-up"} settings</h3>
+      ${voices.length ? `<label>Voice<span class="mm-t-voice"><select id="mm-t-voice">${voices.slice(0, 12).map((v, i) => `<option value="${esc(v.name)}" ${voice && voice.name === v.name ? "selected" : ""}>${esc(v.name.replace(/^(Microsoft|Google|com\.apple\.[\w.]+)\s*/i, ""))}${i === 0 ? " (recommended)" : ""}</option>`).join("")}</select>${btn("mm-chip", 'id="mm-t-try"', "Try it")}</span></label>` : `<p class="mm-t-note">This device has no voices for reading aloud. Captions will show the words instead.</p>`}
+      ${CL ? `<label>Grade<select id="mm-t-lock">${gOpts.map(([k, t]) => `<option value="${k}" ${o.lock === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label>Mysteries per round<select id="mm-t-cases">${[[0, "Grade default"], [3, "3"], [5, "5"], [8, "8"], [12, "All 12"]].map(([k, t]) => `<option value="${k}" ${+o.cases === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>` : ""}
       <label class="mm-check"><input type="checkbox" id="mm-t-slow" ${o.slow ? "checked" : ""}> Slower voice</label>
       <label class="mm-check"><input type="checkbox" id="mm-t-caps" ${o.caps ? "checked" : ""}> Show captions (words on screen)</label>
       <label class="mm-check"><input type="checkbox" id="mm-t-mute" ${S.mute ? "checked" : ""}> Voice and sound off</label>
-      <p class="mm-t-note">Settings are saved on this device. Starting link for one grade: add <code>?grade=pk</code>, <code>k</code>, <code>g1</code>, or <code>g2</code> to the address.</p>
+      <p class="mm-t-note">Settings are saved on this device. For the warmest voice, Apple devices can download "Ava (Premium)" in Settings, Accessibility, Spoken Content, Voices. On Windows, the Edge browser has natural voices built in.${CL ? ` Starting link for one grade: add <code>?grade=pk</code>, <code>k</code>, <code>g1</code>, or <code>g2</code> to the address.` : ""}</p>
       <div class="mm-row">${btn("mm-chip", 'id="mm-t-reset"', "Clear this device's field guide")}${btn("mm-chip mm-chip-go", 'id="mm-t-done"', "Done")}</div></div>`;
     pop.hidden = false; root.classList.add("mm-popped");
     $("mm-t-done").addEventListener("click", () => {
-      o.lock = $("mm-t-lock").value; o.cases = +$("mm-t-cases").value; o.slow = $("mm-t-slow").checked; o.caps = $("mm-t-caps").checked; S.mute = $("mm-t-mute").checked;
+      if (CL) { o.lock = $("mm-t-lock").value; o.cases = +$("mm-t-cases").value; }
+      if ($("mm-t-voice")) { o.voice = $("mm-t-voice").value; pickVoice(); }
+      o.slow = $("mm-t-slow").checked; o.caps = $("mm-t-caps").checked; S.mute = $("mm-t-mute").checked;
       if (o.lock) S.grade = o.lock;
       save(); closePop(); renderBar();
     });
     $("mm-t-reset").addEventListener("click", () => { S.found = {}; S.cousins = 0; save(); renderBar(); $("mm-t-reset").textContent = "Field guide cleared"; });
-    $("mm-t-lock").focus();
+    if ($("mm-t-try")) $("mm-t-try").addEventListener("click", () => {
+      const keep = o.voice; o.voice = $("mm-t-voice").value; pickVoice(); o.voice = keep;
+      say("Hi, I'm Detective Ollie! Let's solve a mammal mystery together.");
+    });
+    ($("mm-t-voice") || $("mm-t-done")).focus();
   }
 
   /* ---------- top bar ---------- */

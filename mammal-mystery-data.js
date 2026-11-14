@@ -145,7 +145,7 @@
       partWhy: { claws: "long claws for digging", eyes: "dark eye patches", tail: "a skinny tail for balance", ears: "small ears that close" },
     },
     rabbit: {
-      name: "rabbit", where: "many parts of the world", hab: "grassland", diet: "plants", group: "other",
+      name: "rabbit", where: "many parts of the world", hab: "grassland", scene: "meadow", diet: "plants", group: "other",
       clues: {
         pk: [["part", "ears", "I have long, long ears!"], ["part", "tail", "I have a puffy white tail."], ["part", "mouth", "I have two big front teeth."], ["shadow", "", "Here is my shadow!"]],
         k:  [["part", "ears", "My long ears turn to catch sounds."], ["part", "mouth", "My front teeth never stop growing."], ["part", "tail", "My fluffy tail looks like a cotton ball."], ["part", "nose", "My nose wiggles when I sniff."]],
@@ -161,7 +161,7 @@
       partWhy: { ears: "long ears that turn", mouth: "front teeth that keep growing", tail: "a puffy tail", nose: "a wiggly nose", paws: "strong feet for hopping" },
     },
     kangaroo: {
-      name: "kangaroo", where: "Australia", hab: "grassland", diet: "plants", group: "marsupial",
+      name: "kangaroo", where: "Australia", hab: "grassland", scene: "outback", diet: "plants", group: "marsupial",
       clues: {
         pk: [["part", "paws", "I have big, long feet for jumping!"], ["part", "pouch", "I have a pocket for my baby."], ["part", "tail", "My tail is big and thick."], ["shadow", "", "Here is my shadow!"]],
         k:  [["part", "pouch", "My baby rides in a pouch on my belly."], ["part", "paws", "My long feet help me jump far."], ["part", "tail", "My thick tail helps me balance."], ["part", "ears", "My tall ears can turn to listen."]],

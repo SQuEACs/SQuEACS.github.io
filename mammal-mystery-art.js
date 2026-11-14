@@ -36,7 +36,8 @@
     rabbit:   { plan: "sit", fur: "#b88d6a", belly: "#efe0cf", muzzle: "#f3e7da", paw: "#efe0cf", ears: "long", earIn: "#f3b7b7", tail: "puff", tailColor: "#ffffff", whisk: true, buckTeeth: true,
                 L: { hx: 200, hy: 175, hr: 60, bx: 200, by: 295, brx: 84, bry: 74 } },
     kangaroo: { plan: "sit", fur: "#c27a4a", belly: "#ecc7a2", muzzle: "#ecc7a2", paw: "#8a5230", ears: "tall", earIn: "#ecc7a2", tail: "roo", bigFeet: true, pouch: true, pawsUp: true, claws: true, head: "fox",
-                L: { hx: 200, hy: 98, hr: 46, bx: 196, by: 255, brx: 74, bry: 108 } },
+                neckUp: true,
+                L: { hx: 200, hy: 90, hr: 46, bx: 196, by: 270, brx: 74, bry: 98 } },
     elephant: { plan: "stand", fur: "#9aa1ae", belly: "#9aa1ae", ears: "elephant", earIn: "#d9a8b5", trunk: true, tusks: true, feet: "feet", tail: "tuft", tuft: INK, nose: "none", mouth: false,
                 L: { hx: 118, hy: 168, hr: 62, bx: 248, by: 238, brx: 118, bry: 82, legW: 40, legDark: "#878d9a" } },
     giraffe:  { plan: "stand", fur: "#f2c062", belly: "#f6d48c", muzzle: "#f6d48c", ears: "leaf", earIn: "#f6d48c", horns: true, neck: "giraffe", spots: "#b86a2b", feet: "hooves", tail: "tuft", tuft: "#4a2a10", nose: "dots", maneColor: "#b86a2b",
@@ -200,6 +201,11 @@
     const fw = a.bigFeet ? 58 : a.bigPaws ? 38 : 32, fy = by + bry * 0.88;
     lay.push({ p: "paws", s: ell(bx - brx * 0.72, fy, fw, 18, P(a.paw)) + ell(bx + brx * 0.72, fy, fw, 18, P(a.paw)) + (a.bigFeet ? "" : "") });
     // body
+    if (a.neckUp) {
+      const t = by - bry * 0.8, nb = brx * 0.36, nt = hr * 0.42, ny = hy + hr * 0.55;
+      lay.push({ p: "fur", s: path(`M ${bx - nb} ${t} C ${bx - nb * 0.7} ${(t + ny) / 2} ${hx - nt} ${ny + 14} ${hx - nt} ${ny} L ${hx + nt} ${ny} C ${hx + nt} ${ny + 14} ${bx + nb * 0.7} ${(t + ny) / 2} ${bx + nb} ${t} Z`, P(a.fur)) +
+        path(`M ${bx - nb * 0.45} ${t + 4} Q ${hx} ${(t + ny) / 2} ${hx - nt * 0.4} ${ny} L ${hx + nt * 0.4} ${ny} Q ${hx} ${(t + ny) / 2} ${bx + nb * 0.45} ${t + 4} Z`, P(a.belly), { "stroke-width": 0 }) });
+    }
     lay.push({ p: "fur", s: ell(bx, by, brx, bry, P(a.fur)) });
     if (a.band) lay.push({ p: "fur", s: path(`M ${bx - brx * 0.98} ${by - bry * 0.18} Q ${bx} ${by - bry * 0.62} ${bx + brx * 0.98} ${by - bry * 0.18} Q ${bx + brx * 0.9} ${by - bry * 0.62} ${bx + brx * 0.55} ${by - bry * 0.85} Q ${bx} ${by - bry * 1.0} ${bx - brx * 0.55} ${by - bry * 0.85} Q ${bx - brx * 0.9} ${by - bry * 0.62} ${bx - brx * 0.98} ${by - bry * 0.18} Z`, P(INK)) });
     if (a.belly !== a.fur) lay.push({ p: "fur", s: ell(bx, by + bry * 0.12, brx * 0.48, bry * 0.66, P(a.belly)) });
@@ -336,7 +342,25 @@
     let body = shown.map(l => `<g data-part="${l.p}">${l.s}</g>`).join("");
     // Tap areas go on top, so a part tucked behind the head (like ears) is still easy to tap.
     if (!o.line && !o.face) body += shown.map(l => { const h = (l.s.match(/<g class="mm-hit">[\s\S]*?<\/g>/g) || []).join(""); return h ? `<g data-part="${l.p}" class="mm-hitlayer">${h}</g>` : ""; }).join("");
-    return `<svg class="${o.cls || "mm-animal"}" viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${o.label || NAMES[id] || id}">${o.shadow ? `<ellipse cx="200" cy="376" rx="150" ry="14" fill="rgba(0,0,0,.18)"/>` : ""}${body}</svg>`;
+    // o.hab: draw the animal standing in its habitat, with a few plants or rocks in front at the edges.
+    const bg = o.hab && !o.face ? scene(o.hab, !!o.line) : "", fg = o.hab && !o.face ? front(o.hab, !!o.line) : "";
+    return `<svg class="${o.cls || "mm-animal"}" viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${o.label || NAMES[id] || id}">${bg}${o.shadow || o.hab ? `<ellipse cx="200" cy="376" rx="150" ry="14" fill="rgba(0,0,0,.18)"/>` : ""}${body}${fg}</svg>`;
+  }
+  function scene(k, line) {
+    return habitat(k, { line }).replace("<svg ", '<svg x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" ').replace(/ role="img" aria-label="[^"]*"/, "");
+  }
+  function front(k, line) {
+    const P = painter(line); let s = "";
+    const tuft = (x, y, c) => [-14, -5, 4, 13].map((dx, i) => path(`M ${x + dx - 5} ${y} Q ${x + dx} ${y - 30 - (i % 2) * 14} ${x + dx + 5} ${y} Z`, P(c), { "stroke-width": 3 })).join("");
+    const flower = (x, y, c) => `<path d="M ${x} ${y} v 34" stroke="${INK}" stroke-width="4"/>` + [0, 72, 144, 216, 288].map(d => { const r = d * Math.PI / 180; return circ(x + Math.cos(r) * 9, y + Math.sin(r) * 9, 8, P(c), { "stroke-width": 3 }); }).join("") + circ(x, y, 5, P("#ffb02e"), { "stroke-width": 3 });
+    if (k === "grassland") s = tuft(22, 400, "#d9b043") + tuft(380, 400, "#d9b043");
+    else if (k === "meadow") s = tuft(22, 404, "#5aa04a") + flower(48, 366, "#ff8fb1") + tuft(382, 404, "#5aa04a") + flower(356, 372, "#ffffff");
+    else if (k === "outback") s = tuft(22, 402, "#c9a24a") + ell(384, 394, 26, 15, P("#b8502a"), { "stroke-width": 4 });
+    else if (k === "forest") s = circ(10, 392, 34, P("#3f9a55"), { "stroke-width": 4 }) + circ(40, 404, 26, P("#4fae62"), { "stroke-width": 4 }) + circ(392, 396, 30, P("#3f9a55"), { "stroke-width": 4 });
+    else if (k === "river") s = [372, 386].map((x, i) => `<path d="M ${x} 404 V ${330 - i * 14}" stroke="${INK}" stroke-width="5"/>` + ell(x, 322 - i * 14, 8, 18, P("#8a5a3b"), { "stroke-width": 3 })).join("") + tuft(24, 404, "#5aa04a");
+    else if (k === "desert") s = ell(18, 392, 30, 18, P("#c79a5a"), { "stroke-width": 4 }) + ell(388, 396, 22, 13, P("#c79a5a"), { "stroke-width": 4 });
+    else if (k === "ice") s = ell(14, 398, 40, 20, P("#ffffff"), { "stroke-width": 4 }) + ell(392, 400, 32, 16, P("#ffffff"), { "stroke-width": 4 });
+    return `<g aria-hidden="true" pointer-events="none">${s}</g>`;
   }
   // Only the layers for one part, e.g. a dragged piece or a clue close-up.
   function partOnly(id, part, o = {}) {
@@ -413,6 +437,22 @@
       s += path("M 0 120 Q 150 110 300 124 L 300 200 L 0 200 Z", P("#e8c35a"), { "stroke-width": 4 });
       s += `<path d="M 210 124 V 70" stroke="${INK}" stroke-width="10"/><path d="M 210 124 V 70" stroke="${P("#8a5a3b")}" stroke-width="4"/>` + path("M 150 72 Q 210 40 270 72 Q 210 84 150 72 Z", P("#5aa04a"), { "stroke-width": 4 });
       for (let i = 0; i < 14; i++) { const x = 10 + i * 21, y = 150 + (i % 3) * 14; s += `<path d="M ${x} ${y} l -5 -16 M ${x} ${y} l 0 -20 M ${x} ${y} l 5 -16" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`; }
+    } else if (k === "meadow") {
+      // cool green rolling meadow: wildflowers, a burrow, no trees
+      s += path("M 0 112 Q 80 84 170 108 Q 240 92 300 104 L 300 200 L 0 200 Z", P("#9fd77a"), { "stroke-width": 4 });
+      s += path("M 0 150 Q 110 128 210 150 Q 260 140 300 146 L 300 200 L 0 200 Z", P("#6fc35a"), { "stroke-width": 4 });
+      s += path("M 196 132 Q 214 112 232 132 Z", P("#5a3d2a"), { "stroke-width": 4 });
+      [[30, 140, "#ff8fb1"], [74, 172, "#ffffff"], [118, 146, "#ffd84f"], [150, 182, "#c79bff"], [252, 170, "#ff8fb1"], [282, 130, "#ffffff"], [96, 120, "#ffd84f"]].forEach(([x, y, c]) => {
+        s += `<path d="M ${x} ${y} v 14" stroke="${INK}" stroke-width="3"/>` + [0, 72, 144, 216, 288].map(d => { const r = d * Math.PI / 180; return circ(x + Math.cos(r) * 5, y + Math.sin(r) * 5, 4.5, P(c), { "stroke-width": 2 }); }).join("") + circ(x, y, 3, P("#ffb02e"), { "stroke-width": 2 });
+      });
+    } else if (k === "outback") {
+      // Australian outback: red earth, a big rock, a gum tree, spiky grass
+      s += path("M 0 124 Q 150 116 300 126 L 300 200 L 0 200 Z", P("#d9733b"), { "stroke-width": 4 });
+      s += path("M 18 124 Q 22 96 52 92 L 118 92 Q 142 96 146 122 Z", P("#b8502a"), { "stroke-width": 4 });
+      s += `<path d="M 240 126 Q 236 96 248 70 M 248 92 Q 262 80 272 70" stroke="${INK}" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M 240 126 Q 236 96 248 70 M 248 92 Q 262 80 272 70" stroke="${P("#f1ece0")}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+      s += path("M 214 70 Q 220 44 250 46 Q 282 38 292 62 Q 300 80 274 80 Q 250 88 230 80 Q 206 82 214 70 Z", P("#8fae7a"), { "stroke-width": 4 });
+      [[40, 170], [120, 186], [190, 160], [272, 184]].forEach(([x, y]) => { s += `<path d="M ${x} ${y} l -12 -12 M ${x} ${y} l -5 -18 M ${x} ${y} l 3 -18 M ${x} ${y} l 11 -13" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`; });
+      [[90, 150], [230, 150]].forEach(([x, y]) => { s += ell(x, y, 9, 5, P("#8a3a1e"), { "stroke-width": 3 }); });
     } else if (k === "desert") {
       s += path("M 0 130 Q 70 96 150 128 Q 220 100 300 124 L 300 200 L 0 200 Z", P("#f2c46b"), { "stroke-width": 4 });
       s += path("M 0 168 Q 90 140 180 170 Q 240 150 300 166 L 300 200 L 0 200 Z", P("#e8ad4f"), { "stroke-width": 4 });
@@ -423,7 +463,7 @@
       s += path("M 30 112 L 60 60 L 96 110 Z", P("#eef8ff"), { "stroke-width": 4 });
       [[40, 30], [120, 50], [200, 24], [160, 80]].forEach(([x, y]) => { s += `<path d="M ${x - 5} ${y} h 10 M ${x} ${y - 5} v 10" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>`; });
     }
-    return `<svg class="mm-hab" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${HAB_NAMES[k]}">${s}</svg>`;
+    return `<svg class="mm-hab" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${HAB_NAMES[k] || HAB_NAMES.grassland}">${s}</svg>`;
   }
   const HAB_NAMES = { river: "River", forest: "Forest", grassland: "Grassland", desert: "Desert", ice: "Ice and snow" };
 

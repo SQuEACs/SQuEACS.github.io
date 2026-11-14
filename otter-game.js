@@ -911,28 +911,38 @@
         const flap = Math.sin(S.t * (p.state === "swoop" ? 4 : 9)) * 0.5; p.m.userData.wings[0].rotation.z = flap; p.m.userData.wings[1].rotation.z = -flap;
       }
       if (p.kind === "coyote") {
+        // Patrol -> notice (short warning) -> chase. The otter is faster on land, water ends the chase,
+        // and the coyote tires out after a while, which also counts as an escape.
         const d = Math.hypot(S.x - p.x, S.z - p.z), onLand = !isWater(S.x, S.z);
-        p.cd = Math.max(0, p.cd - dt);
-        if (p.cd <= 0 && onLand && d < 16 && alive) { if (!p.chasing) { p.chasing = true; toast("A coyote is chasing you! Get into the water!"); beep(600, 0.15, "sawtooth", 0.04); } }
+        p.cd = Math.max(0, p.cd - dt); p.state = p.state || "patrol";
+        const escaped = msg => { p.state = "patrol"; p.chasing = false; p.cd = 6; bump("escape", "coyote"); toast(msg); };
+        if (p.state === "patrol" && p.cd <= 0 && onLand && d < 14 && alive) { p.state = "notice"; p.timer = 0.9; toast("A coyote spotted you! Run to the water!"); sfx("growl", 0.12); }
         let sp = 2, tx = p.hx + Math.cos(p.a) * 8, tz = p.hz + Math.sin(p.a) * 8;
-        if (p.chasing) { sp = 7.4; tx = S.x; tz = S.z; if (!onLand) { p.chasing = false; p.cd = 4; bump("escape", "coyote"); toast("You escaped the coyote!"); } else if (d > 26) p.chasing = false; }
-        else p.a += dt * 0.3;
+        if (p.state === "notice") { sp = 0; tx = S.x; tz = S.z; p.timer -= dt; if (!onLand) escaped("You escaped the coyote!"); else if (p.timer <= 0) { p.state = "chase"; p.chasing = true; p.timer = 7; } }
+        else if (p.state === "chase") {
+          sp = 5.0; tx = S.x; tz = S.z; p.timer -= dt;
+          if (!onLand) escaped("You escaped the coyote!");
+          else if (p.timer <= 0 || d > 22) escaped("You outran the coyote! It gave up.");
+        } else p.a += dt * 0.3;
         const ang = Math.atan2(tx - p.x, tz - p.z), nx2 = p.x + Math.sin(ang) * sp * dt, nz2 = p.z + Math.cos(ang) * sp * dt;
-        if (sdf(nx2, nz2) > 0.5) { p.x = nx2; p.z = nz2; }
+        if (sp > 0 && sdf(nx2, nz2) > 0.5) { p.x = nx2; p.z = nz2; }
         p.m.position.set(p.x, groundY(p.x, p.z) + 1.3, p.z); p.m.rotation.y = ang;
-        p.m.userData.legs.forEach((l, i) => l.rotation.x = Math.sin(S.t * (p.chasing ? 16 : 6) + i * Math.PI) * 0.5);
-        if (p.chasing && d < 1.8) { if (hurt("Caught by the coyote!")) { p.chasing = false; p.cd = 4; } }
+        p.m.userData.legs.forEach((l, i) => l.rotation.x = sp > 0 ? Math.sin(S.t * (p.chasing ? 14 : 6) + i * Math.PI) * 0.5 : 0);
+        if (p.state === "chase" && d < 1.6) { if (hurt("Caught by the coyote!")) { p.state = "patrol"; p.chasing = false; p.cd = 6; } }
       }
       if (p.kind === "gator") {
+        // Lurk -> aim (warning) -> short lunge slower than a swimming otter -> rest.
         const d = Math.hypot(S.x - p.x, S.z - p.z), wet = isWater(S.x, S.z);
         p.cd = Math.max(0, p.cd - dt);
+        const escaped = () => { p.state = "lurk"; p.cd = 5; bump("escape", "alligator"); toast("You escaped the alligator!"); };
         let sp = 1.2, tx = p.hx + Math.cos(p.a) * 6, tz = p.hz + Math.sin(p.a) * 6;
-        if (p.state === "lurk") { p.a += dt * 0.25; if (wet && d < 10 && p.cd <= 0 && alive) { p.state = "lunge"; p.t = 2.4; toast("Alligator! Swim for shore!"); beep(220, 0.2, "sawtooth", 0.05); } }
-        else { p.t -= dt; sp = 8.2; tx = S.x; tz = S.z; if (!wet || d > 15) { p.state = "lurk"; p.cd = 4; bump("escape", "alligator"); toast("You escaped the alligator!"); } else if (p.t <= 0) { p.state = "lurk"; p.cd = 3; } }
+        if (p.state === "lurk") { p.a += dt * 0.25; if (wet && d < 9 && p.cd <= 0 && alive) { p.state = "aim"; p.t = 0.8; toast("Alligator! Swim away fast or climb onto land!"); sfx("gator", 0.14); } }
+        else if (p.state === "aim") { sp = 0; tx = S.x; tz = S.z; p.t -= dt; if (!wet || d > 12) escaped(); else if (p.t <= 0) { p.state = "lunge"; p.t = 1.6; } }
+        else { p.t -= dt; sp = 6.5; tx = S.x; tz = S.z; if (!wet || d > 12 || p.t <= 0) escaped(); }
         const ang = Math.atan2(tx - p.x, tz - p.z), nx2 = p.x + Math.sin(ang) * sp * dt, nz2 = p.z + Math.cos(ang) * sp * dt;
-        if (sdf(nx2, nz2) < -0.8) { p.x = nx2; p.z = nz2; }
+        if (sp > 0 && sdf(nx2, nz2) < -0.8) { p.x = nx2; p.z = nz2; }
         p.m.position.set(p.x, -0.25, p.z); p.m.rotation.y = ang;
-        if (p.state === "lunge" && d < 2.2) { if (hurt("Snapped by the alligator!")) { p.state = "lurk"; p.cd = 4; } }
+        if (p.state === "lunge" && d < 2) { if (hurt("Snapped by the alligator!")) { p.state = "lurk"; p.cd = 5; } }
       }
     });
     S.logs.forEach(lg => {
@@ -978,7 +988,7 @@
           const k = 1 - nd / range;
           if (near.kind === "eagle") { sfx("eagle", near.state === "swoop" ? 0.22 : 0.06 + 0.12 * k); S.sndT = near.state === "swoop" ? 0.5 : 0.9 - 0.5 * k; }
           else if (near.kind === "coyote") { if (near.chasing) { sfx("growl", 0.06 + 0.16 * k); S.sndT = 0.25 + (1 - k) * 0.9; } else { sfx("howl", 0.03 + 0.06 * k); S.sndT = 4; } }
-          else { sfx("gator", 0.04 + (near.state === "lunge" ? 0.16 : 0.08) * k); S.sndT = near.state === "lunge" ? 0.35 : 0.8 + (1 - k) * 1.4; }
+          else { sfx("gator", 0.04 + (near.state === "lunge" || near.state === "aim" ? 0.16 : 0.08) * k); S.sndT = near.state === "lunge" ? 0.35 : 0.8 + (1 - k) * 1.4; }
         }
       }
       if (!near || S.sndT <= 0) S.sndT = 0.4;

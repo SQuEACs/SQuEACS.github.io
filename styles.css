@@ -1080,3 +1080,36 @@ body.og-noscroll { overflow: hidden; }
 .og-ghab h4 { display: flex; align-items: baseline; gap: 0.5rem; font: 700 1rem/1 var(--og-font); color: #1b1530; margin: 0 0 0.5rem 0.4rem; }
 .og-ghab h4 span { font-size: 0.78rem; font-weight: 600; color: #6b6380; }
 .og-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem; }
+
+/* ---------- Tadpole Trek additions ---------- */
+.tg-exp { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.tg-exp > span { display: flex; align-items: center; gap: 0.35rem; font: 700 0.75rem/1 var(--og-font); color: #fff; background: rgba(11,10,16,0.82); border: 2px solid #fff; border-radius: 999px; padding: 0.3rem 0.55rem 0.3rem 0.3rem; }
+.tg-exp .og-ic { width: 1.25rem; height: 1.25rem; background: #fff; border-radius: 50%; padding: 1px; }
+.tg-exp > span > span { width: 4.2rem; height: 9px; border-radius: 999px; background: #2b2540; overflow: hidden; }
+.tg-exp i { display: block; height: 100%; width: 0; background: var(--c, #ff5fa2); transition: width 0.2s; }
+.tg-exp > span.hot { border-color: var(--c, #ff5fa2); animation: oglow 0.6s infinite alternate; }
+.tg-real { margin: 0; display: grid; gap: 0.5rem; background: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 0.5rem; }
+.tg-real figcaption { display: grid; gap: 0.25rem; font-size: 0.875rem; color: #d6d0e2; }
+.tg-real figcaption b { font-family: var(--og-font); font-size: 1rem; color: var(--fg); }
+.tg-mv { position: relative; height: 16rem; display: grid; place-items: center; background: #0f0c18; border-radius: 10px; overflow: hidden; }
+.tg-mv model-viewer { width: 100%; height: 100%; background: #0f0c18; --poster-color: transparent; }
+.tg-bars { display: grid; gap: 0.4rem; text-align: left; }
+.tg-bar { display: grid; grid-template-columns: 2rem 7.4rem minmax(0, 1fr) 2.6rem; align-items: center; gap: 0.4rem; font: 600 0.85rem/1.1 var(--og-font); color: #1b1530; }
+.tg-bar > span:nth-child(3) { height: 12px; border-radius: 999px; background: #e3dcf3; border: 2px solid #0b0a10; overflow: hidden; }
+.tg-bar i { display: block; height: 100%; background: var(--c, #ff5fa2); }
+.tg-bar b { text-align: right; font-variant-numeric: tabular-nums; }
+.tg-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.tg-pair figure { margin: 0; display: grid; gap: 0.2rem; justify-items: center; font: 600 0.8rem/1.2 var(--og-font); color: #4a4160; }
+.tg-pair canvas { width: 100%; height: 7.5rem; background: #1b1530; border: 3px solid #0b0a10; border-radius: 12px; }
+.tg-loss { width: 100%; border-collapse: collapse; font: 600 0.88rem/1.2 var(--og-font); color: #1b1530; text-align: left; }
+.tg-loss th, .tg-loss td { padding: 0.3rem 0.4rem; border-bottom: 2px solid #e3dcf3; }
+.tg-loss td:last-child, .tg-loss th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.tg-loss .dn { color: #c2185b; }
+.tg-flag { font: 600 0.78rem/1.3 var(--og-font); color: #6b6380; text-align: left; }
+.how-flag { color: #ffd45c; font-weight: 600; }
+.how-refs { display: grid; gap: 0.6rem; padding-left: 1.2rem; margin-top: 0.8rem; color: #d6d0e2; max-width: 46rem; }
+
+.tg .og-tasks, .tg .og-map { top: 8.6rem; }
+.tg .og-stage.touch .og-tasks, .tg .og-stage.touch .og-map { top: 6.6rem; }
+.tg .og-stage.touch .tg-exp { max-width: none; flex-wrap: nowrap; }
+.tg .og-stage.touch .tg-exp > span > span { width: 2.6rem; }

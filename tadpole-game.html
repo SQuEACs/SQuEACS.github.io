@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tadpole Trek</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A game from the SQuEACs Lab: guide a tadpole out of polluted water and see how heavy metals, PFAS, and litter shape its developing brain.">
+<link rel="canonical" href="https://squeacs.github.io/tadpole-game.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SQuEACs Lab">
+<meta property="og:title" content="Tadpole Trek">
+<meta property="og:description" content="A game from the SQuEACs Lab: guide a tadpole out of polluted water and see how heavy metals, PFAS, and litter shape its developing brain.">
+<meta property="og:url" content="https://squeacs.github.io/tadpole-game.html">
+<meta property="og:image" content="https://squeacs.github.io/assets/skull-endocast-ct.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css?v=29">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<script src="assets/vendor/three-r149.min.js?v=1" defer></script>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<script src="tadpole-game.js?v=1" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html">3D Models</a></li>
+          <li class="sub"><a href="otter-game.html">Otter Evolution</a></li>
+          <li class="sub"><a href="tadpole-game.html" aria-current="page">Tadpole Trek</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+
+<main id="top" class="subpage">
+  <section id="tadpole-game">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Tadpole Trek</p>
+        <h1 class="page-title">Tadpole Trek</h1>
+        <p>Guide one tadpole from hatchling to froglet through a polluted pond. Swim out of heavy metals, PFAS, and litter toward clean habitat, eat algae, and see how your path shapes the developing brain.</p>
+      </div>
+
+      <div class="og tg">
+        <div class="og-stage">
+          <canvas id="og-canvas" aria-hidden="true"></canvas>
+          <canvas id="og-3d" tabindex="0" hidden aria-label="Tadpole Trek 3D pond. Arrow keys or WASD to move, Space to swim up, Shift or E to dive."></canvas>
+          <div class="og-flash" id="og-stage-flash" aria-hidden="true"></div>
+          <div class="og-hud" id="og-hud" hidden>
+            <div class="og-hud-top">
+              <span class="og-pill pink" id="og-gen">STAGE 1</span>
+              <span class="og-pill" id="og-hab">Hatchling</span>
+              <span class="og-timer" aria-hidden="true" hidden><i id="og-time"></i></span>
+              <button type="button" class="og-pill og-end" id="og-end">End stage</button>
+              <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
+            </div>
+            <div class="og-hud-row">
+              <span class="og-hearts" id="og-hearts" aria-label="Hearts"></span>
+              <span class="og-energy" title="Energy"><b>Energy</b><span><i id="og-energy"></i></span></span>
+            </div>
+            <div class="tg-exp" id="tg-exp" aria-label="Pollutant exposure meters"></div>
+            <div class="og-tasks" id="og-tasks"></div>
+            <canvas class="og-map" id="og-map" width="120" height="120" aria-hidden="true"></canvas>
+          </div>
+          <div class="og-touch" id="og-touch" hidden>
+            <div class="og-stick" id="og-stick" aria-hidden="true"><i id="og-knob"></i></div>
+            <p class="og-touch-hint" id="og-touch-hint" hidden>Left thumb: swim · Right thumb: swipe to look</p>
+            <button type="button" class="og-tbtn og-dive" data-key="dive" aria-label="Dive">Dive</button>
+            <button type="button" class="og-tbtn og-jump" data-key=" " aria-label="Swim up">Up</button>
+          </div>
+          <div class="og-corner" id="og-corner"><button type="button" class="og-home" id="og-home" aria-label="Main menu (Esc)" title="Main menu (Esc)">⌂</button><button type="button" class="og-bag" id="og-bag" aria-label="Open menu" title="Menu"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round"><path d="M11 9 Q11 4 16 4 Q21 4 21 9" fill="none" stroke="#fff"/><rect x="6" y="9" width="20" height="19" rx="5" fill="#ff8a5c"/><rect x="10" y="17" width="12" height="7" rx="2" fill="#ffd23f"/></svg></button><button type="button" class="og-fs" id="og-fs" aria-pressed="false" aria-label="Full screen" title="Full screen">⛶</button></div>
+          <p class="og-toast" id="og-toast" role="status" hidden></p>
+          <div class="og-screen" id="og-screen" hidden></div>
+        </div>
+        <nav class="og-hotbar" aria-label="Game menu">
+          <button type="button" class="og-slot" data-win="journal" aria-label="Journal (J)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M5 6 Q11 4 16 7 Q21 4 27 6 L27 26 Q21 24 16 27 Q11 24 5 26 Z" fill="#2ed3c6"/><path d="M16 7 V27" fill="none"/><path d="M8 11 H13 M8 15 H13 M19 11 H24 M19 15 H24" fill="none" stroke-width="1.6"/></svg><span>Journal</span><kbd>J</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="life" aria-label="Life story (L)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><rect x="6" y="4" width="20" height="24" rx="3" fill="#ffb347"/><path d="M10 4 V28" fill="none"/><ellipse cx="18" cy="14" rx="4" ry="3.2" fill="#5a6b3a" stroke-width="1.6"/><path d="M14 14 Q10 18 14 21" fill="none" stroke-width="1.6"/></svg><span>Life story</span><kbd>L</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="anatomy" aria-label="Anatomy (K)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 5 C10 3 5 7 6 13 C3 16 5 23 10 23 C12 27 16 26 16 24 C16 26 20 27 22 23 C27 23 29 16 26 13 C27 7 22 3 16 5Z" fill="#ff9fc8"/><path d="M16 5 V24 M10 11 Q13 13 11 16 M22 11 Q19 13 21 16" fill="none" stroke-width="1.6"/></svg><span>Anatomy</span><kbd>K</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="growth" aria-label="Growth chart (V)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="4" width="24" height="24" rx="4" fill="#fff"/><path d="M8 22 L13 16 L18 19 L24 9" fill="none" stroke="#ff5fa2" stroke-width="3"/><path d="M8 25 L13 22 L18 23 L24 18" fill="none" stroke="#2ed3c6" stroke-width="2.4"/></svg><span>Growth</span><kbd>V</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="wardrobe" aria-label="Wardrobe (O)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 6 a3 3 0 1 1 3 3 L16 12 L4 22 L28 22 L16 12" fill="none" stroke-width="2.4"/><path d="M4 22 L28 22 L28 26 L4 26 Z" fill="#ff5fa2"/></svg><span>Wardrobe</span><kbd>O</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="dex" aria-label="Pond-dex (X)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="16" cy="19" rx="10" ry="8" fill="#5fae4e"/><circle cx="10" cy="11" r="4" fill="#7ccf68"/><circle cx="22" cy="11" r="4" fill="#7ccf68"/><circle cx="10" cy="11" r="1.6" fill="#0b0a10" stroke="none"/><circle cx="22" cy="11" r="1.6" fill="#0b0a10" stroke="none"/><path d="M11 21 Q16 25 21 21" fill="none" stroke-width="1.8"/></svg><span>Pond-dex</span><kbd>X</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="treasure" aria-label="Treasures (T)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 14 Q16 6 28 14 L28 26 L4 26 Z" fill="#8a6440"/><path d="M4 14 L28 14 M4 18 L28 18" fill="none"/><rect x="13" y="16" width="6" height="5" rx="1" fill="#ffd23f"/><path d="M9 9 L11 6 L13 9 Z M20 8 L23 5 L25 9 Z" fill="#a47bff" stroke-width="1.5"/></svg><span>Treasures</span><kbd>T</kbd><b class="og-badge-new" hidden>!</b></button>
+        </nav>
+        <p class="og-help"><b>Touch:</b> left thumb to swim, right thumb to swipe and look, plus Up and Dive buttons. <b>Keyboard:</b> arrows or WASD to swim · Space to swim up · Shift or E to dive. Each stage ends when you finish its three goals (or tap End stage). Watch the three exposure meters: the longer your tadpole stays in a plume, the more it fills. Tap the menu slots, or press J, L, K, V, O, X, or T, to open your Journal, Life story, Anatomy, Growth chart, Wardrobe, Pond-dex, and Treasure chest. Opening a menu pauses the game.</p>
+
+        <div class="og-modal" id="og-modal" hidden role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
+          <div class="og-modal-box">
+            <div class="og-modal-bar"><button type="button" class="og-wback" id="og-win-back" aria-label="Back">◀</button><span id="og-modal-icon"></span><h2 id="og-modal-title">Journal</h2><button type="button" class="og-close" id="og-close" aria-label="Close">✕</button></div>
+            <div class="og-modal-tabs" role="tablist" id="og-tabs"></div>
+            <div class="og-modal-body">
+          <section class="og-window" data-win="journal" hidden>
+            <header><h2>Science journal</h2></header>
+            <div class="og-how"><b>How pollution reaches the developing brain in this game</b><ol><li><span>1</span>Exposure</li><li><span>2</span>Dose and time</li><li><span>3</span>Critical window</li><li><span>4</span>Brain regions</li><li><span>5</span>Food and growth</li></ol><p>Heavy metals and PFAS fill an exposure meter while your tadpole swims in them, and the meter shrinks brain regions that are still forming. Plastic and paper don't touch the brain. They crowd out algae, so your tadpole eats less and grows slower.</p><a href="tadpole-trek-science.html" target="_blank" rel="noopener">Read exactly how it works, with all the numbers →</a></div>
+            <div class="og-fact" id="og-fact" aria-live="polite"><p class="og-kicker">Science card</p><h3>Press Play to start</h3><p>Science cards from our research appear here as your tadpole grows. Each card names the hypothesis or concept the way scientists know it.</p></div>
+          </section>
+          <section class="og-window" data-win="life" hidden>
+            <header><h2>Life story</h2></header>
+            <p class="og-panel-sub">The story of your tadpole: every stage, meal, close call, and find.</p><div id="og-life"></div>
+          </section>
+          <section class="og-window" data-win="anatomy" hidden>
+            <header><h2>Anatomy</h2><span class="og-count" id="og-anat-sub">Clean-water brain</span></header>
+            <figure class="og-headfig"><h3 class="og-mini">Where is the brain inside a tadpole?</h3>
+<svg class="og-head-svg" viewBox="20 20 560 210" role="img" aria-labelledby="ts-t ts-d">
+  <title id="ts-t">Where the brain and spinal cord sit inside a tadpole</title>
+  <desc id="ts-d">Side view of a tadpole drawn see-through. The brain sits in the head with six labeled parts from front to back: olfactory bulb, telencephalon, diencephalon, optic tectum, cerebellum, and medulla oblongata. The spinal cord runs from the medulla down the tail.</desc>
+  <path d="M60 118 C60 66 120 44 190 48 C240 50 272 70 280 96 C340 74 440 80 540 112 C440 150 340 158 282 134 C270 168 220 180 160 176 C100 172 60 156 60 118 Z" fill="#6b8f4a" fill-opacity="0.32" stroke="#c9e6a0" stroke-width="2.2"/>
+  <path d="M300 96 L300 136 M340 90 L340 142 M380 90 L380 142 M420 94 L420 138 M460 98 L460 132 M500 104 L500 124" stroke="#c9e6a0" stroke-opacity="0.35" stroke-width="1.4" fill="none"/>
+  <circle cx="112" cy="72" r="13" fill="#15121e" stroke="#efe6d2" stroke-width="2"/><circle cx="112" cy="71" r="6.5" fill="#0b0a10"/><circle cx="114.5" cy="68.5" r="2" fill="#fff"/>
+  <circle cx="70" cy="100" r="2" fill="#0b0a10"/>
+  <path d="M72 138 Q96 150 122 140" fill="none" stroke="#efe6d2" stroke-width="2"/>
+  <path d="M228 100 C300 100 420 106 530 112" fill="none" stroke="#cfa8f6" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="76" cy="108" rx="11" ry="8" fill="#ff00e4" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="108" cy="106" rx="23" ry="15" fill="#ff5900" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="142" cy="112" rx="12" ry="11" fill="#ffbf00" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="166" cy="100" rx="17" ry="13" fill="#36ff00" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="194" cy="105" rx="9" ry="10" fill="#00b1ff" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="220" cy="107" rx="21" ry="9" fill="#8300ff" stroke="#0b0a10" stroke-width="1.5"/>
+  <g font-family="Fredoka, 'IBM Plex Sans', Arial, sans-serif" font-weight="700" font-size="12.5">
+    <path d="M76 100 L52 38" stroke="#ff00e4" stroke-width="1.3"/><text x="22" y="32" fill="#ff7bf0">Olfactory bulb</text>
+    <path d="M108 92 L120 38" stroke="#ff5900" stroke-width="1.3"/><text x="96" y="32" fill="#ff9a5c">Telencephalon</text>
+    <path d="M142 102 L186 38" stroke="#ffbf00" stroke-width="1.3"/><text x="168" y="32" fill="#ffd45c">Diencephalon</text>
+    <path d="M166 88 L262 50" stroke="#36ff00" stroke-width="1.3"/><text x="238" y="44" fill="#7dff5c">Optic tectum</text>
+    <path d="M194 115 L214 196" stroke="#00b1ff" stroke-width="1.3"/><text x="176" y="210" fill="#5cc9ff">Cerebellum</text>
+    <path d="M226 115 L284 190" stroke="#8300ff" stroke-width="1.3"/><text x="262" y="204" fill="#c493ff">Medulla oblongata</text>
+    <path d="M420 108 L438 168" stroke="#cfa8f6" stroke-width="1.3"/><text x="398" y="182" fill="#cfa8f6">Spinal cord</text>
+    <text x="112" y="52" font-size="11" fill="#efe6d2" text-anchor="middle" opacity="0">.</text>
+    <text x="60" y="176" font-size="12" fill="#efe6d2">Eye</text><path d="M80 170 L104 82" stroke="#efe6d2" stroke-width="1.1"/>
+  </g>
+</svg><figcaption>The brain fills the head, and the <b>spinal cord</b> runs down the tail. Colors match the numbered structures on our <a href="models.html">3D model of a <i>Lithobates heckscheri</i> tadpole</a>. In the game, five of these regions can lose size when pollutants reach them. The diencephalon is drawn but not scored.</figcaption></figure>
+            <div class="og-anat"><figure><canvas id="og-brain" aria-hidden="true"></canvas><figcaption><b>Your tadpole's brain (top view)</b><span id="og-brain-cap"></span></figcaption></figure></div>
+            <figure class="tg-real"><div class="tg-mv" id="tg-mv"><button type="button" class="og-btn tg-mv-btn" id="tg-mv-load">Load the real 3D tadpole brain</button></div><figcaption><b>Real data: <i>Lithobates heckscheri</i> tadpole nervous system</b><span>MicroCT of a tadpole stained with buffered Lugol's iodine, segmented in AVIZO. Model by Megan Hostetter. Drag to rotate. It is about 5 MB, so it loads when you ask.</span></figcaption></figure>
+            <h3 class="og-mini og-gal-h">Your brain collection</h3><p class="og-panel-sub">Every stage you finish adds your tadpole's brain here. The dashed outline is a clean-water brain for comparison.</p><div class="og-gallery" id="og-gallery"></div>
+          </section>
+          <section class="og-window" data-win="growth" hidden>
+            <header><h2>Growth chart</h2></header>
+            <p class="og-panel-sub">Body size and brain region scores after each stage. 100 means the clean-water value in this game.</p><canvas id="og-chart" aria-label="Line chart of body size and brain region scores across stages"></canvas><ul class="og-legend"><li><i style="background:#ff5fa2"></i>Body size</li><li><i style="background:#ff5900"></i>Telencephalon</li><li><i style="background:#ff00e4"></i>Olfactory bulb</li><li><i style="background:#36ff00"></i>Optic tectum</li><li><i style="background:#00b1ff"></i>Cerebellum</li><li><i style="background:#8300ff"></i>Medulla</li></ul>
+          </section>
+          <section class="og-window" data-win="wardrobe" hidden>
+            <header><h2>Wardrobe</h2><span class="og-count" id="og-outfit-count">0 of 7</span></header>
+            <p class="og-panel-sub">Unlock outfits by growing and playing well. Tap an outfit to wear it.</p><div class="og-tiles" id="og-closet"></div>
+          </section>
+          <section class="og-window" data-win="dex" hidden>
+            <header><h2>Pond-dex</h2><span class="og-count" id="og-dex-count">0 of 7</span></header>
+            <p class="og-panel-sub">Each trek ends with a different kind of froglet, depending on the water you swam through. Finish treks to fill your collection.</p><div class="og-tiles" id="og-dex"></div>
+          </section>
+          <section class="og-window" data-win="treasure" hidden>
+            <header><h2>Treasure chest</h2><span class="og-count" id="og-treasure-count">0 of 6</span></header>
+            <p class="og-panel-sub">Shiny bubbles drift up during stages. Grab them before they pop. Rare ones restore a heart.</p><div class="og-tiles" id="og-treasure"></div><div class="og-nat-head"><h3 class="og-mini">Nature finds</h3><span class="og-count" id="og-nature-count">0 of 8</span></div><p class="og-panel-sub">Each stage hides green rings with pond plants and animals inside. They don't pop. Some sit right at the edge of a plume, so choose your route.</p><div id="og-nature"></div>
+          </section>
+            </div>
+          </div>
+        </div>
+        <p class="og-note">The pollutant effects, brain scores, growth values, and anatomy drawings in this game are illustrative, not measurements. Real exposure depends on chemical, dose, species, and timing, and the hypotheses on the cards are ideas our lab and others are testing, not settled answers. <a href="tadpole-trek-science.html">See exactly how the game works →</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js?v=9"></script>
+</body>
+</html>

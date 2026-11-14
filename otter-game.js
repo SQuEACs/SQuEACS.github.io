@@ -109,8 +109,10 @@
 
   /* ---------- Game state ---------- */
   let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true }, gallery: [], inRun: false };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30) })); } catch (e) {} };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; G.seen = s.seen || {};
+    if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; } } } catch (e) {}
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30), seen: G.seen,
+    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons } : null })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 14, fur: 50 + gauss() * 14, ext: 50 + gauss() * 14, cochlea: 50 + gauss() * 14, canal: valOfDeg(84) + gauss() * 11, brain: 50 + gauss() * 14 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -1222,21 +1224,47 @@
     $("og-set-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); next(); });
     onBack(back);
   }
+  const hasCollections = () => Object.keys(G.unlocked).length || Object.keys(G.dex).length || Object.keys(G.treasure).length || G.gallery.length || Object.keys(G.seen).length;
+  function newGame() {
+    G.inRun = false; G.pop = []; G.history = []; G.gen = 1; G.habSeasons = {}; G.plan = null; save(); updatePanels();
+    if (window.SQ_track) window.SQ_track("play", "otter-game");
+    screenSettings(() => screenHabitat(true));
+  }
   function screenTitle() {
     G.screen = "title";
+    const saved = G.inRun && G.pop.length && G.gen <= GENS;
     screen(`<div class="og-card og-title">
       <p class="og-badge">SQuEACs Lab presents</p>
       <h2 class="og-logo">Otter<br><span>Evolution</span></h2>
-      <p class="og-sub">Guide a population of river otters through ${GENS} generations and watch evolution happen.</p>
+      ${saved ? `<div class="og-welcome"><b>Welcome back!</b><span>Your otters are on generation ${G.gen} of ${GENS} in the ${HAB[G.hab].name}. Keep going, or start over with a new population?</span></div>` : `<p class="og-sub">Guide a population of river otters through ${GENS} generations and watch evolution happen.</p>
       <ol class="og-steps">
         <li><span><b>Play a season</b> as one otter. Eat, swim, and dodge danger.</span></li>
         <li><span><b>Survive and raise pups.</b> Traits pass to the next generation, with the occasional mutation.</span></li>
         <li><span><b>Watch the population evolve</b> to fit its habitat.</span></li>
-      </ol>
-      <div class="og-actions">${G.inRun && G.pop.length && G.gen <= GENS ? `<button type="button" class="og-btn" id="og-continue">Continue · Gen ${G.gen}</button><button type="button" class="og-btn ghost" id="og-play">New game</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div></div>`);
+      </ol>`}
+      <div class="og-actions">${saved ? `<button type="button" class="og-btn" id="og-continue">▶ Continue · Gen ${G.gen}</button><button type="button" class="og-btn ghost" id="og-play">New game</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div>
+      ${saved ? '<p class="og-sub og-small">A new game erases your current generations. Your outfits, Otter-dex, treasures, and journal stay.</p>' : ""}
+      ${hasCollections() || saved ? '<button type="button" class="og-link" id="og-erase">Erase everything and start fresh</button>' : ""}</div>`);
     const cont = $("og-continue"); if (cont) cont.addEventListener("click", () => { beep(660, 0.1, "triangle"); screenBriefing(); });
-    $("og-play").addEventListener("click", () => { beep(660, 0.1, "triangle"); if (window.SQ_track) window.SQ_track("play", "otter-game"); screenSettings(() => screenHabitat(true)); });
+    $("og-play").addEventListener("click", () => { beep(660, 0.1, "triangle"); newGame(); });
+    const er = $("og-erase"); if (er) er.addEventListener("click", screenErase);
   }
+  function screenErase() {
+    G.screen = "erase";
+    screen(`<div class="og-card">${BACK}
+      <h2 class="og-h">Erase everything?</h2>
+      <p class="og-sub">This deletes your otters and generations, plus every outfit, Otter-dex otter, treasure, journal card, and brain and ear drawing you've collected. Your settings stay. This can't be undone.</p>
+      <div class="og-actions"><button type="button" class="og-btn og-danger" id="og-erase-yes">Yes, erase everything</button><button type="button" class="og-btn ghost" id="og-erase-no">Keep my stuff</button></div></div>`);
+    onBack(screenTitle); $("og-erase-no").addEventListener("click", screenTitle); $("og-erase-no").focus({ preventScroll: true });   // safe default
+    $("og-erase-yes").addEventListener("click", () => {
+      Object.assign(G, { pop: [], history: [], gen: 1, habSeasons: {}, plan: null, inRun: false, runs: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, gallery: [] });
+      save(); renderCloset(); renderDex(); renderTreasure(); updatePanels(); resetJournal();
+      document.querySelectorAll(".og-slot .og-badge-new").forEach(x => { x.hidden = true; x.parentElement.classList.remove("has-new"); }); $("og-bag").classList.remove("has-new");
+      beep(330, 0.15, "triangle", 0.05); screenTitle(); toast("Everything erased. Fresh start!");
+    });
+  }
+  const JOURNAL_START = $("og-fact").innerHTML;
+  function resetJournal() { $("og-fact").innerHTML = JOURNAL_START; }
   function screenHabitat(fresh) {
     G.screen = "habitat"; G.back = fresh ? () => screenSettings(() => screenHabitat(true)) : screenBriefing;
     screen(`<div class="og-card og-wide">${BACK}
@@ -1245,7 +1273,7 @@
       <div class="og-habs">${ORDER.map(k => `<button type="button" class="og-hab og-hab-${k}${!fresh && k === G.hab ? " current" : ""}" data-h="${k}"><b>${HAB[k].name}</b><span>${HAB[k].blurb}</span>${!fresh && k === G.hab ? "<em>Current home</em>" : ""}</button>`).join("")}</div></div>`);
     document.querySelectorAll(".og-hab").forEach(b => b.addEventListener("click", () => {
       G.hab = b.dataset.h; beep(520, 0.08, "triangle");
-      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; if (G.gallery.length && G.gallery[G.gallery.length - 1].label) G.gallery.pop(); addGallery("Starting otters"); }
+      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; setTimeout(save, 0); if (G.gallery.length && G.gallery[G.gallery.length - 1].label) G.gallery.pop(); addGallery("Starting otters"); }
       updatePanels(); screenBriefing();
     }));
     onBack(G.back);
@@ -1294,7 +1322,7 @@
       ${G.gen + 1 <= GENS ? '<button type="button" class="og-btn ghost" id="og-move">Move to a new habitat</button>' : ""}</div></div>`);
     paintPortraits(G.pop, $("og-grid")); paintTraits($("og-screen"));
     showFact("inherit"); if (G.mutated) setTimeout(() => showFact("mutation"), 600);
-    G.gen++; updatePanels(); checkTraitUnlocks();
+    G.gen++; updatePanels(); checkTraitUnlocks(); save();
     $("og-next").addEventListener("click", () => { beep(660, 0.08, "triangle"); G.gen > GENS ? screenSummary() : screenBriefing(); });
     const mv = $("og-move"); if (mv) mv.addEventListener("click", () => screenHabitat(false));
   }
@@ -1312,7 +1340,7 @@
       <div class="og-table-wrap"><table class="og-table"><thead><tr><th>Population</th>${TRAITS.map(t => `<th><span class="og-th">${TICON[t.k]}${t.name}</span></th>`).join("")}</tr></thead>
       <tbody><tr class="start"><th>Starting otters</th>${TRAITS.map(({ k }) => `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${start[k]}"></canvas><span>${fmt(k, start[k])}</span></td>`).join("")}</tr>${rows}</tbody></table></div>
       <div class="og-actions"><button type="button" class="og-btn" id="og-again">Start a new population</button></div></div>`);
-    paintTraits($("og-screen")); showFact("adapt"); G.inRun = false;
+    paintTraits($("og-screen")); showFact("adapt"); G.inRun = false; save();
     $("og-again").addEventListener("click", () => screenSettings(() => screenHabitat(true)));
   }
   function checkTraitUnlocks() {
@@ -1560,5 +1588,5 @@
   $("og-mute").addEventListener("click", e => { muted = !muted; e.currentTarget.setAttribute("aria-pressed", String(muted)); e.currentTarget.textContent = muted ? "Sound off" : "Sound on"; glc.focus({ preventScroll: true }); });
   window.addEventListener("resize", () => { resize(); size3D(); updatePanels(); if (!running) drawIdle(); });
 
-  resize(); renderCloset(); renderDex(); renderTreasure(); updatePanels(); screenTitle(); idleLoop();
+  resize(); renderCloset(); renderDex(); renderTreasure(); updatePanels(); { const seenK = Object.keys(G.seen); if (seenK.length) renderFact(seenK[seenK.length - 1]); } screenTitle(); idleLoop();
 })();

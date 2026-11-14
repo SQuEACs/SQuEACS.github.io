@@ -1047,3 +1047,8 @@ body.og-noscroll { overflow: hidden; }
 .og-headfig figcaption b { color: #fff; }
 .og-headfig .hs-brain { color: #2ed3c6; } .og-headfig .hs-ear { color: #ffcc4d; }
 .how .og-headfig { max-width: 46rem; margin-top: 1.2rem; border-color: var(--line-strong); }
+.og-welcome { display: grid; gap: 0.3rem; background: #e6f6fb; border: 3px solid #0b0a10; border-radius: 14px; padding: 0.7rem 0.9rem; font-family: var(--og-font); color: #1b1530; }
+.og-welcome b { font-size: 1.2rem; }
+.og-welcome span { font-size: 0.95rem; color: #4a4160; }
+.og-danger { background: #ff3b5c; color: #fff; }
+.og-danger:hover { background: #ff5f79; }

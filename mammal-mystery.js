@@ -100,7 +100,10 @@
       u.pitch = isNatural() ? 1.0 : 1.06;
       let done = false; const fin = () => { if (!done) { done = true; res(); } };
       u.onend = fin; u.onerror = fin;
-      setTimeout(fin, 2500 + text.length * 110);   // some browsers never fire onend
+      // Some browsers never fire onend: after the expected length, finish as soon as the voice goes quiet.
+      const idle = () => { if (done) return; if (SY.speaking && tok === sayToken) setTimeout(idle, 250); else fin(); };
+      setTimeout(idle, 1200 + text.length * 70 * (0.92 / u.rate));
+      setTimeout(fin, 3000 + text.length * 130);   // hard stop in case the browser keeps saying it is speaking
       const go = () => { try { SY.speak(u); } catch (e) { fin(); } };
       // Chrome can drop an utterance queued right after cancel(); wait a moment only if something was playing.
       if (SY.speaking || SY.pending) { SY.cancel(); setTimeout(go, 80); } else go();
@@ -199,15 +202,14 @@
       ["guide", ART.icon("folder"), "Field guide"],
     ];
     if (g === "g2") items.push(["family", ART.icon("tree"), "Family secrets"]);
-    if (g === "pk" || g === "k") items.push(["color", ART.icon("crayon"), "Coloring"]);
+    items.push(["color", ART.icon("crayon"), "Coloring"]);
     const locked = CL && S.opts.lock;
     show("menu", `
       <div class="mm-head">${ART.detective()}<p class="mm-q">${D.GRADES[g].say}</p></div>
       <div class="mm-menu">${items.map(([k, ic, t], i) => btn("mm-tile mm-act" + (i === 0 ? " mm-main" : ""), `data-k="${k}" aria-label="${t}"`, `${ic}<b>${t}</b>`)).join("")}</div>
       ${locked ? "" : btn("mm-chip", 'id="mm-chg" aria-label="Change grade"', `<span class="mm-grade-dots sm">${"<i></i>".repeat(Object.keys(D.GRADES).indexOf(g) + 1)}</span>Change grade`)}`);
-        if (greet) prompt(g === "g2" ? "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder for your field guide, or the tree for family secrets."
-      : g === "pk" || g === "k" ? "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder to see your field guide, or the crayon to color an animal."
-      : "Let's be detectives! Tap the magnifying glass to solve a mystery, or the folder to see your field guide.");
+        if (greet) prompt(g === "g2" ? "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder for your field guide, the tree for family secrets, or the crayon to color."
+      : "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder to see your field guide, or the crayon to color an animal.");
     view.querySelectorAll(".mm-act").forEach(b => b.addEventListener("click", () => {
       sfx.tap(); const k = b.dataset.k;
       if (k === "case") startRound(); else if (k === "guide") guide(); else if (k === "color") colorPick(); else family();
@@ -227,7 +229,7 @@
   function newCase() {
     const g = G(), id = R.list[R.i];
     const others = shuffle(D.IDS.filter(x => x !== id)).slice(0, D.GRADES[g].suspects - 1);
-    R.c = { id, suspects: shuffle([id].concat(others)), clues: D.ANIMALS[id].clues[g], shown: 0, wrong: 0, done: false };
+    R.c = { id, suspects: shuffle([id].concat(others)), clues: teethFirst(D.ANIMALS[id].clues[g], g), shown: 0, wrong: 0, done: false };
     show("case", `
       <div class="mm-case">
         <div class="mm-casebar"><span class="mm-casenum">${ART.icon("folder")}<b>${R.i + 1}</b>/${R.list.length}</span><span class="mm-dots" id="mm-dots"></span></div>
@@ -259,6 +261,8 @@
     if (type === "food") return `<div class="mm-zoom mm-pic mm-foodclue">${ART.food(arg)}</div>`;
     return "";
   }
+  // 2nd grade always sees the teeth first, so every child studies them before guessing.
+  function teethFirst(cl, g) { return g === "g2" ? cl.filter(c => c[0] === "teeth").concat(cl.filter(c => c[0] !== "teeth")) : cl; }
   function nextClue() {
     const c = R.c; if (c.done || c.shown >= c.clues.length) return;
     const cl = c.clues[c.shown++];
@@ -390,11 +394,18 @@
   }
 
   /* ---------- bonus: 2nd grade picks carnivore, herbivore, or omnivore ---------- */
+  // What the teeth tell us, by back-tooth shape.
+  function teethTip(id) {
+    const t = ART.TEETH[id] || {};
+    if (t.cheek === "blade") return "See the sharp, pointy teeth? Teeth like scissors slice meat.";
+    if (t.cheek === "bumpy") return "See the pointy front teeth and the bumpy back teeth? Bumpy teeth can mash lots of different foods.";
+    return t.can === "big" ? "See the big, flat back teeth? Flat teeth grind and crush plants." : "See the flat back teeth? Flat teeth grind and crush plants.";
+  }
   function bonusDiet(id) {
     const a = D.ANIMALS[id];
-    show("diet", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<span class="mm-mini big">${ART.animal(id, { face: true })}</span></div>
+    show("diet", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<span class="mm-mini big">${ART.animal(id, { face: true })}</span><div class="mm-diet-teeth" aria-label="${cap1(nm(id))}'s teeth">${ART.teeth(id)}</div></div>
       <div class="mm-choices">${["meat", "plants", "both"].map(k => btn("mm-choice mm-diet", `data-d="${k}" aria-label="${D.DIET[k].word}: ${D.DIET[k].kid}"`, `${ART.food(k)}<b>${cap1(D.DIET[k].word)}</b><small>${D.DIET[k].kid}</small>`)).join("")}</div></div>`);
-    prompt(`${vary("eat", [`What does ${the(id)} eat?`, `Detective question: what does ${the(id)} eat?`, `Think about the teeth. What does ${the(id)} eat?`])} Meat makes it a carnivore. Plants make it an herbivore. Both make it an omnivore.`);
+    prompt(`${vary("eat", [`Look at ${the(id)}'s teeth. What does it eat?`, `Detective question: check the teeth! What does ${the(id)} eat?`, `Teeth are clues! What does ${the(id)} eat?`])} ${teethTip(id)} Meat makes it a carnivore. Plants make it an herbivore. Both make it an omnivore.`);
     view.querySelectorAll(".mm-diet").forEach(b => b.addEventListener("click", async () => {
       if (b.classList.contains("nope")) return;
       const d = b.dataset.d;
@@ -467,7 +478,7 @@
     shapes.forEach((el, i) => { el.dataset.i = i; if (saved[i]) paint(el, saved[i]); });
     const setCur = (b) => { view.querySelectorAll(".mm-crayon").forEach(x => x.setAttribute("aria-checked", String(x === b))); cur = [b.dataset.n, b.dataset.c]; };
     view.querySelectorAll(".mm-crayon").forEach(b => { if (b.dataset.c === cur[1]) setCur(b); b.addEventListener("click", () => { sfx.tap(); setCur(b); say(cap1(b.dataset.n) + "!"); }); });
-    prompt(G() === "k" ? `Let's color the ${nm(id)}! Tap a crayon, then tap a body part to color it.` : `Let's color the ${nm(id)}! Tap a crayon, then tap the picture.`);
+    prompt(G() !== "pk" ? `Let's color the ${nm(id)}! Tap a crayon, then tap a body part to color it.` : `Let's color the ${nm(id)}! Tap a crayon, then tap the picture.`);
     let lastPart = "", lastT = 0;
     svg.addEventListener("click", e => {
       const el = e.target.closest("[data-paint]"); if (!el) return;
@@ -476,14 +487,14 @@
       // Kindergarten hears the body part's name too, which practices the words from the mysteries.
       const part = (el.closest("[data-part]") || {}).dataset ? el.closest("[data-part]").dataset.part : "";
       const now = Date.now();
-      if (G() === "k" && part && (part !== lastPart || now - lastT > 4000)) say(`${cap1(cur[0])} ${partWord(id, part)}!`);
+      if (G() !== "pk" && part && (part !== lastPart || now - lastT > 4000)) say(`${cap1(cur[0])} ${partWord(id, part)}!`);
       else if (now - lastT > 2500) say(cap1(cur[0]) + "!");
       lastPart = part; lastT = now;
     });
     $("mm-clear").addEventListener("click", () => { sfx.tap(); shapes.forEach(el => paint(el, "#ffffff")); S.art[id] = {}; save(); say("Fresh page!"); colorPage(id); });
     $("mm-color-done").addEventListener("click", async () => {
       sfx.win(); confetti(view);
-      const ok = await say(`${vary("pretty", PH.pretty)} ${nm(id)}! ${D.ANIMALS[id].facts.pk[0]}`);
+      const ok = await say(`${vary("pretty", PH.pretty)} ${nm(id)}! ${pick(D.ANIMALS[id].facts[G()] || D.ANIMALS[id].facts.pk)}`);
       if (ok && screenName === "color") colorPick();
     });
   }
@@ -520,9 +531,10 @@
     if (right) { F.right++; sfx.yes(); confetti(view); } else sfx.no();
     const t = $("mm-mtree"); t.innerHTML = miniTree(q); t.hidden = false;
     view.querySelectorAll("#mm-fam .mm-suspect").forEach(x => x.classList.add(q.pair.includes(x.dataset.id) ? "yes" : "dim"));
-    const ok = await say(`${right ? vary("yes", PH.yes) : vary("goodTry", ["Good try!", "Nice thinking!", "Ooh, tricky one!"]) + " The closer cousins are " + the(q.pair[0]) + " and " + the(q.pair[1]) + "."} ${q.why}`);
-    if (!ok) return;
-    $("mm-mtree").insertAdjacentHTML("beforeend", btn("mm-big mm-go", 'id="mm-fam-next" aria-label="Next"', ART.icon("next")));
+    // The next arrow shows up right away (after a short fade-in), so nobody waits on a slow voice.
+    // It sticks to the bottom corner of the screen so it is never scrolled out of sight.
+    view.insertAdjacentHTML("beforeend", btn("mm-big mm-go mm-late mm-stick", 'id="mm-fam-next" aria-label="Next"', ART.icon("next")));
+    say(`${right ? vary("yes", PH.yes) : vary("goodTry", ["Good try!", "Nice thinking!", "Ooh, tricky one!"]) + " The closer cousins are " + the(q.pair[0]) + " and " + the(q.pair[1]) + "."} ${q.why}`);
     $("mm-fam-next").addEventListener("click", () => {
       sfx.tap(); F.i++;
       if (F.i < F.list.length) familyRound(false);
@@ -563,11 +575,26 @@
       <path d="${lines}" fill="none" stroke="#a8784a" stroke-width="4" stroke-linecap="round" id="mm-tlines"/>
       ${tips.map((id, i) => `<g class="mm-tip" data-id="${id}">${face(id, i * 80 + 40, 40, 70)}</g>`).join("")}
       ${labels}${dots}</svg></div>
+      <div class="mm-clade" id="mm-clade" aria-live="polite" hidden></div>
       <div class="mm-row">${btn("mm-big mm-again", 'id="mm-fam-again" aria-label="Play family secrets again"', ART.icon("replay"))}</div>`);
     prompt(fromGame ? `You got ${F.right} of ${F.list.length}! Here is the whole family tree. Tap a yellow dot to hear who is in that group.` : "Here is the whole family tree. Tap a yellow dot to hear who is in that group.");
     const byK = {}; nodes.forEach(nd => { byK[nd.n.k] = nd; });
     view.querySelectorAll(".mm-node").forEach(g => {
-      const go = () => { const nd = byK[g.dataset.k]; sfx.tap(); view.querySelectorAll(".mm-tip").forEach(t => t.classList.toggle("dim", !nd.tips.includes(t.dataset.id))); view.querySelectorAll(".mm-node").forEach(x => x.classList.toggle("on", x === g)); say(nd.n.say + " " + nd.tips.map(nm).join(", ") + "."); };
+      const go = () => {
+        const nd = byK[g.dataset.k], n = nd.n; sfx.tap();
+        view.querySelectorAll(".mm-tip").forEach(t => t.classList.toggle("dim", !nd.tips.includes(t.dataset.id)));
+        view.querySelectorAll(".mm-node").forEach(x => x.classList.toggle("on", x === g));
+        // A card about the whole group: who is in it from the game, more facts, and relatives not in the game.
+        const lines = [n.say, `In this game: ${nd.tips.map(nm).join(", ")}.`].concat(n.teethSay ? [n.teethSay] : [], n.more || []);
+        if (n.also && n.also.length) lines.push(`Also in this group: ${n.also.join(", ")}.`);
+        const card = $("mm-clade");
+        card.innerHTML = `${n.teeth ? `<div class="mm-clade-teeth" aria-label="Teeth of the ${nm(n.teeth)}">${ART.teeth(n.teeth)}</div>` : ""}<h3>${n.name || n.label || "This group"}</h3>
+          <div class="mm-clade-faces">${nd.tips.map(id => `<span class="mm-mini" title="${nm(id)}">${ART.animal(id, { face: true })}</span>`).join("")}</div>
+          <ul>${lines.slice(2, n.also && n.also.length ? -1 : undefined).map(t => `<li>${t}</li>`).join("")}</ul>
+          ${n.also && n.also.length ? `<p class="mm-clade-also"><b>Also in this group:</b> ${n.also.map(a => `<span>${a}</span>`).join("")}</p>` : ""}`;
+        card.hidden = false;
+        sayAll(lines, i => card.querySelectorAll("li").forEach((li, j) => li.classList.toggle("now", j === i - 2)));
+      };
       g.addEventListener("click", go); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
     });
     view.querySelectorAll(".mm-tip").forEach(t => t.addEventListener("click", () => say(cap1(nm(t.dataset.id)) + ".")));

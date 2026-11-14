@@ -152,6 +152,18 @@
 .mm-tlabel { font: 700 15px var(--mm-font); fill: var(--mm-ink); paint-order: stroke; stroke: var(--mm-paper); stroke-width: 5px; }
 .mm-node { cursor: pointer; } .mm-node.on circle:first-child { fill: #ff5fa2; }
 .mm-node:focus-visible circle:first-child { stroke: #ff5fa2; stroke-width: 6; }
+.mm-clade { width: min(100%, 44rem); background: #fffaf0; border: 4px solid var(--mm-ink); border-radius: 18px; padding: .8rem 1rem; box-shadow: 0 6px 0 var(--mm-ink); font: 500 1.05rem/1.35 var(--mm-font); animation: mm-pop .35s cubic-bezier(.3,1.4,.5,1); }
+.mm-clade h3 { margin: 0 0 .3rem; font: 700 1.5rem/1.1 var(--mm-font); }
+.mm-clade-faces { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .3rem; } .mm-clade-faces .mm-mini { width: 44px; height: 44px; }
+.mm-clade ul { margin: 0; padding-left: 1.2rem; display: grid; gap: .25rem; } .mm-clade li.now { background: #fff2b8; border-radius: 6px; }
+.mm-clade-also { margin: .5rem 0 0; display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.mm-clade-also span { background: #e9e1ff; border: 2px solid var(--mm-ink); border-radius: 999px; padding: .05rem .55rem; font-size: .95rem; }
+.mm-stick { position: sticky; bottom: .4rem; align-self: flex-end; z-index: 7; flex-shrink: 0; }
+.mm-diet-teeth { width: clamp(140px, 22vw, 220px); background: #fffaf0; border: 4px solid var(--mm-ink); border-radius: 16px; padding: .3rem; }
+.mm-diet-teeth svg { width: 100%; height: auto; display: block; }
+.mm-clade-teeth { float: right; width: clamp(110px, 20vw, 170px); margin: 0 0 .4rem .6rem; background: #fff; border: 3px solid var(--mm-ink); border-radius: 12px; padding: .2rem; } .mm-clade-teeth svg { width: 100%; height: auto; display: block; }
+.mm-clade::after { content: ""; display: block; clear: both; }
+.mm-late { animation: mm-late 1.4s both; } @keyframes mm-late { 0%, 60% { opacity: 0; transform: scale(.6); pointer-events: none; } 100% { opacity: 1; transform: none; } }
 .mm-tip { cursor: pointer; transition: opacity .2s; } .mm-tip.dim { opacity: .25; }
 
 /* case file popup */

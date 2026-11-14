@@ -1052,3 +1052,25 @@ body.og-noscroll { overflow: hidden; }
 .og-welcome span { font-size: 0.95rem; color: #4a4160; }
 .og-danger { background: #ff3b5c; color: #fff; }
 .og-danger:hover { background: #ff5f79; }
+/* ---------- Hotbar with 7 slots, nature finds, life story ---------- */
+.og-hotbar { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+@media (max-width: 40rem) { .og-hotbar { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.og-nat-head { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+.og-nat-hab { margin-top: 0.8rem; padding: 0.6rem; border-radius: 14px; background: #f3eefc; box-shadow: inset 5px 0 0 var(--gc, #a47bff); }
+.og-nat-hab h4 { font: 700 0.95rem/1 var(--og-font); color: #1b1530; margin: 0 0 0.5rem 0.4rem; }
+.og-ntile span { font-size: 0.74rem; }
+.og-lsum { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.6rem; }
+.og-lsum > div { background: #f3eefc; border: 2px solid #d9cff0; border-radius: 14px; padding: 0.6rem 0.7rem; }
+.og-lsum h4 { font: 700 0.8rem/1 var(--og-font); text-transform: uppercase; letter-spacing: 0.06em; color: #7a3fd0; margin: 0 0 0.45rem; }
+.og-lhabs, .og-lchips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.og-lhab { font: 700 0.78rem/1 var(--og-font); padding: 0.35rem 0.55rem; border-radius: 999px; color: #fff; background: var(--gc); border: 2px solid #0b0a10; }
+.og-lhab.no { background: #fff; color: #9a93ad; border-style: dashed; border-color: #b9b1cc; }
+.og-lchip { display: inline-flex; align-items: center; gap: 0.25rem; background: #fff; border: 2px solid #0b0a10; border-radius: 999px; padding: 0.15rem 0.55rem 0.15rem 0.2rem; font-family: var(--og-font); color: #1b1530; }
+.og-lchip .og-ic { width: 1.5rem; height: 1.5rem; }
+.og-lchip b { font-size: 0.95rem; } .og-lchip small { font-size: 0.75rem; color: #4a4160; }
+.og-lentries { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+.og-lentry { background: #fff; border: 2px solid #0b0a10; border-radius: 12px; padding: 0.55rem 0.75rem; box-shadow: inset 6px 0 0 var(--gc, #a47bff); padding-left: 1rem; display: grid; gap: 0.25rem; color: #1b1530; }
+.og-lentry header { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; border: 0; padding: 0; background: none; position: static; }
+.og-lentry header b { font: 700 1rem/1 var(--og-font); } .og-lentry header span { font: 600 0.8rem/1 var(--og-font); color: #6b6380; }
+.og-lentry p { font-size: 0.9rem; line-height: 1.4; }
+.og-lout { font-weight: 700; } .og-lout.ok { color: #138a4a; } .og-lout.lost { color: #c2185b; }

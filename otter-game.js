@@ -105,14 +105,54 @@
     { id: "fossil",    name: "Fossil shell",        color: "#e0c9a0", shape: "fossil",  rarity: "Rare",      w: 5 },
     { id: "nugget",    name: "Golden nugget",       color: "#ffd23f", shape: "gem",     rarity: "Legendary", w: 2 },
   ];
+  /* ---------- Nature finds: plants and natural objects unique to each habitat ---------- */
+  const NATURE = {
+    snow: [
+      { id: "sprucecone", name: "Spruce cone", shape: "cone", c: "#8a5a32", c2: "#5a3a1e", fact: "Spruce cones hang down from the branches. Fir cones stand straight up." },
+      { id: "lichen", name: "Reindeer lichen", shape: "lichen", c: "#d8e4c8", c2: "#a8b898", fact: "Not a plant! Lichen is a fungus and an alga living together." },
+      { id: "wintergreen", name: "Wintergreen berries", shape: "berries", c: "#d8263c", c2: "#2f6b3f", fact: "Bright red berries that stay on the plant all winter." },
+      { id: "antler", name: "Moose antler", shape: "antler", c: "#e8dcc4", c2: "#b8a888", fact: "Moose drop their antlers every winter and grow new ones." },
+    ],
+    desert: [
+      { id: "saguaro", name: "Saguaro flower", shape: "flower", c: "#fbfaf2", c2: "#ffd23f", fact: "Arizona's state flower. It opens at night and closes the next afternoon." },
+      { id: "pricklypear", name: "Prickly pear fruit", shape: "fruit", c: "#c2185b", c2: "#3f8f5a", fact: "Also called a tuna. People and many animals eat it." },
+      { id: "marigold", name: "Desert marigold", shape: "flower", c: "#ffd23f", c2: "#e09a1a", fact: "Its yellow flowers bloom for much of the year." },
+      { id: "ocotillo", name: "Ocotillo bloom", shape: "spike", c: "#ff4a2a", c2: "#6b5a3a", fact: "Red flowers at the tips of tall, spiny stems. Hummingbirds love them." },
+    ],
+    fast: [
+      { id: "aspen", name: "Aspen leaf", shape: "leaf", c: "#ffd23f", c2: "#c99a1a", fact: "Flat leaf stems make aspen leaves flutter in the slightest breeze." },
+      { id: "watermoss", name: "Water moss", shape: "lichen", c: "#3f8a3a", c2: "#2a5a2a", fact: "It grips rocks so tightly the rushing current can't wash it away." },
+      { id: "columbine", name: "Columbine flower", shape: "flower", c: "#8fa8ff", c2: "#fbfaf2", fact: "Long spurs on the petals hold nectar for hummingbirds and moths." },
+      { id: "caddis", name: "Caddisfly case", shape: "tube", c: "#9a8f80", c2: "#6b6058", fact: "A young caddisfly builds this tube out of pebbles and silk." },
+    ],
+    slow: [
+      { id: "cattail", name: "Cattail", shape: "cattail", c: "#6b4226", c2: "#5f8a3a", fact: "One fluffy seed head can hold hundreds of thousands of seeds." },
+      { id: "marshmarigold", name: "Marsh marigold", shape: "flower", c: "#ffd23f", c2: "#ff9a1a", fact: "Glossy yellow flowers that brighten marshes in early spring." },
+      { id: "pickerel", name: "Pickerelweed", shape: "spike", c: "#8a5ad8", c2: "#3f7a3a", fact: "Purple flower spikes grow up out of shallow water." },
+      { id: "dragonfly", name: "Dragonfly shed skin", shape: "shed", c: "#c9a86a", c2: "#8a6a3a", fact: "Young dragonflies live underwater, then climb out and shed this skin." },
+    ],
+    murky: [
+      { id: "waterlily", name: "White water lily", shape: "lily", c: "#fbfaf2", c2: "#4f8a3a", fact: "Air pockets in its long stems help the leaves float flat on the water." },
+      { id: "duckweed", name: "Duckweed", shape: "duckweed", c: "#6fbf3a", c2: "#3f8a2a", fact: "One of the smallest flowering plants in the world." },
+      { id: "mussel", name: "Mussel shell", shape: "shell", c: "#4a4060", c2: "#c8c0e0", fact: "Freshwater mussels filter and clean the water. Otters crack them open to eat." },
+      { id: "arrowhead", name: "Arrowhead leaf", shape: "arrow", c: "#3f8a3a", c2: "#2a6a2a", fact: "Named for its arrow-shaped leaves. Its roots were an important food for many peoples." },
+    ],
+    lake: [
+      { id: "iris", name: "Blue flag iris", shape: "flower", c: "#6a5ad8", c2: "#ffd23f", fact: "A wild iris that grows along lake shores and marshes." },
+      { id: "wildrice", name: "Wild rice", shape: "grain", c: "#c9a86a", c2: "#6f8a3a", fact: "A native grass that grows in shallow lakes. It isn't true rice." },
+      { id: "loon", name: "Loon feather", shape: "feather", c: "#2a2a35", c2: "#fbfaf2", fact: "Loons have heavier, less hollow bones than most birds, which helps them dive deep." },
+      { id: "snail", name: "Pond snail shell", shape: "snail", c: "#b88a5a", c2: "#7a5a3a", fact: "Pond snails scrape algae off rocks and plants with a tongue full of tiny teeth." },
+    ],
+  };
+  const ALL_NATURE = Object.entries(NATURE).flatMap(([h, list]) => list.map(n => ({ ...n, hab: h })));
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true }, gallery: [], inRun: false };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; G.seen = s.seen || {};
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true }, gallery: [], inRun: false, nature: {}, life: [] };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; G.seen = s.seen || {}; G.nature = s.nature || {};
     if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; } } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30), seen: G.seen,
-    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons } : null })); } catch (e) {} };
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30), seen: G.seen, nature: G.nature,
+    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life } : null })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 14, fur: 50 + gauss() * 14, ext: 50 + gauss() * 14, cochlea: 50 + gauss() * 14, canal: valOfDeg(84) + gauss() * 11, brain: 50 + gauss() * 14 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -264,11 +304,48 @@
     else { c.fillStyle = "rgba(255,255,255,0.85)"; c.beginPath(); c.arc(-12, -10, 4, 0, 7); c.fill(); }
     c.restore();
   }
+  function drawNature(c, n, locked, w = 140, h = 100) {
+    c.clearRect(0, 0, w, h); c.save(); c.translate(w / 2, h / 2 + 6);
+    const C1 = locked ? "#3a3350" : n.c, C2 = locked ? "#2b2540" : n.c2;
+    c.lineWidth = 2.5; c.strokeStyle = locked ? "#3a3350" : "#0b0a10"; c.lineJoin = c.lineCap = "round";
+    const blob = (x, y, rx, ry, rot, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, 7); c.fill(); c.stroke(); };
+    const stem = (x1, y1, x2, y2, col) => { c.strokeStyle = col; c.lineWidth = 4; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = locked ? "#3a3350" : "#0b0a10"; c.lineWidth = 2.5; };
+    switch (n.shape) {
+      case "flower": stem(0, 34, 0, 0, locked ? C2 : "#3f8a3a"); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; blob(Math.cos(a) * 14, -6 + Math.sin(a) * 14, 11, 7, a, C1); } blob(0, -6, 7, 7, 0, C2); break;
+      case "cone": c.fillStyle = C1; c.beginPath(); c.ellipse(0, 0, 16, 30, 0, 0, 7); c.fill(); c.stroke(); if (!locked) { c.strokeStyle = C2; for (let i = -3; i <= 3; i++) { c.beginPath(); c.moveTo(-15, i * 8); c.quadraticCurveTo(0, i * 8 + 6, 15, i * 8); c.stroke(); } } break;
+      case "lichen": for (let i = 0; i < 9; i++) blob(Math.cos(i * 2.4) * (6 + i * 2), Math.sin(i * 2.4) * (4 + i * 1.5), 9, 8, 0, i % 2 ? C1 : C2); break;
+      case "berries": blob(-14, 10, 16, 8, -0.5, C2); blob(14, 10, 16, 8, 0.5, C2); blob(-8, -4, 9, 9, 0, C1); blob(8, -6, 9, 9, 0, C1); blob(0, 6, 9, 9, 0, C1); break;
+      case "antler": c.strokeStyle = C1; c.lineWidth = 9; c.beginPath(); c.moveTo(-26, 26); c.quadraticCurveTo(-6, 0, 22, -4); c.moveTo(-10, 10); c.lineTo(-18, -18); c.moveTo(4, 2); c.lineTo(0, -26); c.moveTo(14, -2); c.lineTo(20, -24); c.stroke(); break;
+      case "fruit": blob(0, 4, 18, 22, 0, C1); if (!locked) { c.fillStyle = "#ffd23f"; [[-8, -4], [6, 2], [-2, 12], [8, -10]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 1.8, 0, 7); c.fill(); }); } blob(0, -20, 6, 4, 0, C2); break;
+      case "spike": stem(0, 36, 0, -6, C2); for (let i = 0; i < 6; i++) { blob(-5, -2 - i * 6, 5, 4, 0, C1); blob(5, -5 - i * 6, 5, 4, 0, C1); } break;
+      case "leaf": stem(0, 34, 0, 16, C2); c.fillStyle = C1; c.beginPath(); c.moveTo(0, 18); c.bezierCurveTo(-30, 4, -18, -30, 0, -30); c.bezierCurveTo(18, -30, 30, 4, 0, 18); c.fill(); c.stroke(); if (!locked) { c.strokeStyle = C2; c.beginPath(); c.moveTo(0, 16); c.lineTo(0, -26); c.stroke(); } break;
+      case "tube": c.fillStyle = C1; c.beginPath(); c.roundRect ? c.roundRect(-30, -9, 60, 18, 9) : c.rect(-30, -9, 60, 18); c.fill(); c.stroke(); if (!locked) { c.fillStyle = C2; for (let i = 0; i < 12; i++) { c.beginPath(); c.arc(-24 + (i % 6) * 10, i < 6 ? -3 : 4, 2.6, 0, 7); c.fill(); } } break;
+      case "cattail": stem(0, 38, 0, -34, C2); c.fillStyle = C1; c.beginPath(); c.roundRect ? c.roundRect(-6, -24, 12, 30, 6) : c.rect(-6, -24, 12, 30); c.fill(); c.stroke(); stem(-4, 38, -20, 0, C2); break;
+      case "shed": blob(0, 0, 9, 22, 0, C1); blob(0, -22, 9, 7, 0, C1); [-1, 1].forEach(sd => { for (let i = 0; i < 3; i++) { c.strokeStyle = C2; c.beginPath(); c.moveTo(sd * 6, -8 + i * 8); c.lineTo(sd * 20, -14 + i * 12); c.stroke(); } }); break;
+      case "lily": blob(0, 14, 34, 11, 0, C2); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; blob(Math.cos(a) * 11, 2 + Math.sin(a) * 6, 10, 5, a, C1); } blob(0, 2, 5, 4, 0, "#ffd23f"); break;
+      case "duckweed": for (let i = 0; i < 7; i++) blob(Math.cos(i * 2.2) * (4 + i * 3), Math.sin(i * 2.2) * (3 + i * 2), 7, 5, i, i % 2 ? C1 : C2); break;
+      case "shell": blob(0, 0, 30, 18, 0, C1); if (!locked) { c.strokeStyle = C2; [24, 16, 8].forEach(r => { c.beginPath(); c.ellipse(-4, 2, r, r * 0.6, 0, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); }); } break;
+      case "arrow": stem(0, 36, 0, 10, C2); c.fillStyle = C1; c.beginPath(); c.moveTo(0, -30); c.lineTo(20, 10); c.lineTo(8, 4); c.lineTo(14, 22); c.lineTo(0, 10); c.lineTo(-14, 22); c.lineTo(-8, 4); c.lineTo(-20, 10); c.closePath(); c.fill(); c.stroke(); break;
+      case "grain": for (let i = -2; i <= 2; i++) { stem(i * 9, 38, i * 11, -24, C2); for (let k = 0; k < 4; k++) blob(i * 11 + 3, -20 + k * 7, 2.5, 5, 0.4, C1); } break;
+      case "feather": c.fillStyle = C1; c.beginPath(); c.ellipse(0, -4, 11, 32, 0.35, 0, 7); c.fill(); c.stroke(); if (!locked) { c.fillStyle = C2; [[-2, -16], [4, -2], [-4, 8], [2, -26]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 2.2, 0, 7); c.fill(); }); c.strokeStyle = "#8a8a99"; c.beginPath(); c.moveTo(-12, 30); c.lineTo(10, -34); c.stroke(); } break;
+      case "snail": blob(4, 14, 26, 7, 0, C2); c.fillStyle = C1; c.beginPath(); c.arc(-2, -2, 18, 0, 7); c.fill(); c.stroke(); if (!locked) { c.strokeStyle = C2; c.beginPath(); for (let a = 0; a < 12; a += 0.2) { const r = 1 + a * 1.4; const x = -2 + Math.cos(a) * r, y = -2 + Math.sin(a) * r; a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); } break;
+    }
+    if (locked) { c.fillStyle = "#ff5fa2"; c.font = "700 26px Fredoka, Arial, sans-serif"; c.textAlign = "center"; c.fillText("?", 0, 8); }
+    c.restore();
+  }
+  function renderNature() {
+    const box = $("og-nature"); if (!box) return;
+    box.innerHTML = ORDER.map(h => `<div class="og-nat-hab og-g-${h}"><h4>${HAB[h].name}</h4><div class="og-tiles">${NATURE[h].map(n => { const k = G.nature[n.id] || 0;
+      return `<div class="og-tile og-ntile${k ? "" : " locked"}"><canvas width="140" height="100" data-nat="${n.id}" aria-hidden="true"></canvas><b>${k ? n.name : "???"}</b><span>${k ? n.fact : "Explore the " + HAB[h].name + " to find it."}</span></div>`; }).join("")}</div></div>`).join("");
+    box.querySelectorAll("canvas[data-nat]").forEach(cv => { const n = ALL_NATURE.find(x => x.id === cv.dataset.nat); drawNature(cv.getContext("2d"), n, !G.nature[n.id]); });
+    $("og-nature-count").textContent = `${ALL_NATURE.filter(n => G.nature[n.id]).length} of ${ALL_NATURE.length}`;
+  }
   function renderTreasure() {
     const box = $("og-treasure");
     box.innerHTML = TREASURE.map(tr => { const n = G.treasure[tr.id] || 0; return `<div class="og-tile${n ? "" : " locked"}"><canvas width="140" height="100" data-gem="${tr.id}" aria-hidden="true"></canvas><b>${n ? tr.name : "???"}</b><span>${tr.rarity}${n ? ` · found ${n}` : ""}</span></div>`; }).join("");
     box.querySelectorAll("canvas[data-gem]").forEach(cv => { const tr = TREASURE.find(x => x.id === cv.dataset.gem); drawGem(cv.getContext("2d"), tr, !G.treasure[tr.id]); });
     $("og-treasure-count").textContent = `${TREASURE.filter(tr => G.treasure[tr.id]).length} of ${TREASURE.length}`;
+    renderNature();
   }
   const LOOK = {
     classic:  { t: { size: 50, fur: 50, ext: 50, brain: 50 },  bg: "#cdeefa", icon: "star" },
@@ -622,6 +699,31 @@
     const beam = new T3.Mesh(new T3.CylinderGeometry(0.15, 0.15, 12, 6, 1, true), new T3.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35, depthWrite: false })); beam.position.y = 6; g.add(beam);
     g.userData = { gem: m, ring }; return g;
   }
+  function natureMesh(n) {
+    const g = new T3.Group(), m1 = M(n.c, { roughness: 0.6 }), m2 = M(n.c2, { roughness: 0.7 }), green = M(0x3f8a3a);
+    const add = (geo, mat, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) => { const o = new T3.Mesh(geo, mat); o.position.set(x, y, z); o.scale.set(sx, sy, sz); o.rotation.set(rx, ry, rz); g.add(o); return o; };
+    const sph = r => new T3.SphereGeometry(r, 12, 8), cyl = (r, h) => new T3.CylinderGeometry(r, r, h, 8);
+    switch (n.shape) {
+      case "flower": add(cyl(0.04, 0.8), green, 0, 0.4); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; add(sph(0.16), m1, Math.cos(a) * 0.2, 0.85, Math.sin(a) * 0.2, 1, 0.35, 0.6, 0, -a); } add(sph(0.1), m2, 0, 0.88); break;
+      case "cone": add(new T3.ConeGeometry(0.25, 0.7, 9), M(n.c, { flatShading: true }), 0, 0.35, 0, 1, 1, 1, Math.PI); break;
+      case "lichen": case "duckweed": for (let i = 0; i < 9; i++) add(new T3.IcosahedronGeometry(0.14, 0), i % 2 ? m1 : m2, Math.cos(i * 2.4) * 0.3, 0.1, Math.sin(i * 2.4) * 0.3); break;
+      case "berries": add(sph(0.22), m2, -0.2, 0.08, 0, 1, 0.2, 0.6); add(sph(0.22), m2, 0.2, 0.08, 0, 1, 0.2, 0.6); [[-0.08, 0], [0.1, 0.06], [0, -0.1]].forEach(([x, z]) => add(sph(0.11), m1, x, 0.2, z)); break;
+      case "antler": add(cyl(0.07, 1.2), m1, 0, 0.12, 0, 1, 1, 1, 0, 0, Math.PI / 2.2); [-0.3, 0, 0.3].forEach(x => add(cyl(0.05, 0.5), m1, x, 0.35, 0, 1, 1, 1, 0, 0, 0.3)); break;
+      case "fruit": add(sph(0.25), m1, 0, 0.3, 0, 0.85, 1.1, 0.85); break;
+      case "spike": add(cyl(0.04, 1.1), m2, 0, 0.55); for (let i = 0; i < 6; i++) add(sph(0.08), m1, (i % 2 ? 0.06 : -0.06), 0.75 + i * 0.09, 0); break;
+      case "leaf": case "arrow": add(sph(0.35), m1, 0, 0.08, 0, 0.7, 0.08, 1, 0, 0.6); break;
+      case "tube": add(cyl(0.12, 0.6), m1, 0, 0.12, 0, 1, 1, 1, 0, 0, Math.PI / 2); break;
+      case "cattail": add(cyl(0.035, 1.6), m2, 0, 0.8); add(cyl(0.1, 0.45), m1, 0, 1.25); break;
+      case "shed": add(sph(0.12), m1, 0, 0.15, 0, 0.8, 0.8, 2); break;
+      case "lily": add(new T3.CircleGeometry(0.5, 16), m2, 0, 0.05, 0, 1, 1, 1, -Math.PI / 2); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add(sph(0.12), m1, Math.cos(a) * 0.14, 0.14, Math.sin(a) * 0.14, 1, 0.5, 0.5, 0, -a); } break;
+      case "shell": add(sph(0.3), m1, 0, 0.08, 0, 1, 0.35, 0.65); break;
+      case "grain": for (let i = -1; i <= 1; i++) { add(cyl(0.025, 1.2), m2, i * 0.15, 0.6); add(sph(0.06), m1, i * 0.15, 1.15, 0, 1, 2, 1); } break;
+      case "feather": add(sph(0.3), m1, 0, 0.06, 0, 0.3, 0.05, 1.1, 0, 0.5); break;
+      case "snail": add(sph(0.22), m1, 0, 0.22); add(sph(0.18), m2, 0.15, 0.08, 0, 1.4, 0.4, 0.7); break;
+    }
+    const ring = new T3.Mesh(new T3.TorusGeometry(0.7, 0.035, 6, 24), new T3.MeshBasicMaterial({ color: 0x9dff7a, transparent: true, opacity: 0.85 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.05; g.add(ring);
+    g.userData.ring = ring; g.scale.setScalar(1.25); return g;
+  }
   function logMesh() { const l = new T3.Mesh(new T3.CylinderGeometry(0.45, 0.45, 5, 10), M(0x6b4a2b)); l.rotation.z = Math.PI / 2; const g = new T3.Group(); g.add(l); return g; }
 
   function init3D() {
@@ -722,6 +824,14 @@
     Object.entries(MENU[G.hab]).forEach(([k, n]) => { for (let i = 0; i < Math.round(n * yr().food); i++) spawnFood(k); });
     if (G.plan.year !== "normal") setTimeout(() => showFact("fluct"), 4000);
     spawnFood("golden");
+    // Three nature finds per season, favoring ones the player hasn't found yet
+    S.nature = []; S.finds = []; S.ev = {};
+    const pool = NATURE[G.hab].slice().sort((a, b) => (G.nature[a.id] ? 1 : 0) - (G.nature[b.id] ? 1 : 0) || Math.random() - 0.5);
+    pool.slice(0, 3).forEach(n => {
+      let x, z; for (let i = 0; i < 300; i++) { x = rand(-58, 58); z = rand(-58, 58); const d = sdf(x, z); if (["lily", "duckweed", "shell", "snail", "shed", "tube"].includes(n.shape) ? d > -2.5 && d < 1 : d > 2 && d < 30) break; }
+      const m = natureMesh(n); m.position.set(x, Math.max(groundY(x, z), ["lily", "duckweed"].includes(n.shape) ? -0.03 : -9), z); scene.add(m);
+      S.nature.push({ n, m, x, z, found: false });
+    });
     // Landmark or friends
     if (G.hab === "lake") {
       for (let i = 0; i < 3; i++) { const [x, z] = randWater(4); const f = buildOtter({ size: 55, fur: 55, ext: 45, brain: 60, cochlea: 50, canal: 50 }); scene.add(f); S.friends.push({ m: f, x, z, hx: x, hz: z, a: rand(0, 6), met: false }); }
@@ -761,7 +871,7 @@
   }
   function renderHearts() { $("og-hearts").innerHTML = [0, 1, 2].map(i => `<i class="${i < S.hearts ? "" : "lost"}">♥</i>`).join(""); }
   function bump(kind, what) {
-    let changed = false;
+    let changed = false; const key = kind + (what ? ":" + what : ""); S.ev[key] = (S.ev[key] || 0) + 1;
     S.tasks.forEach(t => { if (t.kind === kind && (!what || t.what === what) && t.have < t.need) { t.have++; changed = true; if (t.have === t.need) { jingle(); toast("Goal complete: " + t.label + "!"); } } });
     if (changed) { renderTasks(); if (S.tasks.every(t => t.have >= t.need) && !S.allDone) { S.allDone = true; if (!G.opts.timer) { S.ending = 3; setTimeout(() => toast("All goals done! Season complete!"), 1200); } else setTimeout(() => toast("All goals done! Your otter will survive and raise extra pups."), 1600); } }
   }
@@ -781,6 +891,7 @@
     c.putImageData(mapBase, 0, 0);
     const radar = 10 + lead().t.brain * 0.3;
     S.items.forEach(it => { if (!it.alive || Math.hypot(it.x - S.x, it.z - S.z) > radar) return; const [x, y] = P(it.x, it.z); c.fillStyle = it.f.rare ? "#ffd23f" : "#ffffff"; c.fillRect(x - 1.5, y - 1.5, 3, 3); });
+    S.nature.forEach(o => { if (o.found || Math.hypot(o.x - S.x, o.z - S.z) > radar * 1.5) return; const [x, y] = P(o.x, o.z); c.fillStyle = "#9dff7a"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.2; c.beginPath(); c.ellipse(x, y, 4, 2.5, -0.6, 0, 7); c.fill(); c.stroke(); });
     S.bonus.forEach(b => { const [x, y] = P(b.x, b.z); c.fillStyle = b.tr.color; c.strokeStyle = "#fff"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y); c.lineTo(x, y + 5); c.lineTo(x - 4, y); c.closePath(); c.fill(); c.stroke(); });
     if (S.place && !S.place.found) { const [x, y] = P(S.place.x, S.place.z); c.fillStyle = "#ffe066"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill(); c.stroke(); }
     S.friends.forEach(f => { if (f.met) return; const [x, y] = P(f.x, f.z); c.fillStyle = "#a47bff"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
@@ -960,6 +1071,14 @@
       const near = Math.abs(lg.x - S.x) < 2.8 && Math.abs(lg.z - S.z) < 1.1;
       if (near && alive) { if (S.y > -0.6) hurt("Bonked by a log!"); else if (!lg.passed) { lg.passed = 3; bump("under", "logs"); toast("Dove under a log!"); } }
     });
+    // Nature finds stay put until collected
+    S.nature.forEach(o => {
+      if (o.found) return; o.m.userData.ring.scale.setScalar(1 + Math.sin(S.t * 4) * 0.12); o.m.rotation.y += dt * 0.6;
+      if (alive && Math.hypot(o.x - S.x, o.z - S.z) < 1.9) {
+        o.found = true; S.scene.remove(o.m); G.nature[o.n.id] = (G.nature[o.n.id] || 0) + 1; S.finds.push(o.n.name); save(); renderNature(); flag("treasure");
+        S.energy = clamp(S.energy + 6, 0, 100); sfx("sparkle", 0.07); toast(`Nature find: ${o.n.name}! ${o.n.fact}`); toastT = 5;
+      }
+    });
     // Surprise treasures pop up near the otter now and then
     S.bonusT -= dt;
     if (S.bonusT <= 0 && alive && S.bonus.length < 2) {
@@ -976,7 +1095,7 @@
       b.life -= dt; b.m.position.set(b.x, b.y + Math.sin(S.t * 3) * 0.2, b.z); b.m.userData.gem.rotation.y += dt * 2;
       b.m.userData.ring.scale.setScalar(1 + Math.sin(S.t * 5) * 0.15); b.m.visible = b.life > 3 || Math.floor(S.t * 8) % 2 === 0;
       if (alive && Math.hypot(b.x - S.x, b.z - S.z) < 1.8 && Math.abs(b.y - S.y) < 2) {
-        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; save(); renderTreasure(); flag("treasure"); bump("treasure");
+        G.treasure[b.tr.id] = (G.treasure[b.tr.id] || 0) + 1; S.finds.push(b.tr.name); save(); renderTreasure(); flag("treasure"); bump("treasure");
         S.energy = clamp(S.energy + 12, 0, 100); let extra = "";
         if ((b.tr.rarity === "Rare" || b.tr.rarity === "Legendary") && S.hearts < 3) { S.hearts++; renderHearts(); extra = " +1 heart!"; }
         sfx("sparkle", 0.09); toast(`Surprise! ${b.tr.rarity} find: ${b.tr.name}!${extra}`);
@@ -1171,7 +1290,11 @@
     while (alive.length < 3) { const i = ranked.find(j => !G.pop[j].alive && !(G.pop[j].lead && S.dead)); if (i === undefined) break; G.pop[i].alive = true; alive = G.pop.filter(o => o.alive); }
     const drift = ranked.slice(0, 3).some(i => !G.pop[i].alive && !G.pop[i].lead);
     Object.assign(G, { lastFood: S.food, lastDone: done, lastAll: all, lastDead: S.dead, lastCause: S.cause, lastGolden: S.golden, drift });
-    G.plan = null; screenSurvival(f); idleLoop();
+    const me = G.pop.find(o => o.lead);
+    G.life.push({ gen: G.gen, hab: G.hab, year: G.lastYear, food: S.counts || {}, ev: S.ev || {}, finds: S.finds || [], hits: S.hits || 0, dead: !!S.dead, cause: S.cause || "",
+      done: G.lastDone, survived: !!(me && me.alive), pups: me && me.alive ? G.lastDone + (S.golden ? 1 : 0) : 0, golden: !!S.golden });
+    G.life = G.life.slice(-40);
+    G.plan = null; screenSurvival(f); idleLoop(); flag("life");
   }
   function breed() {
     const surv = G.pop.filter(o => o.alive);
@@ -1226,7 +1349,7 @@
   }
   const hasCollections = () => Object.keys(G.unlocked).length || Object.keys(G.dex).length || Object.keys(G.treasure).length || G.gallery.length || Object.keys(G.seen).length;
   function newGame() {
-    G.inRun = false; G.pop = []; G.history = []; G.gen = 1; G.habSeasons = {}; G.plan = null; save(); updatePanels();
+    G.inRun = false; G.pop = []; G.history = []; G.gen = 1; G.habSeasons = {}; G.plan = null; G.life = []; save(); updatePanels();
     if (window.SQ_track) window.SQ_track("play", "otter-game");
     screenSettings(() => screenHabitat(true));
   }
@@ -1257,7 +1380,7 @@
       <div class="og-actions"><button type="button" class="og-btn og-danger" id="og-erase-yes">Yes, erase everything</button><button type="button" class="og-btn ghost" id="og-erase-no">Keep my stuff</button></div></div>`);
     onBack(screenTitle); $("og-erase-no").addEventListener("click", screenTitle); $("og-erase-no").focus({ preventScroll: true });   // safe default
     $("og-erase-yes").addEventListener("click", () => {
-      Object.assign(G, { pop: [], history: [], gen: 1, habSeasons: {}, plan: null, inRun: false, runs: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, gallery: [] });
+      Object.assign(G, { pop: [], history: [], gen: 1, habSeasons: {}, plan: null, inRun: false, runs: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, gallery: [], nature: {}, life: [] });
       save(); renderCloset(); renderDex(); renderTreasure(); updatePanels(); resetJournal();
       document.querySelectorAll(".og-slot .og-badge-new").forEach(x => { x.hidden = true; x.parentElement.classList.remove("has-new"); }); $("og-bag").classList.remove("has-new");
       beep(330, 0.15, "triangle", 0.05); screenTitle(); toast("Everything erased. Fresh start!");
@@ -1460,7 +1583,7 @@
   /* ---------- RPG menu: hotbar slots open game windows ---------- */
   const modal = $("og-modal"); let openK = null, lastFocus = null;
   document.querySelector(".og-stage").appendChild(modal);   // so menus also show in full screen
-  const WIN_KEYS = { j: "journal", k: "anatomy", v: "evolution", o: "wardrobe", x: "dex", t: "treasure" };
+  const WIN_KEYS = { j: "journal", l: "life", k: "anatomy", v: "evolution", o: "wardrobe", x: "dex", t: "treasure" };
   function flag(k) { if (openK === k) return; const b = document.querySelector(`.og-slot[data-win="${k}"] .og-badge-new`); if (b) { b.hidden = false; b.parentElement.classList.add("has-new"); } $("og-bag").classList.add("has-new"); }
   let winHist = [];
   function openWin(k, fromBack) {
@@ -1475,6 +1598,8 @@
     $("og-modal-icon").innerHTML = document.querySelector(`.og-slot[data-win="${k}"] svg`).outerHTML;
     const b = document.querySelector(`.og-slot[data-win="${k}"]`); b.querySelector(".og-badge-new").hidden = true; b.classList.remove("has-new"); $("og-bag").classList.toggle("has-new", !!document.querySelector(".og-slot.has-new"));
     if (k === "anatomy" || k === "evolution") requestAnimationFrame(() => { updatePanels(); if (k === "anatomy") renderGallery(); });
+    if (k === "life") renderLife();
+    if (k === "treasure") requestAnimationFrame(renderNature);
     beep(520, 0.06, "triangle", 0.04);
     $("og-close").focus({ preventScroll: true });
   }
@@ -1547,6 +1672,39 @@
   }
   $("og-fs").addEventListener("click", () => setFull(!stage.classList.contains("og-fs-on")));
   document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && stage.classList.contains("og-fs-on")) setFull(false); });
+
+  /* ---------- Life story journal ---------- */
+  function renderLife() {
+    const box = $("og-life"); if (!box) return;
+    if (!G.life.length) { box.innerHTML = '<p class="og-panel-sub">Your otter family\'s story starts after your first season. Every season adds a page.</p>'; return; }
+    const tot = { food: {}, esc: {}, finds: 0, seasons: G.life.length, survived: 0, pups: 0, habs: new Set(), friends: 0 };
+    G.life.forEach(e => {
+      Object.entries(e.food).forEach(([k, n]) => tot.food[k] = (tot.food[k] || 0) + n);
+      Object.entries(e.ev).forEach(([k, n]) => { const [kind, what] = k.split(":"); if (kind === "dodge" || kind === "escape") tot.esc[what] = (tot.esc[what] || 0) + n; if (kind === "under") tot.esc.logs = (tot.esc.logs || 0) + n; if (kind === "friends") tot.friends += n; });
+      tot.finds += e.finds.length; if (e.survived) tot.survived++; tot.pups += e.pups; tot.habs.add(e.hab);
+    });
+    const FOODK = { trout: "trout", minnow: "minnow", catfish: "catfish", crayfish: "crayfish", golden: "golden fish" };
+    const PREDK = { eagle: "eagle", coyote: "coyote", alligator: "alligator", logs: "logs" };
+    const chip = (ic, n, label) => `<span class="og-lchip">${ic}<b>${n}</b><small>${label}</small></span>`;
+    const foodChips = Object.entries(tot.food).map(([k, n]) => chip(ICON[FOODK[k]] || ICON.trout, n, FOODK[k] === "golden fish" ? "golden fish" : FOODK[k])).join("") || "<small>No food yet</small>";
+    const escChips = Object.entries(tot.esc).map(([k, n]) => chip(ICON[PREDK[k]] || ICON.eagle, n, k === "eagle" ? "eagle dodges" : k === "logs" ? "logs dived under" : k + " escapes")).join("") || "<small>No close calls yet</small>";
+    const YN = { good: "Good year", normal: "Normal year", hard: "Hard year" };
+    const entries = G.life.slice().reverse().map(e => {
+      const food = Object.entries(e.food).map(([k, n]) => `${n} ${FOODK[k]}`).join(", ") || "nothing";
+      const esc = Object.entries(e.ev).filter(([k]) => /^(dodge|escape|under)/.test(k)).map(([k, n]) => { const [kind, what] = k.split(":"); return kind === "dodge" ? `dodged the eagle ×${n}` : kind === "under" ? `dove under ${n} log${n > 1 ? "s" : ""}` : `escaped the ${what}`; });
+      const fr = e.ev.friends ? [`made ${e.ev.friends} otter friend${e.ev.friends > 1 ? "s" : ""}`] : [];
+      const out = e.dead ? `Lost this season. ${e.cause} The family carried on through a cousin's pup.` : e.survived ? `Survived and raised pups${e.pups ? `, including ${e.pups} extra for finishing goals` : ""}.` : "Didn't survive the season. A pup from another family carried on.";
+      return `<article class="og-lentry og-g-${e.hab}"><header><b>Generation ${e.gen}</b><span>${HAB[e.hab].name} · ${YN[e.year] || "Normal year"}</span></header>
+        <p>Ate ${food}.${esc.concat(fr).length ? " " + esc.concat(fr).join(", ").replace(/^./, c => c.toUpperCase()) + "." : ""}${e.finds.length ? " Found " + e.finds.join(", ") + "." : ""}${e.golden ? " Caught the golden fish!" : ""}</p>
+        <p class="og-lout ${e.dead || !e.survived ? "lost" : "ok"}">${out}</p></article>`;
+    }).join("");
+    box.innerHTML = `<div class="og-lsum">
+        <div><h4>Habitats visited</h4><div class="og-lhabs">${ORDER.map(h => `<span class="og-lhab og-g-${h}${tot.habs.has(h) ? "" : " no"}">${HAB[h].name}</span>`).join("")}</div></div>
+        <div><h4>Food eaten</h4><div class="og-lchips">${foodChips}</div></div>
+        <div><h4>Close calls survived</h4><div class="og-lchips">${escChips}</div></div>
+        <div><h4>Family record</h4><div class="og-lchips">${chip(ICON.flag, tot.seasons, tot.seasons === 1 ? "season" : "seasons")}${chip(ICON.heart, tot.survived, "survived")}${chip(ICON.friends, tot.pups, tot.pups === 1 ? "extra pup" : "extra pups")}${chip(ICON.gem, tot.finds, tot.finds === 1 ? "find" : "finds")}</div></div>
+      </div><h4 class="og-mini">Season by season</h4><div class="og-lentries">${entries}</div>`;
+  }
 
   /* ---------- Main menu button and pause ---------- */
   function quitSeason() {

@@ -870,7 +870,7 @@
       scene.add(lm);
       const beacon = new T3.Mesh(new T3.CylinderGeometry(0.4, 0.4, 30, 8, 1, true), new T3.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.35, side: T3.DoubleSide, depthWrite: false }));
       beacon.position.set(lx, 15, lz); scene.add(beacon);
-      S.place = { x: lx, z: lz, beacon, found: false };
+      S.place = { x: lx, z: lz, beacon, found: false }; beacon.visible = S.tasks.some(t => t.kind === "visit");
     }
     // Predators
     (G.opts.preds ? PREDS[G.hab] : []).forEach(p => {
@@ -921,11 +921,13 @@
     const cv = $("og-map"), c = cv.getContext("2d"), n = cv.width, P = (x, z) => [(x / ARENA / 2 + 0.5) * n, (z / ARENA / 2 + 0.5) * n];
     c.putImageData(mapBase, 0, 0);
     const radar = 10 + lead().t.brain * 0.3;
-    S.items.forEach(it => { if (!it.alive || Math.hypot(it.x - S.x, it.z - S.z) > radar) return; const [x, y] = P(it.x, it.z); c.fillStyle = it.f.rare ? "#ffd23f" : "#ffffff"; c.fillRect(x - 1.5, y - 1.5, 3, 3); });
-    S.nature.forEach(o => { if (o.found || Math.hypot(o.x - S.x, o.z - S.z) > radar * 1.5) return; const [x, y] = P(o.x, o.z); c.fillStyle = "#9dff7a"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.2; c.beginPath(); c.ellipse(x, y, 4, 2.5, -0.6, 0, 7); c.fill(); c.stroke(); });
-    S.bonus.forEach(b => { const [x, y] = P(b.x, b.z); c.fillStyle = b.tr.color; c.strokeStyle = "#fff"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y); c.lineTo(x, y + 5); c.lineTo(x - 4, y); c.closePath(); c.fill(); c.stroke(); });
-    if (S.place && !S.place.found) { const [x, y] = P(S.place.x, S.place.z); c.fillStyle = "#ffe066"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill(); c.stroke(); }
-    S.friends.forEach(f => { if (f.met) return; const [x, y] = P(f.x, f.z); c.fillStyle = "#a47bff"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
+    // Only highlight what this round's unfinished goals ask for
+    const goal = (kind, what) => S.tasks.some(t => t.kind === kind && (!what || t.what === what) && t.have < t.need);
+    S.items.forEach(it => { if (!it.alive || !goal("eat", it.f.name) || Math.hypot(it.x - S.x, it.z - S.z) > radar) return; const [x, y] = P(it.x, it.z); c.fillStyle = "#ffffff"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1; c.beginPath(); c.arc(x, y, 2.6, 0, 7); c.fill(); c.stroke(); });
+
+    if (goal("treasure")) S.bonus.forEach(b => { const [x, y] = P(b.x, b.z); c.fillStyle = b.tr.color; c.strokeStyle = "#fff"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y); c.lineTo(x, y + 5); c.lineTo(x - 4, y); c.closePath(); c.fill(); c.stroke(); });
+    if (S.place && !S.place.found && goal("visit")) { const [x, y] = P(S.place.x, S.place.z); c.fillStyle = "#ffe066"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill(); c.stroke(); }
+    if (goal("friends")) S.friends.forEach(f => { if (f.met) return; const [x, y] = P(f.x, f.z); c.fillStyle = "#a47bff"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
     S.preds.forEach(p => { if (p.kind === "eagle" && p.state === "circle") return; const [x, y] = P(p.x, p.z); c.fillStyle = "#ff3b5c"; c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); });
     const [px, py] = P(S.x, S.z); c.save(); c.translate(px, py); c.rotate(-S.heading + Math.PI); c.fillStyle = "#ff5fa2"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, -7); c.lineTo(5, 5); c.lineTo(-5, 5); c.closePath(); c.fill(); c.stroke(); c.restore();
@@ -1119,7 +1121,7 @@
         if (sdf(x, z) < -3) continue;
         const tr = pickTreasure(), m = treasureMesh(tr); S.scene.add(m);
         S.bonus.push({ tr, m, x, z, y: groundY(x, z) + 0.7, life: 16 });
-        sfx("sparkle", 0.05); toast("Something sparkly appeared! Check your map."); break;
+        sfx("sparkle", 0.05); toast(S.tasks.some(t => t.kind === "treasure" && t.have < t.need) ? "Something sparkly appeared! Check your map." : "Something sparkly appeared nearby!"); break;
       }
     }
     S.bonus = S.bonus.filter(b => {

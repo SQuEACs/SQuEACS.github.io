@@ -1113,3 +1113,19 @@ body.og-noscroll { overflow: hidden; }
 .tg .og-stage.touch .og-tasks, .tg .og-stage.touch .og-map { top: 6.6rem; }
 .tg .og-stage.touch .tg-exp { max-width: none; flex-wrap: nowrap; }
 .tg .og-stage.touch .tg-exp > span > span { width: 2.6rem; }
+
+/* Why each trait changed */
+.og-why { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.6rem; text-align: left; }
+.og-wcard { background: #f3eefc; border: 2px solid #d9cff0; border-radius: 14px; padding: 0.6rem 0.75rem; display: grid; gap: 0.4rem; font-family: var(--og-font); color: #1b1530; }
+.og-wcard header { display: flex; align-items: center; gap: 0.4rem; border: 0; padding: 0; background: none; position: static; }
+.og-wcard header .og-ic { width: 1.6rem; height: 1.6rem; }
+.og-wcard header b { font-size: 1rem; }
+.og-wcard header span { margin-left: auto; font-weight: 700; font-size: 0.9rem; color: #6b6380; }
+.og-wcard header span.up { color: #138a4a; } .og-wcard header span.down { color: #c2185b; }
+.og-wcard p { font-size: 0.85rem; line-height: 1.35; color: #3a3350; }
+.og-wbars { display: grid; gap: 0.25rem; }
+.og-wrow { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 3.2rem; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: #4a4160; }
+.og-wbar { position: relative; height: 0.7rem; background: #fff; border: 1.5px solid #c9c2dc; border-radius: 999px; overflow: hidden; }
+.og-wbar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1.5px; background: #6b6380; }
+.og-wbar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+.og-wrow b { text-align: right; font-size: 0.75rem; color: #1b1530; }

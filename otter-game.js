@@ -154,7 +154,7 @@
   try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.opts.timer = false;   // timer mode retired: seasons end when goals are done G.gallery = s.gallery || []; G.seen = s.seen || {}; G.nature = s.nature || {};
     if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; } } } catch (e) {}
   const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30), seen: G.seen, nature: G.nature,
-    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life } : null })); } catch (e) {} };
+    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life, contrib: G.contrib } : null })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 14, fur: 50 + gauss() * 14, ext: 50 + gauss() * 14, cochlea: 50 + gauss() * 14, canal: valOfDeg(84) + gauss() * 11, brain: 50 + gauss() * 14 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -889,7 +889,7 @@
     G.screen = "season"; screen("");
     canvas.hidden = true; glc.hidden = false; size3D();
     $("og-hud").hidden = false; document.querySelector(".og-hud-top").appendChild($("og-corner")); $("og-time").parentElement.hidden = !G.opts.timer; $("og-end").hidden = G.opts.timer;
-    if (touchMode && smallLandscape() && !stage.classList.contains("og-fs-on")) setFull(true); showTouch(); $("og-gen").textContent = "GEN " + G.gen; $("og-hab").textContent = h.name;
+    if (touchMode && smallLandscape() && !stage.classList.contains("og-fs-on")) setFull(true); showTouch(); $("og-gen").textContent = "GEN " + (G.gen - 1); $("og-hab").textContent = h.name;
     renderTasks(); renderHearts(); paintMapBase();
     const f = h.facts[(G.habSeasons[G.hab] - 1) % 2]; setTimeout(() => showFact(f), 1500);
     keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
@@ -1283,7 +1283,7 @@
          <div class="og-ctl"><span class="og-keys-row">${KEY("Space")}</span><small>Jump / swim up</small></div>
          <div class="og-ctl"><span class="og-keys-row">${KEY("Shift")}</span><small>Dive</small></div>`;
     screen(`<div class="og-card og-wide og-brief">${BACK}
-      <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
+      <p class="og-badge">Generation ${G.gen - 1} · ${HAB[G.hab].name}</p>
       ${plan.year !== "normal" ? `<div class="og-year og-year-${plan.year}">${ICON[Y.icon]}<b>${Y.name}!</b><span>${YEAR_TEXT[plan.year][G.hab]} ${plan.year === "hard" ? "Goals are tougher and fewer otters will survive." : "Goals are easier and more otters will survive."}</span></div>` : ""}
       <h2 class="og-h">Your mission</h2>
       <div class="og-modes"><span>${G.opts.preds ? "Predators on" : "No predators"}</span><button type="button" class="og-link" id="og-change">Change settings</button></div>
@@ -1335,6 +1335,7 @@
     G.life = G.life.slice(-40);
     G.plan = null; screenSurvival(f); idleLoop(); flag("life");
   }
+  const newContrib = () => Object.fromEntries(TRAITS.map(({ k }) => [k, { surv: 0, breed: 0, player: 0, mut: 0, chance: 0 }]));
   function breed() {
     const surv = G.pop.filter(o => o.alive);
     const fw = surv.map(o => 0.02 + fitness(o.t, G.hab) ** 2);   // fitter parents raise many more pups
@@ -1342,13 +1343,23 @@
     const leadParent = surv.find(o => o.lead);
     const extra = leadParent ? G.lastDone + (G.lastGolden ? 1 : 0) : 0;
     const pups = []; let mutated = false;
+    const before = meanTraits(G.pop), survM = meanTraits(surv), rec = [];
     for (let i = 0; i < POP; i++) {
       const a = i < extra ? leadParent : pick(); let b = pick(); if (b === a && surv.length > 1) b = surv.find(o => o !== a);
-      const t = {}; let mut = false;
-      TRAITS.forEach(({ k }) => { let v = (a.t[k] + b.t[k]) / 2 + gauss() * 6; if (Math.random() < 0.025) { v += gauss() * 16; mut = true; } t[k] = v; });
+      const t = {}, mid = {}, jump = {}; let mut = false;
+      TRAITS.forEach(({ k }) => { mid[k] = (a.t[k] + b.t[k]) / 2; jump[k] = 0; let v = mid[k] + gauss() * 6; if (Math.random() < 0.025) { jump[k] = gauss() * 16; v += jump[k]; mut = true; } t[k] = v; });
       pups.push({ t: clampT(t), lead: false, mut, fromLead: a === leadParent });
+      rec.push({ mid, jump, extra: i < extra });
       if (mut) mutated = true;
     }
+    // Split this generation's change in each trait into its causes
+    if (!G.contrib) G.contrib = newContrib();
+    const pupM = meanTraits(pups), avg = (arr, k, f) => arr.length ? arr.reduce((s2, r) => s2 + f(r)[k], 0) / arr.length : 0;
+    TRAITS.forEach(({ k }) => {
+      const nonEx = rec.filter(r => !r.extra), pAll = avg(rec, k, r => r.mid), pNon = nonEx.length ? avg(nonEx, k, r => r.mid) : pAll, mutM = avg(rec, k, r => r.jump);
+      const C = G.contrib[k];
+      C.surv += survM[k] - before[k]; C.breed += pNon - survM[k]; C.player += pAll - pNon; C.mut += mutM; C.chance += pupM[k] - pAll - mutM;
+    });
     const heir = pups.find(p => p.fromLead) || pups[0]; heir.lead = true;
     G.pop = pups; G.mutated = mutated; checkDex(pups); flag("evolution"); flag("anatomy");
     G.history.push(meanTraits(G.pop)); addGallery();
@@ -1396,13 +1407,13 @@
     screen(`<div class="og-card og-title">
       <p class="og-badge">SQuEACs Lab presents</p>
       <h2 class="og-logo">Otter<br><span>Evolution</span></h2>
-      ${saved ? `<div class="og-welcome"><b>Welcome back!</b><span>Your otters are on generation ${G.gen} of ${GENS} in the ${HAB[G.hab].name}. Keep going, or start over with a new population?</span></div>` : `<p class="og-sub">Guide a population of river otters through ${GENS} generations and watch evolution happen.</p>
+      ${saved ? `<div class="og-welcome"><b>Welcome back!</b><span>Your otters are on generation ${G.gen - 1} in the ${HAB[G.hab].name}, with ${GENS - G.gen + 1} ${GENS - G.gen + 1 === 1 ? "season" : "seasons"} to go. Keep going, or start over with a new population?</span></div>` : `<p class="og-sub">Guide a population of river otters through ${GENS} generations and watch evolution happen.</p>
       <ol class="og-steps">
         <li><span><b>Play a season</b> as one otter. Eat, swim, and dodge danger.</span></li>
         <li><span><b>Survive and raise pups.</b> Traits pass to the next generation, with the occasional mutation.</span></li>
         <li><span><b>Watch the population evolve</b> to fit its habitat.</span></li>
       </ol>`}
-      <div class="og-actions">${saved ? `<button type="button" class="og-btn" id="og-continue">▶ Continue · Gen ${G.gen}</button><button type="button" class="og-btn ghost" id="og-play">New game</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div>
+      <div class="og-actions">${saved ? `<button type="button" class="og-btn" id="og-continue">▶ Continue · Gen ${G.gen - 1}</button><button type="button" class="og-btn ghost" id="og-play">New game</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div>
       ${saved ? '<p class="og-sub og-small">A new game erases your current generations. Your outfits, Otter-dex, treasures, and journal stay.</p>' : ""}
       ${hasCollections() || saved ? '<button type="button" class="og-link" id="og-erase">Erase everything and start fresh</button>' : ""}</div>`);
     const cont = $("og-continue"); if (cont) cont.addEventListener("click", () => { beep(660, 0.1, "triangle"); screenBriefing(); });
@@ -1433,7 +1444,7 @@
       <div class="og-habs">${ORDER.map(k => `<button type="button" class="og-hab og-hab-${k}${!fresh && k === G.hab ? " current" : ""}" data-h="${k}"><b>${HAB[k].name}</b><span>${HAB[k].blurb}</span>${!fresh && k === G.hab ? "<em>Current home</em>" : ""}</button>`).join("")}</div></div>`);
     document.querySelectorAll(".og-hab").forEach(b => b.addEventListener("click", () => {
       G.hab = b.dataset.h; beep(520, 0.08, "triangle");
-      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; setTimeout(save, 0); if (G.gallery.length && G.gallery[G.gallery.length - 1].label) G.gallery.pop(); addGallery("Starting otters"); }
+      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; G.contrib = newContrib(); setTimeout(save, 0); if (G.gallery.length && G.gallery[G.gallery.length - 1].label) G.gallery.pop(); addGallery("Starting otters"); }
       updatePanels(); screenBriefing();
     }));
     onBack(G.back);
@@ -1442,7 +1453,7 @@
     G.screen = "gen";
     const lost = G.pop.filter(o => !o.alive).length;
     screen(`<div class="og-card og-wide">
-      <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
+      <p class="og-badge">Generation ${G.gen - 1} · ${HAB[G.hab].name}</p>
       <h2 class="og-h">Season over! Who survived?</h2>
       <p class="og-sub">${G.lastDead ? `Your otter was lost. ${G.lastCause} You'll play next season as a pup from another family.` : `Your otter ate <b>${G.lastFood}</b> food and finished <b>${G.lastDone} of 3</b> goals${G.lastDone >= 2 ? ", so it survives and raises extra pups" : ""}.`} Across the population, otters whose traits suit this habitat had better odds.${G.lastYear === "hard" ? " It was a hard year, so selection was stronger." : G.lastYear === "good" ? " It was a good year, so more otters made it." : ""}</p>
       <div class="og-grid" id="og-grid">${G.pop.map((o, i) => portrait(o, i)).join("")}</div>
@@ -1471,7 +1482,7 @@
       return `<li><span class="og-cname">${TICON[k]}${name}</span><span class="og-cmp"><canvas data-tk="${k}" data-tv="${start}" title="Starting otters"></canvas><i aria-hidden="true">▸</i><canvas data-tk="${k}" data-tv="${now[k]}" title="Now"></canvas></span><b class="${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? ARROW.up + "+" : d < 0 ? ARROW.down : ARROW.same}${d}${unit}</b></li>`;
     }).join("");
     screen(`<div class="og-card og-wide">
-      <p class="og-badge">Generation ${G.gen + 1} is born</p>
+      <p class="og-badge">Generation ${G.gen} is born</p>
       <h2 class="og-h">Meet the pups</h2>
       <p class="og-sub">Each pup inherits a blend of its parents' traits.${G.mutated ? " A few carry new mutations." : ""}</p>
       <div class="og-grid" id="og-grid">${G.pop.map((o, i) => portrait(o, i)).join("")}</div>
@@ -1486,6 +1497,45 @@
     $("og-next").addEventListener("click", () => { beep(660, 0.08, "triangle"); G.gen > GENS ? screenSummary() : screenBriefing(); });
     const mv = $("og-move"); if (mv) mv.addEventListener("click", () => screenHabitat(false));
   }
+  function whyCards(start, end) {
+    if (!G.contrib) return "";
+    // Which habitats this population lived in, and the trait values they favored
+    const seasons = {}; G.life.forEach(e => seasons[e.hab] = (seasons[e.hab] || 0) + 1);
+    const habs = Object.entries(seasons).sort((a, b) => b[1] - a[1]), nS = habs.reduce((a, [, n]) => a + n, 0) || 1;
+    const habText = habs.map(([h, n]) => `the ${HAB[h].name} (${n} ${n === 1 ? "season" : "seasons"})`).join(" and ") || `the ${HAB[G.hab].name}`;
+    const PARTS = [["surv", "Survival of the best-suited", "#3ddc6f"], ["breed", "Best-suited parents raised more pups", "#2ed3c6"], ["player", "Your otter's family (extra pups from goals)", "#ff5fa2"], ["mut", "Mutation", "#ffb347"], ["chance", "Luck (genetic drift)", "#a47bff"]];
+    const cards = TRAITS.map(({ k, name }) => {
+      const u = k === "canal" ? 0.35 : 1, unit = k === "canal" ? "°" : "", C = G.contrib[k];
+      const vals = PARTS.map(([key]) => C[key] * u), max = Math.max(1, ...vals.map(Math.abs));
+      const d = (end[k] - start[k]) * u, dir = d >= 0 ? "up" : "down";
+      const target = habs.length ? habs.reduce((a, [h, n]) => a + HAB[h].opt[k] * n, 0) / nS : HAB[G.hab].opt[k];
+      const want = target > start[k] + 3 ? "higher" : target < start[k] - 3 ? "lower" : "about the same";
+      const topI = vals.reduce((bi, v, i) => Math.abs(v) > Math.abs(vals[bi]) ? i : bi, 0), top = PARTS[topI][0];
+      const lname = name.toLowerCase();
+      const WORD = { size: ["bigger bodies", "smaller bodies"], fur: ["thicker fur", "thinner fur"], ext: ["longer ears and tails", "shorter ears and tails"],
+        cochlea: ["flatter, longer cochleas", "more tightly coiled cochleas"], canal: ["wider canal angles", "narrower canal angles"], brain: ["bigger brains", "smaller brains"] }[k];
+      const hiHabs = habs.filter(([h]) => HAB[h].opt[k] > start[k] + 3).map(([h]) => HAB[h].name), loHabs = habs.filter(([h]) => HAB[h].opt[k] < start[k] - 3).map(([h]) => HAB[h].name);
+      const sel = vals[0] + vals[1], others = PARTS.map((pp, i) => [pp, vals[i]]).slice(2);
+      const against = others.filter(([, v]) => Math.sign(v) !== Math.sign(sel)).sort((x, y) => Math.abs(y[1]) - Math.abs(x[1]))[0];
+      const favored = want === "higher" ? WORD[0] : want === "lower" ? WORD[1] : null;
+      let why;
+      if (Math.abs(d) < 2) {
+        if (hiHabs.length && loHabs.length) why = `Barely changed. Your habitats pulled in opposite directions: the ${hiHabs.join(" and ")} favored ${WORD[0]}, while the ${loHabs.join(" and ")} favored ${WORD[1]}.`;
+        else if (!favored) why = `Barely changed. Your habitats favored ${lname} close to where the starting otters began, so selection had little to push.`;
+        else if (against && Math.abs(against[1]) > 0.8) why = `Barely changed. Selection favored ${favored}, but ${against[0][1].toLowerCase().replace(/ \(.*\)/, "")} pulled it back.`;
+        else why = `Barely changed. Selection favored ${favored}, but eight generations weren't enough to move it far.`;
+      }
+      else if (top === "surv" || top === "breed") why = `Natural selection did most of the work. ${hiHabs.length && loHabs.length ? "Overall, your habitats" : habText.replace(/^./, c => c.toUpperCase())} favored ${d > 0 ? WORD[0] : WORD[1]}, so otters with them survived and raised more pups.`;
+      else if (top === "player") why = `Your otter's family made the biggest difference. Finishing goals gave it extra pups, so its ${lname} spread through the population.`;
+      else if (top === "mut") why = `Mutation made the biggest difference. New variation pushed the population toward ${d > 0 ? WORD[0] : WORD[1]}.`;
+      else why = `Luck made the biggest difference. In a small population, random inheritance pushed it toward ${d > 0 ? WORD[0] : WORD[1]}${favored && ((want === "higher") !== (d > 0)) ? ", even though your habitats favored " + favored : ""}.`;
+      const bars = PARTS.map(([key, label, col], i) => { const v = vals[i], w = Math.abs(v) / max * 50;
+        return `<div class="og-wrow"><span>${label}</span><div class="og-wbar"><i style="background:${col};width:${w}%;${v >= 0 ? "left:50%" : `left:${50 - w}%`}"></i></div><b>${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(1)}${unit}</b></div>`; }).join("");
+      return `<article class="og-wcard"><header>${TICON[k]}<b>${name}</b><span class="${d > 1 ? "up" : d < -1 ? "down" : ""}">${fmtT(k, start[k])} → ${fmtT(k, end[k])}</span></header><p>${why}</p><div class="og-wbars">${bars}</div></article>`;
+    }).join("");
+    return `<h3 class="og-h3">Why each trait ended up where it did</h3><p class="og-sub og-small">Bars show how much each force moved the population's average over all ${GENS} generations. Right means higher, left means lower. Your habitats: ${habText}.</p><div class="og-why">${cards}</div>`;
+  }
+  const fmtT = (k, v) => k === "canal" ? degOf(v) + "°" : Math.round(v);
   function screenSummary() {
     unlock("labcoat");
     const start = G.history[0], end = G.history[G.history.length - 1];
@@ -1499,6 +1549,7 @@
       <p class="og-sub">Started in ${HAB[G.startHab].name}, ended in ${HAB[G.hab].name}. Compare populations from different habitats: one species, many forms.</p>
       <div class="og-table-wrap"><table class="og-table"><thead><tr><th>Population</th>${TRAITS.map(t => `<th><span class="og-th">${TICON[t.k]}${t.name}</span></th>`).join("")}</tr></thead>
       <tbody><tr class="start"><th>Starting otters</th>${TRAITS.map(({ k }) => `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${start[k]}"></canvas><span>${fmt(k, start[k])}</span></td>`).join("")}</tr>${rows}</tbody></table></div>
+      ${whyCards(start, end)}
       <div class="og-actions"><button type="button" class="og-btn" id="og-again">Start a new population</button></div></div>`);
     paintTraits($("og-screen")); showFact("adapt"); G.inRun = false; save();
     $("og-again").addEventListener("click", () => screenSettings(() => screenHabitat(true)));
@@ -1575,7 +1626,7 @@
     c.strokeStyle = "rgba(255,255,255,0.12)"; c.lineWidth = 1; c.fillStyle = "#a8a0ba"; c.font = "11px 'IBM Plex Mono', monospace";
     [0, 50, 100].forEach(v => { const y = pad.t + ph - v / 100 * ph; c.beginPath(); c.moveTo(pad.l, y); c.lineTo(w - pad.r, y); c.stroke(); c.fillText(v, 4, y + 4); });
     const n = Math.max(GENS, G.history.length - 1);
-    for (let g = 0; g <= n; g++) if (g % 2 === 0) c.fillText(g + 1, pad.l + g / n * pw - 3, h - 6);
+    for (let g = 0; g <= n; g++) if (g % 2 === 0) c.fillText(g, pad.l + g / n * pw - 3, h - 6);
     if (G.history.length < 1) return;
     TRAITS.forEach(({ k, color }) => {
       c.strokeStyle = color; c.lineWidth = 2.2; c.beginPath();
@@ -1596,7 +1647,7 @@
     if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Play a season to start collecting brains and inner ears.</p>'; return; }
     // Group by habitat (in habitat order), oldest generation first within each group
     const tile = (g, i) => `<figure class="og-gtile og-g-${g.hab}"><div><canvas data-gi="${i}" data-kind="brain"></canvas><canvas data-gi="${i}" data-kind="ear"></canvas></div>
-      <figcaption><b>${g.label ? "Generation 1 · starting otters" : "Generation " + g.gen}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`;
+      <figcaption><b>${g.label ? "Generation 0 · starting otters" : "Generation " + (g.gen - 1)}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`;
     freeCanvases(box);
     box.innerHTML = ORDER.filter(h => G.gallery.some(g => g.hab === h)).map(h => {
       const items = G.gallery.map((g, i) => ({ g, i })).filter(x => x.g.hab === h);
@@ -1609,7 +1660,7 @@
     drawBrain(m); drawEar(m); drawChart();
     $("og-brain-cap").textContent = `Brain size ${Math.round(m.brain)} (dashed outline = starting otters)`;
     $("og-ear-cap").textContent = `Cochlea ${(1.8 + m.cochlea / 100 * 1.1).toFixed(1)} turns, ${m.cochlea > 60 ? "flatter and longer" : m.cochlea < 40 ? "tightly coiled" : "in between"} · Canal angle ${degOf(m.canal)}°`;
-    $("og-anat-sub").textContent = G.pop.length ? `Population average · generation ${G.gen}` : "Starting otters";
+    $("og-anat-sub").textContent = G.pop.length ? `Population average · generation ${G.gen - 1}` : "Starting otters";
   }
 
   /* ---------- Idle canvas (behind menus) ---------- */
@@ -1737,7 +1788,7 @@
       const esc = Object.entries(e.ev).filter(([k]) => /^(dodge|escape|under)/.test(k)).map(([k, n]) => { const [kind, what] = k.split(":"); return kind === "dodge" ? `dodged the eagle ×${n}` : kind === "under" ? `dove under ${n} log${n > 1 ? "s" : ""}` : `escaped the ${what}`; });
       const fr = e.ev.friends ? [`made ${e.ev.friends} otter friend${e.ev.friends > 1 ? "s" : ""}`] : [];
       const out = e.dead ? `Lost this season. ${e.cause} The family carried on through a cousin's pup.` : e.survived ? `Survived and raised pups${e.pups ? `, including ${e.pups} extra for finishing goals` : ""}.` : "Didn't survive the season. A pup from another family carried on.";
-      return `<article class="og-lentry og-g-${e.hab}"><header><b>Generation ${e.gen}</b><span>${HAB[e.hab].name} · ${YN[e.year] || "Normal year"}</span></header>
+      return `<article class="og-lentry og-g-${e.hab}"><header><b>Generation ${e.gen - 1}</b><span>${HAB[e.hab].name} · ${YN[e.year] || "Normal year"}</span></header>
         <p>Ate ${food}.${esc.concat(fr).length ? " " + esc.concat(fr).join(", ").replace(/^./, c => c.toUpperCase()) + "." : ""}${e.finds.length ? " Found " + e.finds.join(", ") + "." : ""}${e.golden ? " Caught the golden fish!" : ""}</p>
         <p class="og-lout ${e.dead || !e.survived ? "lost" : "ok"}">${out}</p></article>`;
     }).join("");

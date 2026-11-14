@@ -19,6 +19,7 @@ const TZ = "America/Phoenix";
 
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) throw new Error("This script isn't attached to a Google Sheet. Open your sheet, then use Extensions > Apps Script and paste the code there.");
 
   let log = ss.getSheetByName("Log");
   if (!log) log = ss.insertSheet("Log");
@@ -52,6 +53,14 @@ function setup() {
 
   const extra = ss.getSheetByName("Sheet1");
   if (extra && extra.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(extra);
+  console.log("Done! Go back to your Google Sheet: you should now see Summary, Log, and Labels tabs along the bottom.");
+}
+
+// Finds the Log tab, creating all the tabs first if setup was never run.
+function logSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss.getSheetByName("Log")) setup();
+  return ss.getSheetByName("Log");
 }
 
 function doPost(e) {
@@ -66,7 +75,7 @@ function doPost(e) {
     const lock = LockService.getScriptLock();
     lock.waitLock(5000);
     try {
-      SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log").appendRow([
+      logSheet().appendRow([
         now,
         Utilities.formatDate(now, TZ, "yyyy-MM"),
         event,
@@ -84,7 +93,7 @@ function doPost(e) {
 
 // Visiting the web app URL in a browser shows a quick text summary.
 function doGet() {
-  const rows = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log").getDataRange().getValues().slice(1);
+  const rows = logSheet().getDataRange().getValues().slice(1);
   const counts = {};
   rows.forEach(r => {
     if (r[2] === "page") return;

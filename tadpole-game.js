@@ -705,7 +705,7 @@
     const rad = 14 + 0.55 * b.olf; c.fillStyle = "#b6ff7a";
     S.items.forEach(it => { if (it.alive && Math.hypot(it.x - S.x, it.z - S.z) < rad) c.fillRect(mx(it.x) - 1, mz(it.z) - 1, 2.4, 2.4); });
     S.bonus.forEach(g => { c.fillStyle = "#fff"; c.beginPath(); c.arc(mx(g.x), mz(g.z), 2.2, 0, 7); c.fill(); });
-    c.save(); c.translate(mx(S.x), mz(S.z)); c.rotate(-S.heading + Math.PI); c.fillStyle = "#ff5fa2"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, 5); c.lineTo(4, -4); c.lineTo(-4, -4); c.closePath(); c.fill(); c.stroke(); c.restore();
+    c.save(); c.translate(mx(S.x), mz(S.z)); c.rotate(-S.heading); c.fillStyle = "#ff5fa2"; c.strokeStyle = "#0b0a10"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, 5); c.lineTo(4, -4); c.lineTo(-4, -4); c.closePath(); c.fill(); c.stroke(); c.restore();
   }
 
   function hurt(cause) {

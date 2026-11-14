@@ -1139,3 +1139,5 @@ body.og-noscroll { overflow: hidden; }
 .og-gprev[open] summary::before { content: "▾"; }
 .og-gprev summary span { font-size: 0.8rem; color: #6b6380; }
 .og-gprev[open] { display: grid; gap: 0.6rem; }
+.pi-line { margin-top: 0.6rem; color: #d6d0e2; font-size: 1rem; }
+.pi-line a { color: var(--pink); font-weight: 600; }

@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="styles.css?v=30">
+<link rel="stylesheet" href="styles.css?v=31">
 </head>
 <body>
 
@@ -56,7 +56,7 @@
       </div>
 
       <h2 class="people-sub">The population</h2>
-      <p>Each game starts with 12 otters. Every otter carries six heritable traits, each scored from 0 to 100:</p>
+      <p>Each game starts with 12 otters, called generation 0. Each season produces the next generation, so eight seasons end at generation 8. Every otter carries six heritable traits, each scored from 0 to 100:</p>
       <ul class="how-list">
         <li><b>Body size.</b> Bigger bodies hold heat; smaller bodies shed it.</li>
         <li><b>Fur thickness.</b> Thick fur insulates; thin fur keeps an otter cool.</li>
@@ -110,7 +110,7 @@
 
       <h2 class="people-sub">What each habitat favors</h2>
       <p>Each habitat sets a target value for every trait. Lab hypotheses inspired the direction of each target; the exact values are invented for the game.</p>
-      <div class="how-table-wrap"><table class="how-table"><thead><tr><th scope="col">Habitat</th><th scope="col">Body size</th><th scope="col">Fur</th><th scope="col">Ears and tail</th><th scope="col">Cochlea</th><th scope="col">Canal angle</th><th scope="col">Brain</th><th scope="col">Inspired by</th></tr></thead><tbody><tr><th scope="row">Starting otters (average)</th><td>50</td><td>50</td><td>50</td><td>50</td><td>84°</td><td>50</td><td></td></tr><tr><th scope="row">Snowy North</th><td>82</td><td>90</td><td>18</td><td>45</td><td>86°</td><td>50</td><td>Bergmann's and Allen's rules</td></tr><tr><th scope="row">Desert River</th><td>30</td><td>14</td><td>86</td><td>35</td><td>86°</td><td>35</td><td>Allen's rule; expensive tissue hypothesis</td></tr><tr><th scope="row">Fast Mountain River</th><td>55</td><td>50</td><td>50</td><td>75</td><td>93°</td><td>66</td><td>Agility hypothesis; cognitive buffer hypothesis</td></tr><tr><th scope="row">Slow Marsh Stream</th><td>55</td><td>45</td><td>55</td><td>75</td><td>74°</td><td>50</td><td>Relaxed selection; cochlear shape</td></tr><tr><th scope="row">Murky Pond</th><td>50</td><td>45</td><td>50</td><td>86</td><td>82°</td><td>60</td><td>Sensory drive; cochlear shape</td></tr><tr><th scope="row">Deep Clear Lake</th><td>64</td><td>55</td><td>45</td><td>92</td><td>86°</td><td>76</td><td>Social brain hypothesis; cochlear shape</td></tr></tbody></table></div>
+      <div class="how-table-wrap"><table class="how-table"><thead><tr><th scope="col">Habitat</th><th scope="col">Body size</th><th scope="col">Fur</th><th scope="col">Ears and tail</th><th scope="col">Cochlea</th><th scope="col">Canal angle</th><th scope="col">Brain</th><th scope="col">Inspired by</th></tr></thead><tbody><tr><th scope="row">Starting otters, generation 0 (average)</th><td>50</td><td>50</td><td>50</td><td>50</td><td>84°</td><td>50</td><td></td></tr><tr><th scope="row">Snowy North</th><td>82</td><td>90</td><td>18</td><td>45</td><td>86°</td><td>50</td><td>Bergmann's and Allen's rules</td></tr><tr><th scope="row">Desert River</th><td>30</td><td>14</td><td>86</td><td>35</td><td>86°</td><td>35</td><td>Allen's rule; expensive tissue hypothesis</td></tr><tr><th scope="row">Fast Mountain River</th><td>55</td><td>50</td><td>50</td><td>75</td><td>93°</td><td>66</td><td>Agility hypothesis; cognitive buffer hypothesis</td></tr><tr><th scope="row">Slow Marsh Stream</th><td>55</td><td>45</td><td>55</td><td>75</td><td>74°</td><td>50</td><td>Relaxed selection; cochlear shape</td></tr><tr><th scope="row">Murky Pond</th><td>50</td><td>45</td><td>50</td><td>86</td><td>82°</td><td>60</td><td>Sensory drive; cochlear shape</td></tr><tr><th scope="row">Deep Clear Lake</th><td>64</td><td>55</td><td>45</td><td>92</td><td>86°</td><td>76</td><td>Social brain hypothesis; cochlear shape</td></tr></tbody></table></div>
 
       <h2 class="people-sub">Five steps each generation</h2>
       <ol class="how-steps">
@@ -142,7 +142,7 @@
 
       <h2 class="people-sub">What to expect after eight generations</h2>
       <p>Average results from 300 simulated runs of eight generations in one habitat, without a player. Single games vary because of drift.</p>
-      <div class="how-table-wrap"><table class="how-table"><thead><tr><th scope="col">Habitat</th><th scope="col">Body size</th><th scope="col">Fur</th><th scope="col">Ears and tail</th><th scope="col">Cochlea</th><th scope="col">Canal angle</th><th scope="col">Brain</th></tr></thead><tbody><tr class="start"><th scope="row">Starting otters</th><td>50</td><td>50</td><td>50</td><td>50</td><td>84°</td><td>50</td></tr><tr><th scope="row">Snowy North</th><td>69</td><td>73</td><td>30</td><td>47</td><td>85°</td><td>51</td></tr><tr><th scope="row">Desert River</th><td>38</td><td>28</td><td>72</td><td>41</td><td>85°</td><td>42</td></tr><tr><th scope="row">Fast Mountain River</th><td>54</td><td>50</td><td>50</td><td>69</td><td>90°</td><td>60</td></tr><tr><th scope="row">Slow Marsh Stream</th><td>54</td><td>46</td><td>54</td><td>69</td><td>77°</td><td>50</td></tr><tr><th scope="row">Murky Pond</th><td>50</td><td>46</td><td>50</td><td>77</td><td>82°</td><td>56</td></tr><tr><th scope="row">Deep Clear Lake</th><td>60</td><td>54</td><td>47</td><td>78</td><td>85°</td><td>65</td></tr></tbody></table></div>
+      <div class="how-table-wrap"><table class="how-table"><thead><tr><th scope="col">Habitat</th><th scope="col">Body size</th><th scope="col">Fur</th><th scope="col">Ears and tail</th><th scope="col">Cochlea</th><th scope="col">Canal angle</th><th scope="col">Brain</th></tr></thead><tbody><tr class="start"><th scope="row">Starting otters (generation 0)</th><td>50</td><td>50</td><td>50</td><td>50</td><td>84°</td><td>50</td></tr><tr><th scope="row">Snowy North</th><td>69</td><td>73</td><td>30</td><td>47</td><td>85°</td><td>51</td></tr><tr><th scope="row">Desert River</th><td>38</td><td>28</td><td>72</td><td>41</td><td>85°</td><td>42</td></tr><tr><th scope="row">Fast Mountain River</th><td>54</td><td>50</td><td>50</td><td>69</td><td>90°</td><td>60</td></tr><tr><th scope="row">Slow Marsh Stream</th><td>54</td><td>46</td><td>54</td><td>69</td><td>77°</td><td>50</td></tr><tr><th scope="row">Murky Pond</th><td>50</td><td>46</td><td>50</td><td>77</td><td>82°</td><td>56</td></tr><tr><th scope="row">Deep Clear Lake</th><td>60</td><td>54</td><td>47</td><td>78</td><td>85°</td><td>65</td></tr></tbody></table></div>
 
       <h2 class="people-sub">What the game simplifies</h2>
       <ul class="how-list">

@@ -150,11 +150,11 @@
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: false }, gallery: [], inRun: false, nature: {}, life: [] };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.opts.timer = false;   // timer mode retired: seasons end when goals are done G.gallery = s.gallery || []; G.seen = s.seen || {}; G.nature = s.nature || {};
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: false }, gallery: [], inRun: false, nature: {}, life: [], runCount: 0, runId: 0 };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.opts.timer = false;   // timer mode retired: seasons end when goals are done G.gallery = s.gallery || []; G.seen = s.seen || {}; G.runCount = s.runCount || 0; G.nature = s.nature || {};
     if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; } } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30), seen: G.seen, nature: G.nature,
-    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life, contrib: G.contrib } : null })); } catch (e) {} };
+  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-90), seen: G.seen, runCount: G.runCount, nature: G.nature,
+    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life, contrib: G.contrib, runId: G.runId } : null })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 14, fur: 50 + gauss() * 14, ext: 50 + gauss() * 14, cochlea: 50 + gauss() * 14, canal: valOfDeg(84) + gauss() * 11, brain: 50 + gauss() * 14 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -1428,7 +1428,7 @@
       <div class="og-actions"><button type="button" class="og-btn og-danger" id="og-erase-yes">Yes, erase everything</button><button type="button" class="og-btn ghost" id="og-erase-no">Keep my stuff</button></div></div>`);
     onBack(screenTitle); $("og-erase-no").addEventListener("click", screenTitle); $("og-erase-no").focus({ preventScroll: true });   // safe default
     $("og-erase-yes").addEventListener("click", () => {
-      Object.assign(G, { pop: [], history: [], gen: 1, habSeasons: {}, plan: null, inRun: false, runs: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, gallery: [], nature: {}, life: [] });
+      Object.assign(G, { pop: [], history: [], gen: 1, habSeasons: {}, plan: null, inRun: false, runs: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, gallery: [], nature: {}, life: [], runCount: 0, runId: 0 });
       save(); renderCloset(); renderDex(); renderTreasure(); updatePanels(); resetJournal();
       document.querySelectorAll(".og-slot .og-badge-new").forEach(x => { x.hidden = true; x.parentElement.classList.remove("has-new"); }); $("og-bag").classList.remove("has-new");
       beep(330, 0.15, "triangle", 0.05); screenTitle(); toast("Everything erased. Fresh start!");
@@ -1444,7 +1444,8 @@
       <div class="og-habs">${ORDER.map(k => `<button type="button" class="og-hab og-hab-${k}${!fresh && k === G.hab ? " current" : ""}" data-h="${k}"><b>${HAB[k].name}</b><span>${HAB[k].blurb}</span>${!fresh && k === G.hab ? "<em>Current home</em>" : ""}</button>`).join("")}</div></div>`);
     document.querySelectorAll(".og-hab").forEach(b => b.addEventListener("click", () => {
       G.hab = b.dataset.h; beep(520, 0.08, "triangle");
-      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; G.contrib = newContrib(); setTimeout(save, 0); if (G.gallery.length && G.gallery[G.gallery.length - 1].label) G.gallery.pop(); addGallery("Starting otters"); }
+      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; G.contrib = newContrib();
+        { const last = G.gallery[G.gallery.length - 1]; if (last && last.label && last.run === G.runId && G.history.length <= 1) G.gallery.pop(); else { G.runCount = (G.runCount || 0) + 1; G.runId = G.runCount; } } setTimeout(save, 0); addGallery("Starting otters"); }
       updatePanels(); screenBriefing();
     }));
     onBack(G.back);
@@ -1487,7 +1488,7 @@
       <p class="og-sub">Each pup inherits a blend of its parents' traits.${G.mutated ? " A few carry new mutations." : ""}</p>
       <div class="og-grid" id="og-grid">${G.pop.map((o, i) => portrait(o, i)).join("")}</div>
       <h3 class="og-h3">How the population changed</h3>
-      <p class="og-sub og-small">Pictures compare the starting otters (left) with this generation (right). Numbers show the change since last generation.</p>
+      <p class="og-sub og-small">Pictures compare the starting otters (generation 0, left) with this generation (right). Numbers show the change since last generation.</p>
       <ul class="og-changes og-changes-pics">${changes}</ul>
       <div class="og-actions"><button type="button" class="og-btn" id="og-next">${G.gen + 1 > GENS ? "See your results →" : "Play next season →"}</button>
       ${G.gen + 1 <= GENS ? '<button type="button" class="og-btn ghost" id="og-move">Move to a new habitat</button>' : ""}</div></div>`);
@@ -1542,13 +1543,13 @@
     G.runs.push({ hab: G.hab, start: G.startHab, end }); G.runs = G.runs.slice(-4); save();
     const fmt = (k, v) => k === "canal" ? degOf(v) + "°" : Math.round(v);
     const cell = (k, v) => { const d = k === "canal" ? degOf(v) - degOf(start[k]) : Math.round(v - start[k]); return `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${v}"></canvas><span>${fmt(k, v)} <small class="${d > 2 ? "up" : d < -2 ? "down" : ""}">${d > 2 ? ARROW.up : d < -2 ? ARROW.down : ""}</small></span></td>`; };
-    const rows = G.runs.slice().reverse().map(r => `<tr><th>${HAB[r.hab].name}</th>${TRAITS.map(({ k }) => cell(k, r.end[k])).join("")}</tr>`).join("");
+    const rows = G.runs.slice().reverse().map(r => `<tr><th>${HAB[r.hab].name} (generation ${GENS})</th>${TRAITS.map(({ k }) => cell(k, r.end[k])).join("")}</tr>`).join("");
     screen(`<div class="og-card og-wide">
-      <p class="og-badge">${GENS} generations complete</p>
+      <p class="og-badge">Generation ${GENS} reached · ${GENS} generations of evolution</p>
       <h2 class="og-h">Your otters evolved!</h2>
       <p class="og-sub">Started in ${HAB[G.startHab].name}, ended in ${HAB[G.hab].name}. Compare populations from different habitats: one species, many forms.</p>
       <div class="og-table-wrap"><table class="og-table"><thead><tr><th>Population</th>${TRAITS.map(t => `<th><span class="og-th">${TICON[t.k]}${t.name}</span></th>`).join("")}</tr></thead>
-      <tbody><tr class="start"><th>Starting otters</th>${TRAITS.map(({ k }) => `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${start[k]}"></canvas><span>${fmt(k, start[k])}</span></td>`).join("")}</tr>${rows}</tbody></table></div>
+      <tbody><tr class="start"><th>Starting otters (generation 0)</th>${TRAITS.map(({ k }) => `<td><canvas class="og-tcan" data-tk="${k}" data-tv="${start[k]}"></canvas><span>${fmt(k, start[k])}</span></td>`).join("")}</tr>${rows}</tbody></table></div>
       ${whyCards(start, end)}
       <div class="og-actions"><button type="button" class="og-btn" id="og-again">Start a new population</button></div></div>`);
     paintTraits($("og-screen")); showFact("adapt"); G.inRun = false; save();
@@ -1638,29 +1639,38 @@
   }
   function addGallery(label) {
     const m = meanTraits(G.pop);
-    G.gallery.push({ hab: G.hab, gen: label ? 0 : G.gen + 1, label: label || "", brain: Math.round(m.brain), cochlea: Math.round(m.cochlea), canal: Math.round(m.canal) });
-    G.gallery = G.gallery.slice(-30); save();
+    G.gallery.push({ hab: G.hab, gen: label ? 0 : G.gen + 1, run: G.runId || 0, label: label || "", brain: Math.round(m.brain), cochlea: Math.round(m.cochlea), canal: Math.round(m.canal) });
+    G.gallery = G.gallery.slice(-90); save();
   }
   function renderGallery() {
     const box = $("og-gallery"); if (!box) return;
     freeCanvases(box);
     if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Play a season to start collecting brains and inner ears.</p>'; return; }
-    // Group by habitat (in habitat order), oldest generation first within each group
     const tile = (g, i) => `<figure class="og-gtile og-g-${g.hab}"><div><canvas data-gi="${i}" data-kind="brain"></canvas><canvas data-gi="${i}" data-kind="ear"></canvas></div>
       <figcaption><b>${g.label ? "Generation 0 · starting otters" : "Generation " + (g.gen - 1)}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`;
-    freeCanvases(box);
-    box.innerHTML = ORDER.filter(h => G.gallery.some(g => g.hab === h)).map(h => {
-      const items = G.gallery.map((g, i) => ({ g, i })).filter(x => x.g.hab === h);
-      return `<section class="og-ghab og-g-${h}"><h4>${HAB[h].name}<span>${items.length} ${items.length === 1 ? "generation" : "generations"}</span></h4><div class="og-gallery-grid">${items.map(x => tile(x.g, x.i)).join("")}</div></section>`;
+    const byHab = items => ORDER.filter(h => items.some(x => x.g.hab === h)).map(h => {
+      const list = items.filter(x => x.g.hab === h);
+      return `<section class="og-ghab og-g-${h}"><h4>${HAB[h].name}<span>${list.length} ${list.length === 1 ? "generation" : "generations"}</span></h4><div class="og-gallery-grid">${list.map(x => tile(x.g, x.i)).join("")}</div></section>`;
     }).join("");
-    box.querySelectorAll("canvas[data-gi]").forEach(cv => { const g = G.gallery[+cv.dataset.gi]; (cv.dataset.kind === "brain" ? drawBrain : drawEar)(g, cv); });
+    // Group entries by game; the current (or most recent) game stays open, earlier games collapse
+    const all = G.gallery.map((g, i) => ({ g, i })), ids = [...new Set(all.map(x => x.g.run || 0))];
+    const current = G.inRun && ids.includes(G.runId) ? G.runId : ids[ids.length - 1];
+    const cur = all.filter(x => (x.g.run || 0) === current), prev = ids.filter(id => id !== current).reverse();
+    const prevHtml = prev.map(id => {
+      const items = all.filter(x => (x.g.run || 0) === id), habs = [...new Set(items.map(x => HAB[x.g.hab].name))].join(", ");
+      return `<details class="og-gprev"><summary><b>${id ? "Earlier game " + id : "Earlier games"}</b><span>${habs} · ${items.length} ${items.length === 1 ? "generation" : "generations"}</span></summary>${byHab(items)}</details>`;
+    }).join("");
+    box.innerHTML = `<h4 class="og-gcur">${G.inRun && current === G.runId ? "This game" : "Most recent game"}</h4>${byHab(cur)}${prev.length ? `<h4 class="og-gcur">Earlier games <span>Tap to open</span></h4>${prevHtml}` : ""}`;
+    const draw = root => root.querySelectorAll("canvas[data-gi]").forEach(cv => { if (cv.closest("details:not([open])")) return; const g = G.gallery[+cv.dataset.gi]; (cv.dataset.kind === "brain" ? drawBrain : drawEar)(g, cv); });
+    draw(box);
+    box.querySelectorAll("details.og-gprev").forEach(d => d.addEventListener("toggle", () => { if (d.open) draw(d); else freeCanvases(d); }));
   }
   function updatePanels() {
     const pop = G.pop.length ? G.pop : newPopulation(), m = meanTraits(pop);
     drawBrain(m); drawEar(m); drawChart();
     $("og-brain-cap").textContent = `Brain size ${Math.round(m.brain)} (dashed outline = starting otters)`;
     $("og-ear-cap").textContent = `Cochlea ${(1.8 + m.cochlea / 100 * 1.1).toFixed(1)} turns, ${m.cochlea > 60 ? "flatter and longer" : m.cochlea < 40 ? "tightly coiled" : "in between"} · Canal angle ${degOf(m.canal)}°`;
-    $("og-anat-sub").textContent = G.pop.length ? `Population average · generation ${G.gen - 1}` : "Starting otters";
+    $("og-anat-sub").textContent = G.pop.length ? `Population average · generation ${G.gen - 1}` : "Generation 0 · starting otters";
   }
 
   /* ---------- Idle canvas (behind menus) ---------- */

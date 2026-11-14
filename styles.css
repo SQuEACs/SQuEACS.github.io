@@ -1199,3 +1199,12 @@ body.tg-big .og-sub.og-small { font-size: 1em; }
 .og-stage.touch .tg-lab { top: calc(6.6rem + 130px + 12px); }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) { .og-stage.touch .tg-lab { top: 6.6rem; right: 122px; grid-template-columns: repeat(2, auto); } }
 @media (max-width: 640px) { .tg-lab { top: 8.6rem; right: 140px; } }
+
+/* Journal: always-visible metamorphosis box and locked cards */
+.og-modal .og-meta { background: #1b1530; border: 3px solid #0b0a10; border-radius: 16px; padding: 1rem 1.1rem; display: grid; gap: .6rem; box-shadow: inset 4px 0 0 #ffb347; margin-bottom: .9rem; }
+.og-meta h3 { font: 700 var(--step-1)/1.15 var(--og-font); color: #ffb347; margin: 0; }
+.og-meta p, .og-meta li { color: #d6d0e2; font-size: .9375rem; margin: 0; }
+.og-meta ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .35rem; }
+.og-meta a { font-weight: 600; }
+.fact-chip.locked { opacity: .55; cursor: default; border-style: dashed; }
+body.tg-big .og-meta { font-size: 1.22em; line-height: 1.5; }

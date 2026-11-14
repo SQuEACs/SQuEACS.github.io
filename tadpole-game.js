@@ -62,7 +62,6 @@
   /* ---------- Journal: science cards ---------- */
   const SC = "tadpole-trek-science.html";
   const FACTS = {
-    howmeta:   { t: "How metamorphosis works", k: "Metamorphosis", x: "Metamorphosis is a fast rebuild of a body. In frogs, rising thyroid hormone tells tissues to change: the tail is absorbed, legs grow, gills give way to lungs, the long plant-eating gut shortens, and the skin and brain remodel. Many salamanders also use thyroid hormone. Insects use other hormones, ecdysone and juvenile hormone, to go from larva to pupa to adult in butterflies, beetles, and flies, while dragonflies skip the pupa. Some flatfish move an eye across the head, and sea squirt larvae lose their tails. Species differ, and some, like axolotls, keep their larval form. Scientists ask whether some pollutants can disturb the hormone signal that times these changes. That question is being tested.", h: SC + "#refs", l: "See the sources to verify" },
     why:       { t: "Tadpoles as sentinels", k: "Bioindicators", x: "Tadpoles absorb water through thin skin and live where pollutants collect, so they work as early-warning animals for pond and river health. Our lab studies the central nervous system of Lithobates heckscheri tadpoles to ask how pollutants might change brain development.", h: "research.html", l: "See the lab's tadpole project" },
     regions:   { t: "Meet the tadpole brain", k: "Brain regions", x: "A tadpole brain has an olfactory bulb for smell, a telencephalon (forebrain), a diencephalon, an optic tectum for vision, a cerebellum for coordination, and a medulla oblongata for basic body functions. You can spin all of them on our 3D model.", h: "models.html", l: "Explore the 3D tadpole brain" },
     cumulative:{ t: "Longer exposure, bigger effect", k: "Dose and duration", x: "How much a pollutant matters depends on how much a tadpole meets and for how long. In the game each meter fills the longer you stay in a plume. Researchers have compared continuous cadmium exposure with short pulses in tadpoles and reported stronger effects from continuous exposure.", h: SC + "#refs", l: "See the sources to verify" },
@@ -96,7 +95,6 @@
     pfas: "PFAS are chemicals that can float on top of the water as foam. In the game, dive down to take in less. Scientists are still learning how PFAS change tadpole brains. Some studies find changes and some do not.",
     litter: "Plastic and paper do not change the brain in this game. But trash can cover algae, so the tadpole finds less food. Less food means slower growth.",
     mixture: "Real ponds can have more than one kind of pollution at once. Scientists are asking whether two pollutants together do more than one alone. We do not know yet. That is a question being tested.",
-    howmeta: "Metamorphosis means a body changes shape a lot as an animal grows up. A tadpole loses its tail, grows legs, and gets lungs to breathe air. A hormone called thyroid hormone helps tell the body when to change. A caterpillar turns into a butterfly, and a baby dragonfly climbs out of the water and grows wings. Some animals, like axolotls, keep their young body their whole life.",
     metamorph: "At the end, a tadpole turns into a froglet. Its body changes a lot. Some parts of the brain change too. Scientists ask how dirty water in earlier stages might show up later.",
     species: "Different kinds of frogs and tadpoles may react in different ways to the same pollution. The game uses one tadpole, so it cannot show every species. Scientists study many kinds to find out."
   };
@@ -200,13 +198,14 @@
 
   /* ---------- Science card panel and toasts ---------- */
   function renderFact(key) {
-    const f = FACTS[key], found = Object.keys(FACTS).filter(k => G.seen[k]);
-    const box = $("og-fact");
-    box.innerHTML = `<p class="og-kicker">Science card</p><h3>${f.t}</h3>
-      <p class="og-known"><span>Known as</span> ${f.k}</p><p>${factX(key)}</p><a href="${f.h}">${f.l} →</a>
-      <div class="fact-log"><p class="label">Cards found: ${found.length} of ${Object.keys(FACTS).length}</p>
-      <div class="fact-chips">${found.map(k => `<button type="button" class="fact-chip" data-fact="${k}" aria-pressed="${k === key}">${FACTS[k].t.replace(/^Hypothesis: /, "").replace(/^./, c => c.toUpperCase())}</button>`).join("")}</div></div>`;
-    box.querySelectorAll(".fact-chip").forEach(b => b.addEventListener("click", () => renderFact(b.dataset.fact)));
+    const box = $("og-fact"), all = Object.keys(FACTS), found = all.filter(k => G.seen[k]);
+    const log = `<div class="fact-log"><p class="label">Cards found: ${found.length} of ${all.length}</p>
+      <div class="fact-chips">${all.map(k => G.seen[k] ? `<button type="button" class="fact-chip" data-fact="${k}" aria-pressed="${k === key}">${FACTS[k].t.replace(/^Hypothesis: /, "").replace(/^./, c => c.toUpperCase())}</button>` : `<span class="fact-chip locked" title="Keep playing to find this card">🔒 ???</span>`).join("")}</div></div>`;
+    if (key && FACTS[key]) { const f = FACTS[key];
+      box.innerHTML = `<p class="og-kicker">Science card</p><h3>${f.t}</h3>
+      <p class="og-known"><span>Known as</span> ${f.k}</p><p>${factX(key)}</p><a href="${f.h}">${f.l} →</a>${log}`;
+    } else box.innerHTML = JOURNAL_START + log;
+    box.querySelectorAll("button.fact-chip").forEach(b => b.addEventListener("click", () => renderFact(b.dataset.fact)));
   }
   function showFact(key) {
     if (G.seen[key]) return;
@@ -217,7 +216,15 @@
   let toastT = 0;
   function toast(msg, secs = 3) { const el = $("og-toast"); el.textContent = msg; el.hidden = false; toastT = secs; }
   const JOURNAL_START = $("og-fact").innerHTML;
-  function resetJournal() { $("og-fact").innerHTML = JOURNAL_START; }
+  renderFact(null); renderMeta();
+  function resetJournal() { renderFact(null); }
+  /* ---------- Always-visible metamorphosis box (top of the Journal) ---------- */
+  function renderMeta() {
+    const box = $("og-meta"); if (!box) return;
+    box.innerHTML = CL && G.opts.young
+      ? `<h3>How metamorphosis works</h3><p>Metamorphosis means a body changes shape a lot as an animal grows up. A hormone called thyroid hormone helps tell the body when to change.</p><ul><li><b>Frogs:</b> the tadpole loses its tail, grows legs, and gets lungs to breathe air.</li><li><b>Butterflies:</b> a caterpillar rests in a chrysalis and comes out with wings.</li><li><b>Dragonflies:</b> a baby that lives in water climbs out and grows wings.</li><li><b>Axolotls:</b> they keep their young body their whole life.</li></ul>`
+      : `<h3>How metamorphosis works</h3><p>Metamorphosis is a fast rebuild of a body, timed by hormones.</p><ul><li><b>Frogs:</b> rising thyroid hormone tells tissues to change. The tail is absorbed, legs grow, gills give way to lungs, the long plant-eating gut shortens, and the skin and brain remodel.</li><li><b>Salamanders:</b> many also use thyroid hormone. Some, like axolotls, keep their larval form for life.</li><li><b>Insects:</b> ecdysone and juvenile hormone drive the change from larva to pupa to adult in butterflies, beetles, and flies. Dragonflies skip the pupa.</li><li><b>Other animals:</b> some flatfish move an eye across the head, and sea squirt larvae lose their tails.</li></ul><p>Species differ. Scientists ask whether some pollutants can disturb the hormone signal that times these changes. That question is being tested. <a href="${SC}#refs">See the sources to verify →</a></p>`;
+  }
 
   /* ---------- Picture icons ---------- */
   const SV = (body, vb = "0 0 32 32") => `<svg class="og-ic" viewBox="${vb}" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">${body}</svg>`;
@@ -705,7 +712,6 @@
     if (!lab) setTimeout(() => S && S.t < 12 && showFact(st.fact), 1500);
     if (si === 0 && !lab) setTimeout(() => S && showFact("cumulative"), 11000);
     if (si === 1 && !lab) setTimeout(() => S && showFact("species"), 9000);
-    if (si === 2 && !lab) setTimeout(() => S && showFact("howmeta"), 9000);
     keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
   }
 
@@ -955,7 +961,7 @@
      SCREENS
      ============================================================ */
   let PRED = {};
-  function applyOpts() { document.body.classList.toggle("tg-big", CL && !!G.opts.big); if (!G.opts.speak && "speechSynthesis" in window) speechSynthesis.cancel(); }
+  function applyOpts() { renderMeta(); document.body.classList.toggle("tg-big", CL && !!G.opts.big); if (!G.opts.speak && "speechSynthesis" in window) speechSynthesis.cancel(); }
   function speak(card) {
     if (!("speechSynthesis" in window)) return; speechSynthesis.cancel();
     const c = card.cloneNode(true); c.querySelectorAll(".tg-say, .og-back, canvas, button.og-btn, button.og-link, .tg-flag").forEach(n => n.remove());

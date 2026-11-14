@@ -6,6 +6,8 @@
    ============================================================ */
 (function () {
   const $ = id => document.getElementById(id);
+  // Safari on iPhone/iPad caps total canvas memory; shrinking old canvases to 0x0 releases it right away
+  const freeCanvases = el => { if (el) el.querySelectorAll("canvas").forEach(c => { c.width = 0; c.height = 0; }); };
   const canvas = $("og-canvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -271,6 +273,7 @@
   }
   function renderCloset() {
     const box = $("og-closet");
+    freeCanvases(box);
     box.innerHTML = Object.entries(OUTFITS).map(([id, o]) => G.unlocked[id]
       ? tile(id, o.name, G.worn[id] ? "Wearing · tap to remove" : "Tap to wear", true, `data-wear aria-pressed="${!!G.worn[id]}"`)
       : tile(id, o.name, o.hint, false)).join("");
@@ -335,6 +338,7 @@
   }
   function renderNature() {
     const box = $("og-nature"); if (!box) return;
+    freeCanvases(box);
     box.innerHTML = ORDER.map(h => `<div class="og-nat-hab og-g-${h}"><h4>${HAB[h].name}</h4><div class="og-tiles">${NATURE[h].map(n => { const k = G.nature[n.id] || 0;
       return `<div class="og-tile og-ntile${k ? "" : " locked"}"><canvas width="140" height="100" data-nat="${n.id}" aria-hidden="true"></canvas><b>${k ? n.name : "???"}</b><span>${k ? n.fact : "Explore the " + HAB[h].name + " to find it."}</span></div>`; }).join("")}</div></div>`).join("");
     box.querySelectorAll("canvas[data-nat]").forEach(cv => { const n = ALL_NATURE.find(x => x.id === cv.dataset.nat); drawNature(cv.getContext("2d"), n, !G.nature[n.id]); });
@@ -342,6 +346,7 @@
   }
   function renderTreasure() {
     const box = $("og-treasure");
+    freeCanvases(box);
     box.innerHTML = TREASURE.map(tr => { const n = G.treasure[tr.id] || 0; return `<div class="og-tile${n ? "" : " locked"}"><canvas width="140" height="100" data-gem="${tr.id}" aria-hidden="true"></canvas><b>${n ? tr.name : "???"}</b><span>${tr.rarity}${n ? ` · found ${n}` : ""}</span></div>`; }).join("");
     box.querySelectorAll("canvas[data-gem]").forEach(cv => { const tr = TREASURE.find(x => x.id === cv.dataset.gem); drawGem(cv.getContext("2d"), tr, !G.treasure[tr.id]); });
     $("og-treasure-count").textContent = `${TREASURE.filter(tr => G.treasure[tr.id]).length} of ${TREASURE.length}`;
@@ -396,6 +401,7 @@
   }
   function renderDex() {
     const box = $("og-dex");
+    freeCanvases(box);
     box.innerHTML = DEX.map(d => G.dex[d.id] ? tile(d.id, d.name, d.why, true) : tile(d.id, d.name, d.hint, false)).join("");
     box.querySelectorAll("canvas[data-tile]").forEach(cv => paintDexTile(cv, cv.dataset.tile, !G.dex[cv.dataset.tile]));
     $("og-dex-count").textContent = `${DEX.filter(d => G.dex[d.id]).length} of ${DEX.length}`;
@@ -1305,7 +1311,7 @@
 
   /* ---------- Between seasons: selection, inheritance, mutation ---------- */
   function endSeason() {
-    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch(); document.querySelector(".og-stage").appendChild($("og-corner"));
+    running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch(); setTimeout(disposeScene, 0); document.querySelector(".og-stage").appendChild($("og-corner"));
     showFact("fitness"); G.lastYear = (G.plan && G.plan.year) || "normal";
     if (S.food >= 12) unlock("chef");
     if (S.hits === 0 && !S.quick) unlock("crown");
@@ -1349,7 +1355,7 @@
   }
 
   /* ---------- Screens (DOM overlays) ---------- */
-  function screen(html) { const el = $("og-screen"); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-hab, .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
+  function screen(html) { const el = $("og-screen"); freeCanvases(el); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-hab, .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
   const BACK = '<button type="button" class="og-back" id="og-back">◀ Back</button>';
   const onBack = fn => { const b = $("og-back"); if (b) b.addEventListener("click", () => { beep(440, 0.06, "triangle", 0.04); fn(); }); };
   function portrait(o, i, cls = "") {
@@ -1586,10 +1592,12 @@
   }
   function renderGallery() {
     const box = $("og-gallery"); if (!box) return;
+    freeCanvases(box);
     if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Play a season to start collecting brains and inner ears.</p>'; return; }
     // Group by habitat (in habitat order), oldest generation first within each group
     const tile = (g, i) => `<figure class="og-gtile og-g-${g.hab}"><div><canvas data-gi="${i}" data-kind="brain"></canvas><canvas data-gi="${i}" data-kind="ear"></canvas></div>
       <figcaption><b>${g.label ? "Generation 1 · starting otters" : "Generation " + g.gen}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`;
+    freeCanvases(box);
     box.innerHTML = ORDER.filter(h => G.gallery.some(g => g.hab === h)).map(h => {
       const items = G.gallery.map((g, i) => ({ g, i })).filter(x => x.g.hab === h);
       return `<section class="og-ghab og-g-${h}"><h4>${HAB[h].name}<span>${items.length} ${items.length === 1 ? "generation" : "generations"}</span></h4><div class="og-gallery-grid">${items.map(x => tile(x.g, x.i)).join("")}</div></section>`;
@@ -1742,7 +1750,17 @@
   }
 
   /* ---------- Main menu button and pause ---------- */
+  function disposeScene() {
+    if (!S || !S.scene) return;
+    S.scene.traverse(o => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose());
+    });
+    if (R3) R3.renderer.renderLists.dispose();
+    S.scene = null;
+  }
   function quitSeason() {
+    disposeScene();
     running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch();
     document.querySelector(".og-stage").appendChild($("og-corner"));
     if (G.habSeasons[G.hab]) G.habSeasons[G.hab]--;

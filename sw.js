@@ -12,6 +12,10 @@
    below and bump VERSION. Bumping ?v= on a script or stylesheet
    without updating this list still works: the old saved copy is
    used offline until the tablet next opens the game online.
+
+   To switch offline support off everywhere, replace this file with
+   one that only calls self.registration.unregister(); tablets pick
+   it up the next time they open a game online.
    ============================================================ */
 const VERSION = "games-v1";
 
@@ -70,8 +74,12 @@ async function fromCache(request) {
   return (await cache.match(request)) || (await cache.match(request, { ignoreSearch: true }));
 }
 
+// Only this site and these font/library hosts are ever saved on the tablet.
+const TRUSTED_HOSTS = [self.location.host, "fonts.googleapis.com", "fonts.gstatic.com", "unpkg.com"];
+
 async function save(request, response) {
-  if (response && (response.ok || response.type === "opaque")) {
+  const host = new URL(request.url).host;
+  if (response && TRUSTED_HOSTS.includes(host) && (response.ok || response.type === "opaque")) {
     const cache = await caches.open(VERSION);
     await cache.put(request, response.clone());
   }
@@ -88,6 +96,7 @@ a{display:inline-block;margin:8px;padding:12px 20px;border-radius:999px;backgrou
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;   // e.g. the lab's play counter: leave it alone
+  if (!TRUSTED_HOSTS.includes(new URL(request.url).host)) return;   // anything else: browser as normal
 
   // Pages: internet first (so updates arrive), saved copy when offline.
   if (request.mode === "navigate") {

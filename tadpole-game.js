@@ -34,6 +34,9 @@
     { id: "meta",  name: "Metamorph",        gosner: "about Gosner 46",       scale: 1.25, eat: 4, sens: 0.3, preds: ["heron", "fish"],          fact: "metamorph" },
   ];
   const NSTAGE = STAGES.length;
+  const CL = !!window.TG_CLASSROOM;   // classroom edition: set by tadpole-classroom.html
+  const OPT0 = { preds: true, young: false, speak: false, big: false, pat: true, quick: false };
+  const eatN = x => CL && G.opts.quick ? Math.max(3, Math.round(x.eat * 0.6)) : x.eat;
 
   // Brain regions, with the colors of the numbered structures on the lab's 3D model.
   // wM / wP = made-up weights: how strongly metal and PFAS exposure shrink each region.
@@ -81,6 +84,21 @@
     flower: { name: "Flower crown",  slot: "head", req: "Collect 3 bubble treasures" },
     badge:  { name: "Clean badge",   slot: "neck", req: "Finish with every brain region at 80 or more" },
   };
+
+  // Younger-reader science cards (classroom edition). Short sentences; claims stay hedged.
+  const FACTS_Y = {
+    why: "Tadpoles drink in water through their skin. So if the water is dirty, tadpoles can tell us first. Scientists in our lab look at tadpole brains to ask: does dirty water change how a brain grows?",
+    regions: "A tadpole brain has parts, like a team. One part smells. One part sees. One part helps the tadpole balance and swim. Each part has a job. You can spin a real tadpole brain on our 3D model.",
+    cumulative: "The longer a tadpole stays in dirty water, the more it takes in. In the game, a meter fills up while you swim in a cloud. Scientists compared a little bit of a metal for a long time with short bursts. They saw stronger changes from the long time.",
+    windows: "A baby tadpole is still building its brain. Scientists are testing an idea: dirty water may matter more when the brain is still being built. That is why early stages are the most sensitive in this game.",
+    metal: "Some metals sink and settle on the bottom of the pond. In the game, swim higher up to take in less. Scientists are testing whether metals change how a tadpole brain grows.",
+    pfas: "PFAS are chemicals that can float on top of the water as foam. In the game, dive down to take in less. Scientists are still learning how PFAS change tadpole brains. Some studies find changes and some do not.",
+    litter: "Plastic and paper do not change the brain in this game. But trash can cover algae, so the tadpole finds less food. Less food means slower growth.",
+    mixture: "Real ponds can have more than one kind of pollution at once. Scientists are asking whether two pollutants together do more than one alone. We do not know yet. That is a question being tested.",
+    metamorph: "At the end, a tadpole turns into a froglet. Its body changes a lot. Some parts of the brain change too. Scientists ask how dirty water in earlier stages might show up later.",
+    species: "Different kinds of frogs and tadpoles may react in different ways to the same pollution. The game uses one tadpole, so it cannot show every species. Scientists study many kinds to find out."
+  };
+  const factX = k => CL && G.opts.young && FACTS_Y[k] ? FACTS_Y[k] : FACTS[k].x;
   const DEX = [
     { id: "clean",  name: "Clean Hopper",    tint: "#5fae4e", sub: "Big and sharp. You kept out of the worst water." },
     { id: "slow",   name: "Slow Grower",     tint: "#8aa04a", sub: "Brain mostly fine, but litter kept food scarce." },
@@ -111,14 +129,14 @@
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  const SAVE_KEY = "squeacs-tadpole-trek";
+  const SAVE_KEY = CL ? "squeacs-tadpole-trek-classroom" : "squeacs-tadpole-trek";
   const newBrain = () => ({ olf: 100, tel: 100, tect: 100, cereb: 100, med: 100 });
-  let G = { screen: "title", stage: 0, brain: newBrain(), size: 0, history: [], life: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, nature: {}, gallery: [], opts: { preds: true }, inRun: false, totals: { eaten: 0, finds: 0, gems: 0 }, retry: 0 };
+  let G = { screen: "title", stage: 0, brain: newBrain(), size: 0, history: [], life: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, nature: {}, gallery: [], opts: { ...OPT0 }, inRun: false, totals: { eaten: 0, finds: 0, gems: 0 }, retry: 0 };
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
     if (s.v === 1) {
       ["unlocked", "worn", "dex", "treasure", "nature", "seen"].forEach(k => { if (s[k]) G[k] = s[k]; });
-      if (s.opts) G.opts = s.opts; if (s.gallery) G.gallery = s.gallery; if (s.totals) G.totals = s.totals; if (s.life) G.life = s.life;
+      if (s.opts) G.opts = { ...OPT0, ...s.opts }; if (s.gallery) G.gallery = s.gallery; if (s.totals) G.totals = s.totals; if (s.life) G.life = s.life;
       if (s.run && s.run.history) { Object.assign(G, s.run); G.inRun = true; }
     }
   } catch (e) {}
@@ -174,7 +192,7 @@
     const f = FACTS[key], found = Object.keys(FACTS).filter(k => G.seen[k]);
     const box = $("og-fact");
     box.innerHTML = `<p class="og-kicker">Science card</p><h3>${f.t}</h3>
-      <p class="og-known"><span>Known as</span> ${f.k}</p><p>${f.x}</p><a href="${f.h}">${f.l} →</a>
+      <p class="og-known"><span>Known as</span> ${f.k}</p><p>${factX(key)}</p><a href="${f.h}">${f.l} →</a>
       <div class="fact-log"><p class="label">Cards found: ${found.length} of ${Object.keys(FACTS).length}</p>
       <div class="fact-chips">${found.map(k => `<button type="button" class="fact-chip" data-fact="${k}" aria-pressed="${k === key}">${FACTS[k].t.replace(/^Hypothesis: /, "").replace(/^./, c => c.toUpperCase())}</button>`).join("")}</div></div>`;
     box.querySelectorAll(".fact-chip").forEach(b => b.addEventListener("click", () => renderFact(b.dataset.fact)));
@@ -487,6 +505,7 @@
         m.position.set(z.x + Math.cos(a) * d, 0.04, z.z + Math.sin(a) * d); g.add(m); items.push({ m, by: 0.04, ph: rand(0, 6), amp: 0.05, spin: rand(-0.2, 0.2) });
       }
     }
+    if (CL && G.opts.pat) { const sp = labelSprite(z.kind); sp.position.set(z.x, -0.7, z.z); g.add(sp); }
     scene.add(g); return { g, items, disc };
   }
 
@@ -608,7 +627,7 @@
      A STAGE OF PLAY
      ============================================================ */
   const st0 = () => STAGES[G.stage];
-  const BR = () => G.brain;
+  const BR = () => (S && S.lab ? S.brain : G.brain);
   const layerF = (kind, y, floor) => kind === "metal" ? (y < floor + 3 ? 1 : 0.25) : kind === "pfas" ? (y > -2.6 ? 1 : 0.25) : 1;
   const inLitter = (x, z, pad = 1.1) => S && S.zones.some(zn => (zn.kind === "plastic" || zn.kind === "paper") && Math.hypot(zn.x - x, zn.z - z) < zn.r * pad);
   const isHidden = () => S.world.cover.some(([x, z]) => Math.hypot(x - S.x, z - S.z) < 2.6) && S.y < -0.5;
@@ -634,21 +653,22 @@
     const m = ringMesh(), y = Math.max(groundY(x, z) + 1.2, -2.2); m.position.set(x, y, z); S.scene.add(m);
     S.rings.push({ n, m, x, y, z, found: false });
   }
-  function makeGoals(st) { return [{ kind: "eat", n: st.eat, have: 0 }, { kind: "ring", n: 1, have: 0 }, { kind: "reach", n: 1, have: 0 }]; }
+  function makeGoals(st) { return [{ kind: "eat", n: eatN(st), have: 0 }, { kind: "ring", n: 1, have: 0 }, { kind: "reach", n: 1, have: 0 }]; }
 
-  function startStage() {
-    const si = G.stage, st = STAGES[si];
-    if (!init3D()) { toast("Your browser can't show the 3D pond, so this stage was skipped."); S = { zones: [], E: { metal: 0, pfas: 0, litter: 0 }, eaten: st.eat, finds: [], ev: {}, hurts: 0, reached: true, dead: false, quick: true }; endStage(); return; }
-    const zones = makeZones(si), world = buildWorld(zones), scene = world.scene;
+  function startStage(lab) {
+    if (lab !== true) lab = false;
+    const si = lab ? 2 : G.stage, st = STAGES[si];
+    if (!init3D()) { toast("Your browser can't show the 3D pond, so this stage was skipped."); S = { zones: [], E: { metal: 0, pfas: 0, litter: 0 }, eaten: eatN(st), finds: [], ev: {}, hurts: 0, reached: true, dead: false, quick: true }; endStage(); return; }
+    const zones = lab ? labZones() : makeZones(si), world = buildWorld(zones), scene = world.scene;
     const tad = buildTad(si, G.worn); scene.add(tad);
     S = { scene, world, zones, tad, t: 0, x: -54, y: -1.6, z: 0, vy: 0, heading: Math.PI / 2, speed: 0, hearts: 3, energy: 100, inv: 0, E: { metal: 0, pfas: 0, litter: 0 }, zt: { metal: 0, pfas: 0, plastic: 0, paper: 0 },
-      eaten: 0, finds: [], gems: [], ev: {}, dead: false, cause: "", hurts: 0, reached: false, ending: 0, items: [], rings: [], bonus: [], bonusT: rand(7, 10), preds: [], goals: makeGoals(st), starve: 0, tipT: 0, flash: 0, seenKinds: {}, camInit: false, paused: false, frame: 0 };
+      eaten: 0, finds: [], gems: [], ev: {}, dead: false, cause: "", hurts: 0, reached: false, ending: 0, items: [], rings: [], bonus: [], bonusT: rand(7, 10), preds: [], goals: lab ? [{ kind: "fix", n: zones.length, have: 0 }] : makeGoals(st), lab, brain: lab ? newBrain() : null, starve: 0, tipT: 0, flash: 0, seenKinds: {}, camInit: false, paused: false, frame: 0 };
     S.camYaw = S.heading;
     for (let i = 0; i < 24; i++) spawnAlgae(false);
     for (let i = 0; i < 8; i++) spawnAlgae(true);
     const pool = NATURE.slice().sort((a, b) => (G.nature[a.id] ? 1 : 0) - (G.nature[b.id] ? 1 : 0) || Math.random() - 0.5).slice(0, 3);
-    pool.forEach((n, i) => spawnRing(n, i === 0));
-    if (G.opts.preds) st.preds.forEach(p => {
+    if (!lab) pool.forEach((n, i) => spawnRing(n, i === 0));
+    if (G.opts.preds && !lab) st.preds.forEach(p => {
       if (p === "heron") { const m = heronMesh(); m.visible = false; scene.add(m); const sh = new T3.Mesh(new T3.CircleGeometry(2.2, 20), MB(0x000000, 0)); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.06; scene.add(sh); S.preds.push({ kind: "heron", m, sh, state: "away", cd: rand(9, 13), t: 0, tx: 0, tz: 0, near: false }); }
       if (p === "nymph") { for (let i = 0; i < (si === 0 ? 2 : 1); i++) { const far = S.world.cover.filter(q => Math.hypot(q[0] + 54, q[1]) > 24), c = pick(far.length ? far : S.world.cover), x = c[0] + rand(-2, 2), z = c[1] + rand(-2, 2); const m = nymphMesh(); m.position.set(x, groundY(x, z) + 0.4, z); scene.add(m); S.preds.push({ kind: "nymph", m, state: "idle", x, z, y: groundY(x, z) + 0.4, t: 0, dx: 0, dz: 0, hit: false }); } }
       if (p === "fish") { let x, z; for (let i = 0; i < 40; i++) { [x, z] = randWater(8); if (Math.hypot(x + 54, z) > 28) break; } const m = fishMesh(); scene.add(m); S.preds.push({ kind: "fish", m, state: "patrol", x, z, y: -2, h: rand(0, 6), tx: x, tz: z, cd: 0, lost: 0 }); }
@@ -656,17 +676,17 @@
     G.screen = "season"; screen("");
     canvas.hidden = true; glc.hidden = false; size3D();
     $("og-hud").hidden = false; document.querySelector(".og-hud-top").appendChild($("og-corner"));
-    $("og-gen").textContent = "STAGE " + (si + 1); $("og-hab").textContent = st.name;
+    $("og-gen").textContent = lab ? "POND LAB" : "STAGE " + (si + 1); $("og-hab").textContent = lab ? "Fix the pond" : st.name; $("og-end").textContent = lab ? "See results" : "End stage"; if (CL) $("tg-lab").hidden = !lab;
     if (touchMode && smallLandscape() && !stageEl.classList.contains("og-fs-on")) setFull(true); showTouch();
     renderTasks(); renderHearts(); renderExposure(); paintMapBase();
-    setTimeout(() => S && S.t < 12 && showFact(st.fact), 1500);
-    if (si === 0) setTimeout(() => S && showFact("cumulative"), 11000);
-    if (si === 1) setTimeout(() => S && showFact("species"), 9000);
+    if (!lab) setTimeout(() => S && S.t < 12 && showFact(st.fact), 1500);
+    if (si === 0 && !lab) setTimeout(() => S && showFact("cumulative"), 11000);
+    if (si === 1 && !lab) setTimeout(() => S && showFact("species"), 9000);
     keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
   }
 
   /* ----- HUD ----- */
-  function goalLabel(g) { return g.kind === "eat" ? `Eat ${g.n} algae` : g.kind === "ring" ? "Swim through a nature ring" : "Reach the clean habitat"; }
+  function goalLabel(g) { return g.kind === "fix" ? `Clean up every source (${Math.max(0, g.n - g.have)} left)` : g.kind === "eat" ? `Eat ${g.n} algae` : g.kind === "ring" ? "Swim through a nature ring" : "Reach the clean habitat"; }
   function goalIcon(g) { return g.kind === "eat" ? ICON.algae : g.kind === "ring" ? ICON.ring : ICON.flag; }
   function renderTasks() {
     $("og-tasks").innerHTML = `<b>Goals</b>` + S.goals.map(g => `<span class="${g.have >= g.n ? "done" : ""}">${goalIcon(g)}${goalLabel(g)} ${g.kind === "eat" ? `<em>${Math.min(g.have, g.n)}/${g.n}</em>` : ""}</span>`).join("");
@@ -696,7 +716,7 @@
     c.clearRect(0, 0, 120, 120); if (mapBase) c.drawImage(mapBase, 0, 0);
     // plumes: how clearly you remember them depends on the telencephalon
     const al = 0.3 + 0.7 * b.tel / 100;
-    S.zones.forEach(z => { c.globalAlpha = 0.55 * al; c.fillStyle = ZK[z.kind].css; c.beginPath(); c.arc(mx(z.x), mz(z.z), z.r * k, 0, 7); c.fill(); });
+    S.zones.forEach(z => { c.globalAlpha = 0.55 * al; c.fillStyle = ZK[z.kind].css; c.beginPath(); c.arc(mx(z.x), mz(z.z), z.r * k, 0, 7); c.fill(); if (CL && G.opts.pat) { c.fillStyle = patFor(c, z.kind); c.fill(); } });
     c.globalAlpha = 1;
     c.strokeStyle = "#3ddc6f"; c.lineWidth = 2; c.beginPath(); c.arc(mx(CLEAN.x), mz(CLEAN.z), CLEAN.r * k, 0, 7); c.stroke();
     c.fillStyle = "#ffe066"; c.beginPath(); c.arc(mx(CLEAN.x), mz(CLEAN.z), 2.6, 0, 7); c.fill();
@@ -749,7 +769,7 @@
     if (alive) Object.keys(sm).forEach(g => { S.E[g] = Math.min(100, S.E[g] + dt * RATE * sm[g]); });
     // Energy: the medulla sets how fast it drains
     if (alive) S.energy = clamp(S.energy - 1.3 * (1 + (100 - b.med) * 0.007) * dt, 0, 100);
-    if (S.energy <= 0 && alive) { if (G.opts.preds) { S.starve += dt; if (S.starve > 3.5) { S.starve = 0; S.inv = 0; hurt("Too hungry!"); } } else if (S.tipT <= 0) { S.tipT = 6; toast("So hungry! Eat some algae."); } }
+    if (S.energy <= 0 && alive) { if (G.opts.preds && !S.lab) { S.starve += dt; if (S.starve > 3.5) { S.starve = 0; S.inv = 0; hurt("Too hungry!"); } } else if (S.tipT <= 0) { S.tipT = 6; toast("So hungry! Eat some algae."); } }
     // Food
     const hx = S.x + Math.sin(S.heading) * 0.7, hz = S.z + Math.cos(S.heading) * 0.7, er = 0.9 + 0.5 * st.scale;
     S.items.forEach(it => {
@@ -757,7 +777,7 @@
       it.m.position.y = it.y + Math.sin(S.t * 1.3 + it.ph) * 0.05;
       if (alive && Math.hypot(it.x - hx, it.z - hz) < er && Math.abs(it.m.position.y - S.y) < er + 0.4) {
         it.alive = false; it.m.visible = false; it.respawn = S.t + 14; S.eaten++; G.totals.eaten++; S.energy = Math.min(100, S.energy + 14); sfx("pop", 0.07);
-        const g = S.goals[0]; g.have++; renderTasks(); checkGoals();
+        if (!S.lab) { const g = S.goals[0]; g.have++; renderTasks(); checkGoals(); }
       }
     });
     // Nature rings
@@ -782,7 +802,7 @@
       if (g.life <= 0) { S.scene.remove(g.m); return false; } return true;
     });
     // Reaching clean habitat
-    if (!S.reached && alive && Math.hypot(S.x - CLEAN.x, S.z - CLEAN.z) < CLEAN.r - 2) { S.reached = true; S.goals[2].have = 1; toast("Clean habitat! The water is clear here.", 2.6); sfx("gem", 0.08); renderTasks(); checkGoals(); }
+    if (!S.reached && !S.lab && alive && Math.hypot(S.x - CLEAN.x, S.z - CLEAN.z) < CLEAN.r - 2) { S.reached = true; S.goals[2].have = 1; toast("Clean habitat! The water is clear here.", 2.6); sfx("gem", 0.08); renderTasks(); checkGoals(); }
     updatePreds(dt, alive);
     updateExposure();
   }
@@ -870,6 +890,7 @@
   }
   function logLife(e) { G.life.push(e); }
   function endStage() {
+    if (S && S.lab) { endLab(); return; }
     const st = st0(), wasQuick = S && S.quick; leaveSeason();
     if (S.dead) {
       logLife({ stage: G.stage, name: st.name, dead: true, cause: S.cause, E: S.E, eaten: S.eaten, finds: S.finds, ev: S.ev, gems: S.gems });
@@ -879,8 +900,8 @@
     if (!S.reached && !wasQuick) { ["metal", "pfas", "litter"].forEach(k => E[k] = Math.min(100, E[k] + 20)); penalty = true; }
     const before = { ...G.brain }, loss = lossFor(E, st.sens), after = {};
     RK.forEach(k => { after[k] = clamp(before[k] - loss[k], 25, 100); });
-    const gain = 20 * clamp(S.eaten / st.eat, 0.25, 1) * (1 - 0.25 * E.litter / 100), size = Math.min(100, G.size + gain);
-    const entry = { stage: G.stage, name: st.name, E, eaten: S.eaten, target: st.eat, gain, size, before, after, loss, hurts: S.hurts, finds: S.finds.slice(), ev: { ...S.ev }, gems: S.gems.slice(), reached: S.reached, penalty, retries: G.retry, zt: { ...S.zt } };
+    const gain = 20 * clamp(S.eaten / eatN(st), 0.25, 1) * (1 - 0.25 * E.litter / 100), size = Math.min(100, G.size + gain);
+    const entry = { stage: G.stage, name: st.name, E, eaten: S.eaten, target: eatN(st), gain, size, before, after, loss, hurts: S.hurts, finds: S.finds.slice(), ev: { ...S.ev }, gems: S.gems.slice(), reached: S.reached, penalty, retries: G.retry, zt: { ...S.zt } };
     G.brain = after; G.size = size; G.history.push(entry); G.gallery.push({ label: `Stage ${G.stage + 1}: ${st.name}`, scores: { ...after } });
     G.inRun = true; logLife({ stage: G.stage, name: st.name, dead: false, E, eaten: S.eaten, finds: entry.finds, ev: entry.ev, gems: entry.gems, gain, reached: S.reached, after: { ...after } });
     G.retry = 0; G.stage++;
@@ -909,7 +930,16 @@
   /* ============================================================
      SCREENS
      ============================================================ */
-  function screen(html) { const el = $("og-screen"); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
+  let PRED = {};
+  function applyOpts() { document.body.classList.toggle("tg-big", CL && !!G.opts.big); if (!G.opts.speak && "speechSynthesis" in window) speechSynthesis.cancel(); }
+  function speak(card) {
+    if (!("speechSynthesis" in window)) return; speechSynthesis.cancel();
+    const c = card.cloneNode(true); c.querySelectorAll(".tg-say, .og-back, canvas, button.og-btn, button.og-link, .tg-flag").forEach(n => n.remove());
+    const u = new SpeechSynthesisUtterance(c.innerText.replace(/\s+/g, " ").trim()); u.rate = 0.9; u.pitch = 0.6; u.volume = 0.8; speechSynthesis.speak(u);
+  }
+  function addSay(card) { const b = document.createElement("button"); b.type = "button"; b.className = "tg-say"; b.textContent = "🔊 Read to me"; b.addEventListener("click", () => speak(card)); card.insertBefore(b, card.firstChild); }
+  function screen(html) { const el = $("og-screen"); if (CL && "speechSynthesis" in window) speechSynthesis.cancel(); el.innerHTML = html; el.hidden = !html;
+    if (html && CL && G.opts.speak) { const c = el.querySelector(".og-card"); if (c) addSay(c); } if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
   const BACK = '<button type="button" class="og-back" id="og-back">◀ Back</button>';
   const onBack = fn => { const b = $("og-back"); if (b) b.addEventListener("click", () => { beep(220, 0.06, "triangle", 0.04); fn(); }); };
   const bar = (label, v, css, icon) => `<div class="tg-bar" style="--c:${css}">${icon || "<span></span>"}<span>${label}</span><span><i style="width:${clamp(v, 0, 100)}%"></i></span><b>${pct(v)}</b></div>`;
@@ -922,14 +952,16 @@
       <h2 class="og-h">How do you want to play?</h2>
       <h3 class="og-mini">Predators</h3>
       <div class="og-opts">${opt(true, ICON.heron, "Predators on", "Herons, dragonfly nymphs, and fish. More challenge!")}${opt(false, ICON.algae, "No predators", "Relaxed swimming, great for little kids.")}</div>
+      ${CL ? `<h3 class="og-mini">Classroom options</h3><div class="og-opts tg-cl-opts">${[["young", "📖", "Younger readers", "Shorter, simpler science cards"], ["speak", "🔊", "Read to me", "Reads each screen out loud"], ["big", "🔠", "Big text", "Larger words"], ["pat", "◭", "Pattern labels", "Shapes and words on pollution, for color-blind players"], ["quick", "⏱", "Quick play", "About 40% less food to eat in each stage"]].map(([k, ic, t, sub]) => `<button type="button" class="og-opt tg-tog" data-t="${k}" aria-pressed="${!!G.opts[k]}"><span class="tg-ic">${ic}</span><b>${t}</b><span>${sub}</span></button>`).join("")}</div>` : ""}
       <button type="button" class="og-btn" id="og-set-go">Let's go ▶</button></div>`);
-    document.querySelectorAll(".og-opt").forEach(b => b.addEventListener("click", () => { G.opts.preds = b.dataset.v === "true"; save(); beep(220, 0.06, "triangle", 0.04); document.querySelectorAll(".og-opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+    document.querySelectorAll(".tg-tog").forEach(b => b.addEventListener("click", () => { const k = b.dataset.t; G.opts[k] = !G.opts[k]; save(); applyOpts(); beep(220, 0.06, "triangle", 0.04); b.setAttribute("aria-pressed", String(G.opts[k])); if (k === "speak" && G.opts.speak) { const c = document.querySelector("#og-screen .og-card"); if (c && !c.querySelector(".tg-say")) addSay(c); } }));
+    document.querySelectorAll(".og-opt:not(.tg-tog)").forEach(b => b.addEventListener("click", () => { G.opts.preds = b.dataset.v === "true"; save(); beep(220, 0.06, "triangle", 0.04); document.querySelectorAll(".og-opt:not(.tg-tog)").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
     $("og-set-go").addEventListener("click", () => { beep(260, 0.1, "triangle"); next(); });
     onBack(back);
   }
   function newGame() {
-    G.inRun = false; G.stage = 0; G.brain = newBrain(); G.size = 0; G.history = []; G.retry = 0; save(); updatePanels();
-    if (window.SQ_track) window.SQ_track("play", "tadpole-game");
+    G.inRun = false; G.stage = 0; G.brain = newBrain(); G.size = 0; G.history = []; G.retry = 0; PRED = {}; save(); updatePanels();
+    if (window.SQ_track && !CL) window.SQ_track("play", "tadpole-game");
     screenSettings(() => screenBriefing());
   }
   function screenTitle() {
@@ -946,7 +978,9 @@
       </ol>`}
       <div class="og-actions">${saved ? `<button type="button" class="og-btn" id="og-continue">▶ Continue · Stage ${G.stage + 1}</button><button type="button" class="og-btn ghost" id="og-play">New tadpole</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div>
       ${saved ? '<p class="og-sub og-small">A new tadpole erases your current trek. Your outfits, Pond-dex, treasures, and journal stay.</p>' : ""}
+      ${CL ? '<div class="tg-cl-links"><button type="button" class="og-btn ghost" id="og-lab-go">🔬 Pond lab</button><button type="button" class="og-link" id="og-sci">Meet the scientists</button><a class="og-link" href="tadpole-teachers.html">For teachers</a></div>' : ""}
       ${hasCollections() || saved ? '<button type="button" class="og-link" id="og-erase">Erase everything and start fresh</button>' : ""}</div>`);
+    if (CL) { $("og-lab-go").addEventListener("click", screenLab); $("og-sci").addEventListener("click", screenScientists); }
     const cont = $("og-continue"); if (cont) cont.addEventListener("click", () => { beep(260, 0.1, "triangle"); screenBriefing(); });
     $("og-play").addEventListener("click", () => { beep(260, 0.1, "triangle"); newGame(); });
     const er = $("og-erase"); if (er) er.addEventListener("click", screenErase);
@@ -997,12 +1031,100 @@
           ${brainTips().map(([ic, txt]) => `<div class="og-row">${ICON[ic]}<small>${txt}</small></div>`).join("")}
         </section>
       </div>
+      ${CL ? predBlock() : ""}
       <div class="og-controls">${controls}</div>
       <p class="og-sub og-small">Take your time! The stage ends when you finish all 3 goals. If you leave before reaching clean habitat, you spend the rest of the stage in the polluted pond and your meters rise. Plume sizes and brain effects are illustrative.</p>${(coarse || touchMode) && matchMedia("(orientation: portrait)").matches ? '<p class="og-sub og-small">📱 Tip: turn your phone sideways for a bigger view.</p>' : ""}
       <button type="button" class="og-btn" id="og-go">Start stage ▶</button></div>`);
     $("og-go").addEventListener("click", () => { beep(260, 0.1, "triangle"); startStage(); });
+    if (CL) document.querySelectorAll(".tg-pred-opts button").forEach(b => b.addEventListener("click", () => { PRED[G.stage] = b.dataset.p; document.querySelectorAll(".tg-pred-opts button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); beep(220, 0.06, "triangle", 0.04); }));
     if (G.history.length) onBack(screenSummaryLast);
     $("og-change").addEventListener("click", () => screenSettings(screenBriefing, screenBriefing));
+  }
+
+  /* ---------- Classroom edition: prediction, reflection, scientists, Pond lab ---------- */
+  const PNAME = { metal: "Metals", pfas: "PFAS", litter: "Litter", none: "Not sure" };
+  function predBlock() {
+    const cur = PRED[G.stage], o = (k, ic) => `<button type="button" data-p="${k}" aria-pressed="${cur === k}">${ic || "<span class='tg-ic'>?</span>"}<span>${PNAME[k]}</span></button>`;
+    return `<section class="tg-pred"><h3 class="og-mini">Make a prediction (optional)</h3><p class="og-sub og-small">Which do you think will change your tadpole the most this stage?</p><div class="tg-pred-opts">${o("metal", ICON.metal)}${o("pfas", ICON.pfas)}${o("litter", ICON.litter)}${o("none")}</div></section>`;
+  }
+  const REFLECT_Q = [
+    "Where in the pond did your tadpole spend the most time? What would you change next time?",
+    "Metals sink and PFAS float. How did that change where you swam?",
+    "Did the early stage or this stage seem to matter more for the brain? What is your evidence?",
+    "If two pollutants overlapped, what do you predict would happen? How could scientists test that?",
+    "What is one thing people could do to keep litter and chemicals out of ponds?"
+  ];
+  function reflectBlock(e) {
+    const top = ["metal", "pfas", "litter"].map(k => [k, e.E[k]]).sort((a, b) => b[1] - a[1])[0], pr = PRED[e.stage];
+    const said = pr ? (pr === "none" ? "You were not sure, and that is a fine place to start." : `You predicted <b>${PNAME[pr]}</b>.`) : "You did not make a prediction this time.";
+    const had = top[1] < 5 ? "Your tadpole took in very little pollution." : `Your tadpole took in the most <b>${PNAME[top[0]]}</b> this stage.`;
+    const match = pr && pr !== "none" && top[1] >= 5 ? (pr === top[0] ? " Your prediction matched." : " That is different from your prediction. Scientists learn from surprises too.") : "";
+    return `<section class="tg-reflect"><h3 class="og-mini">Think like a scientist</h3><p>${said} ${had}${match}</p><p class="tg-q"><b>Talk about it:</b> ${REFLECT_Q[e.stage % REFLECT_Q.length]}</p></section>`;
+  }
+  function screenScientists() {
+    G.screen = "sci";
+    screen(`<div class="og-card og-wide">${BACK}
+      <h2 class="og-h">Meet the scientists</h2>
+      <p class="og-sub">The SQuEACs Lab at Midwestern University in Glendale, Arizona is led by <b>Dr. Leigha Lynch</b>. The lab uses CT scans to look inside animals without cutting them open, then builds 3D models of their bodies and brains.</p>
+      <p class="og-sub">One project looks at the brains of tadpoles. The 3D tadpole brain in this game's Anatomy window comes from that work.</p>
+      <h3 class="og-mini">Questions scientists ask</h3>
+      <ul class="tg-qs"><li>Do tadpoles that grow up in polluted water grow different brains?</li><li>Does it matter how long a tadpole stays in the water?</li><li>Do some stages of growth matter more than others?</li></ul>
+      <p class="og-sub og-small">These are questions being tested, not answers. The numbers in the game are made up to help you explore them.</p>
+      <div class="og-actions"><button type="button" class="og-btn" id="og-sci-back">Back to the game</button></div></div>`);
+    onBack(screenTitle); $("og-sci-back").addEventListener("click", screenTitle);
+  }
+  const labZones = () => [{ kind: "metal", x: -50, z: -5, r: 13 }, { kind: "pfas", x: -54, z: 8, r: 12 }, { kind: "plastic", x: -20, z: -10, r: 9 }, { kind: "paper", x: -8, z: 12, r: 9 }, { kind: "metal", x: 12, z: -14, r: 9 }, { kind: "plastic", x: 22, z: 14, r: 8 }];
+  function screenLab() {
+    G.screen = "lab";
+    screen(`<div class="og-card og-wide">${BACK}
+      <p class="og-badge">Pond lab</p><h2 class="og-h">Fix the pond</h2>
+      <p class="og-sub">This pond has six pollution sources. Swim into a source and press <b>Clean up</b> to remove it. You can also add sources to test your ideas. Your exposure meters keep filling while you swim, so watch what happens.</p>
+      <ul class="og-goals"><li>${ICON.flag}<span>Clean up every source</span></li></ul>
+      <div class="og-brief-grid"><section><h3 class="og-mini">Tools</h3>
+        <div class="og-row">${ICON.metal}<small>Add metals (key 1)</small></div><div class="og-row">${ICON.pfas}<small>Add PFAS (key 2)</small></div><div class="og-row">${ICON.litter}<small>Add litter (key 3)</small></div><div class="og-row">${ICON.flag}<small>Clean up the source you are in (key F)</small></div></section>
+        <section><h3 class="og-mini">Try asking</h3><p class="og-sub og-small">Does a metal source hurt more near the bottom or the top? What happens if you clean up the first source before the others? How could we keep new sources from starting?</p></section></div>
+      <p class="tg-flag">The lab uses the same made-up game values. Nothing here is saved to your trek.</p>
+      <div class="og-actions"><button type="button" class="og-btn" id="og-lab-start">Start the lab ▶</button></div></div>`);
+    onBack(screenTitle); $("og-lab-start").addEventListener("click", () => { beep(260, 0.1, "triangle"); startStage(true); });
+  }
+  function labAdd(kind) {
+    if (!S || !S.lab || S.paused || S.ending > 0 || S.zones.length >= 12) { if (S && S.lab && S.zones.length >= 12) toast("The pond is full. Clean something up first."); return; }
+    const z = { kind, x: S.x, z: S.z, r: 9 }; S.zones.push(z); S.world.zm.push(zoneMesh(z, S.scene)); S.goals[0].n++; renderTasks(); sfx("pop", 0.06); toast(`${kind === "plastic" ? "Litter" : GRP[ZK[kind].grp].name} source added here.`, 2);
+  }
+  function labClean() {
+    if (!S || !S.lab || S.paused || S.ending > 0) return;
+    let bi = -1, bd = 1e9; S.zones.forEach((z, i) => { const d = Math.hypot(z.x - S.x, z.z - S.z); if (d < z.r + 2 && d < bd) { bd = d; bi = i; } });
+    if (bi < 0) { toast("Swim into a pollution source, then press Clean up.", 2.5); return; }
+    S.scene.remove(S.world.zm[bi].g); S.zones.splice(bi, 1); S.world.zm.splice(bi, 1); S.goals[0].have++; sfx("gem", 0.08); toast("Cleaned up! That source is gone.", 2); renderTasks(); checkGoals();
+  }
+  function endLab() {
+    const E = { ...S.E }, before = newBrain(), loss = lossFor(E, 0.7), after = {}; RK.forEach(k => { after[k] = clamp(before[k] - loss[k], 25, 100); });
+    const g = S.goals[0], fixed = g.have >= g.n; leaveSeason(); S = null; G.screen = "labdone";
+    screen(`<div class="og-card og-wide"><p class="og-badge">Pond lab results</p>
+      <h2 class="og-h">${fixed ? "You fixed the pond!" : "Lab closed."}</h2>
+      <p class="og-sub">${fixed ? `You cleaned up all ${g.n} sources. Your tadpole still took in pollution on the way, which shows why stopping pollution early matters.` : `You cleaned up ${g.have} of ${g.n} sources.`}</p>
+      <h3 class="og-mini">Exposure in the lab</h3><div class="tg-bars">${expBars(E)}</div>
+      <h3 class="og-mini">Brain</h3><div class="tg-pair"><figure><canvas id="tg-b0"></canvas>Before</figure><figure><canvas id="tg-b1"></canvas>After</figure></div>
+      <p class="tg-flag">Illustrative game values, not measurements.</p>
+      <div class="og-actions"><button type="button" class="og-btn" id="og-lab-again">Try the lab again</button><button type="button" class="og-btn ghost" id="og-lab-menu">Main menu</button></div></div>`);
+    requestAnimationFrame(() => { drawBrain(before, $("tg-b0"), { noGhost: true }); drawBrain(after, $("tg-b1")); });
+    $("og-lab-again").addEventListener("click", () => startStage(true)); $("og-lab-menu").addEventListener("click", screenTitle); idleLoop();
+  }
+  function labelSprite(kind) {
+    const c = document.createElement("canvas"); c.width = 256; c.height = 64; const x = c.getContext("2d");
+    const t = kind === "metal" ? ["▲", "METALS", "#d9822b"] : kind === "pfas" ? ["●", "PFAS", "#b06cff"] : ["■", kind === "plastic" ? "PLASTIC" : "PAPER", "#4aa8c8"];
+    x.fillStyle = "rgba(11,10,16,0.82)"; x.beginPath(); x.roundRect ? x.roundRect(4, 6, 248, 52, 14) : x.rect(4, 6, 248, 52); x.fill(); x.lineWidth = 3; x.strokeStyle = t[2]; x.stroke();
+    x.fillStyle = t[2]; x.font = "700 30px Fredoka, Arial, sans-serif"; x.textBaseline = "middle"; x.fillText(t[0], 20, 33); x.fillStyle = "#fff"; x.fillText(t[1], 60, 34);
+    const sp = new T3.Sprite(new T3.SpriteMaterial({ map: new T3.CanvasTexture(c), transparent: true, opacity: 0.88, depthWrite: false })); sp.scale.set(4.8, 1.2, 1); return sp;
+  }
+  const patCache = {};
+  function patFor(c, kind) {
+    if (patCache[kind]) return patCache[kind];
+    const t = document.createElement("canvas"); t.width = t.height = 8; const x = t.getContext("2d"); x.strokeStyle = "rgba(11,10,16,0.75)"; x.fillStyle = "rgba(11,10,16,0.75)"; x.lineWidth = 1.4;
+    if (kind === "metal") { x.beginPath(); x.moveTo(0, 8); x.lineTo(8, 0); x.stroke(); }
+    else if (kind === "pfas") { x.beginPath(); x.arc(4, 4, 1.4, 0, 7); x.fill(); }
+    else { x.strokeRect(1, 1, 6, 6); }
+    return (patCache[kind] = c.createPattern(t, "repeat"));
   }
   function screenCaught(cause) {
     G.screen = "caught";
@@ -1029,6 +1151,7 @@
       <div class="tg-pair"><figure><canvas id="tg-b0"></canvas>Before</figure><figure><canvas id="tg-b1"></canvas>After</figure></div>
       <table class="tg-loss"><thead><tr><th>Region</th><th>Score</th><th>Change</th></tr></thead><tbody>${lossRows}</tbody></table>
       <p class="og-sub">${line}</p>
+      ${CL ? reflectBlock(e) : ""}
       <p class="tg-flag">Scores are illustrative game values, with 100 meaning the clean-water value. The sizes of the effects are made up. The hypotheses behind them are being tested.</p>
       <div class="og-actions"><button type="button" class="og-btn" id="og-next">Next stage ▶</button></div></div>`);
     requestAnimationFrame(() => { drawBrain(e.before, $("tg-b0"), { noGhost: true }); drawBrain(e.after, $("tg-b1")); });
@@ -1100,8 +1223,9 @@
   let mvLoaded = false;
   function loadModel() {
     if (mvLoaded) return; mvLoaded = true; const host = $("tg-mv");
+    if (CL && !customElements.get("model-viewer")) { const sc = document.createElement("script"); sc.type = "module"; sc.src = "https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"; document.head.appendChild(sc); }
     host.innerHTML = '<model-viewer src="models/tadpole-cns.glb" alt="3D model of a Lithobates heckscheri tadpole central nervous system" camera-controls touch-action="pan-y" auto-rotate rotation-per-second="10deg" camera-orbit="62deg 58deg 26m" camera-target="0m 1.6m 19.5m" field-of-view="30deg" min-camera-orbit="auto auto 3m" shadow-intensity="0" exposure="1.1"></model-viewer>';
-    if (window.SQ_track) window.SQ_track("view", "tadpole-cns", "tadpole-trek");
+    if (window.SQ_track && !CL) window.SQ_track("view", "tadpole-cns", "tadpole-trek");
   }
   $("tg-mv-load").addEventListener("click", loadModel);
 
@@ -1192,6 +1316,11 @@
     resize(); size3D(); if (!running) drawIdle(); if (running && touchMode) restStick();
   }, 250));
   $("og-bag").addEventListener("click", () => openWin(document.querySelector(".og-slot.has-new")?.dataset.win || "journal"));
+  if (CL) {
+    applyOpts();
+    $("tg-lab").addEventListener("click", e => { const b = e.target.closest("button[data-tool]"); if (!b) return; const t = b.dataset.tool; if (t === "clean") labClean(); else labAdd(t); glc.focus({ preventScroll: true }); });
+    window.addEventListener("keydown", e => { if (!S || !S.lab || G.screen !== "season" || openK || e.ctrlKey || e.metaKey || e.altKey) return; if (e.key === "1") labAdd("metal"); else if (e.key === "2") labAdd("pfas"); else if (e.key === "3") labAdd(Math.random() < 0.5 ? "plastic" : "paper"); else if (e.key === "f" || e.key === "F") labClean(); });
+  }
   $("og-end").addEventListener("click", () => { if (S && running && S.ending <= 0) S.ending = 0.01; });
   function setFull(on) {
     stageEl.classList.toggle("og-fs-on", on); document.body.classList.toggle("og-noscroll", on);

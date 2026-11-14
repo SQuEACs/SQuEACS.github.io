@@ -1141,3 +1141,52 @@ body.og-noscroll { overflow: hidden; }
 .og-gprev[open] { display: grid; gap: 0.6rem; }
 .pi-line { margin-top: 0.6rem; color: #d6d0e2; font-size: 1rem; }
 .pi-line a { color: var(--pink); font-weight: 600; }
+
+/* ---------- Tadpole Trek classroom edition ---------- */
+.page-title small { display: block; font-size: .42em; font-weight: 600; letter-spacing: .02em; opacity: .75; margin-top: .2em; }
+.tg-cl-links { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; justify-content: center; margin-top: .6rem; }
+.tg-cl-opts { grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); }
+.tg-tog .tg-ic { font-size: 1.5rem; line-height: 1; }
+.tg-say { justify-self: end; justify-self: flex-end; margin: 0 0 .5rem auto; display: block; font: 600 .85rem/1 var(--sans, system-ui); padding: .5rem .8rem; border-radius: 999px; border: 2px solid #0b0a10; background: #ffe066; color: #0b0a10; cursor: pointer; }
+.tg-pred { margin-top: .8rem; }
+.tg-pred-opts { display: flex; flex-wrap: wrap; gap: .5rem; }
+.tg-pred-opts button { display: flex; align-items: center; gap: .4rem; padding: .45rem .8rem; border-radius: 999px; border: 2px solid #0b0a10; background: #fff; color: #0b0a10; font: 600 .9rem/1 var(--sans, system-ui); cursor: pointer; }
+.tg-pred-opts button svg { width: 1.4rem; height: 1.4rem; }
+.tg-pred-opts button[aria-pressed="true"] { background: #ffe066; box-shadow: 0 0 0 3px #7a3fd0; }
+.tg-pred-opts .tg-ic { display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: #ddd; font-weight: 800; }
+.tg-reflect { margin-top: .9rem; padding: .8rem 1rem; border: 2px dashed #7a3fd0; border-radius: 1rem; background: rgba(122, 63, 208, .07); }
+.tg-reflect p { margin: .3rem 0; }
+.tg-q { font-weight: 500; }
+.tg-qs { margin: .4rem 0 .6rem 1.2rem; }
+.tg-lab { position: absolute; right: 0; top: calc(8.6rem + 126px + 12px); display: grid; gap: .35rem; z-index: 4; pointer-events: auto; }
+.tg-lab[hidden] { display: none; }
+.tg-lab button { padding: .5rem .8rem; border-radius: 999px; border: 2px solid #0b0a10; background: #fff; color: #0b0a10; font: 700 .85rem/1 var(--sans, system-ui); cursor: pointer; text-align: left; }
+.tg-lab .tg-clean { background: #7bd96b; }
+.og-stage.touch .tg-lab { top: calc(6.6rem + 90px + 12px); }
+@media (max-width: 640px) { .tg-lab { top: 8.6rem; } .og-stage.touch .tg-lab { top: 6.6rem; } }
+.tg-lab-panel { margin-top: 1rem; padding: .8rem 1rem; border-radius: 1rem; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .18); }
+.tg-lab-panel ul { margin: .3rem 0 .6rem 1.1rem; }
+body.tg-big .og-card, body.tg-big .og-window, body.tg-big .og-tasks, body.tg-big .og-fact, body.tg-big .og-toast { font-size: 1.22em; line-height: 1.5; }
+body.tg-big .og-sub.og-small { font-size: 1em; }
+
+/* teacher pages */
+.tc h2 { margin-top: 2rem; }
+.tc .tc-band { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: 1rem 0; }
+.tc .tc-band > div { padding: 1rem 1.1rem; border: 2px solid currentColor; border-radius: 1rem; }
+.tc .tc-band h3 { margin: 0 0 .4rem; }
+.tc .tc-step { display: grid; grid-template-columns: 4.5rem 1fr; gap: .8rem; padding: .5rem 0; border-top: 1px solid rgba(128, 128, 128, .35); }
+.tc .tc-step b { font-variant-numeric: tabular-nums; }
+.tc table { border-collapse: collapse; width: 100%; margin: .8rem 0; }
+.tc th, .tc td { border: 1px solid rgba(128, 128, 128, .5); padding: .45rem .6rem; text-align: left; vertical-align: top; }
+.tc .tc-note { padding: .8rem 1rem; border-left: 4px solid #d9822b; background: rgba(217, 130, 43, .1); border-radius: .3rem; margin: 1rem 0; }
+.tc .tc-line { border-bottom: 1.5px solid #333; min-height: 2.2rem; margin: .3rem 0; }
+.tc .tc-box { border: 2px solid #333; min-height: 11rem; border-radius: .6rem; margin: .4rem 0 1rem; }
+.tc .tc-print { margin: 1rem 0; }
+@media print {
+  .site-header, .site-footer, .tc .tc-noprint, .crumb { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .tc .tc-sheet { break-after: page; }
+  .tc a { color: #000; text-decoration: none; }
+}
+.tg-tog .tg-ic { grid-row: span 2; text-align: center; }
+@media print { .tc, .tc * { color: #000 !important; border-color: #333 !important; } .tc .tc-band > div { border-color: #333 !important; } }

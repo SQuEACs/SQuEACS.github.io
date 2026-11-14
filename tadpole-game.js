@@ -219,11 +219,43 @@
   renderFact(null); renderMeta();
   function resetJournal() { renderFact(null); }
   /* ---------- Always-visible metamorphosis box (top of the Journal) ---------- */
+    // Original drawings of six stages of frog metamorphosis, in the game's own style (simplified, not to scale).
+  function metaArt() {
+    const body = "#5b6b3a", belly = "#b9c78a", leg = "#6f9448", fin = "#8aa860", ink = "#0b0a10";
+    const eye = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${ink}" stroke-width="1.4"/><circle cx="${x + r * 0.25}" cy="${y}" r="${r * 0.5}" fill="${ink}"/>`;
+    const tad = (o) => {
+      const { k = 1, rx = 22, ry = 15, tl = 50, hind = 0, fore = 0, gills = false } = o;
+      let s = `<g transform="scale(${k})" stroke="${ink}" stroke-width="1.6" stroke-linejoin="round">`;
+      s += `<path d="M${-rx + 4},${-ry * 0.5} Q${-rx - tl * 0.6},${-ry * 1.05} ${-rx - tl},0 Q${-rx - tl * 0.6},${ry * 1.05} ${-rx + 4},${ry * 0.5} Z" fill="${fin}"/>`;
+      if (hind) s += `<ellipse cx="${-rx * 0.5}" cy="${ry * 0.85}" rx="${6 + hind * 6}" ry="${3 + hind * 2}" transform="rotate(30 ${-rx * 0.5} ${ry * 0.85})" fill="${leg}"/><ellipse cx="${-rx * 0.5}" cy="${-ry * 0.85}" rx="${6 + hind * 6}" ry="${3 + hind * 2}" transform="rotate(-30 ${-rx * 0.5} ${-ry * 0.85})" fill="${leg}"/>`;
+      s += `<ellipse cx="0" cy="0" rx="${rx}" ry="${ry}" fill="${body}"/><ellipse cx="2" cy="${ry * 0.3}" rx="${rx * 0.75}" ry="${ry * 0.5}" fill="${belly}" stroke="none"/>`;
+      if (fore) s += `<ellipse cx="${rx * 0.45}" cy="${ry * 0.95}" rx="${3 + fore * 4}" ry="${2 + fore * 2}" transform="rotate(-25 ${rx * 0.45} ${ry * 0.95})" fill="${leg}"/><ellipse cx="${rx * 0.45}" cy="${-ry * 0.95}" rx="${3 + fore * 4}" ry="${2 + fore * 2}" transform="rotate(25 ${rx * 0.45} ${-ry * 0.95})" fill="${leg}"/>`;
+      if (gills) s += `<path d="M${rx * 0.55},${-ry * 0.3} l9,-7 M${rx * 0.55},${-ry * 0.1} l11,-2 M${rx * 0.55},${ry * 0.1} l9,5" stroke="#ff7a9a" stroke-width="2" fill="none"/>`;
+      s += eye(rx * 0.55, -ry * 0.45, Math.max(3, rx * 0.2)) + `</g>`;
+      return s;
+    };
+    const egg = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="rgba(210,235,225,0.55)" stroke="#9bc8b4" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="${r * 0.38}" fill="${ink}"/>`;
+    const frog = `<g stroke="${ink}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M-22,6 Q-44,8 -40,22 Q-30,24 -14,16 Z" fill="${leg}"/><path d="M22,6 Q44,8 40,22 Q30,24 14,16 Z" fill="${leg}"/>
+      <ellipse cx="0" cy="2" rx="22" ry="16" fill="#5fae4e"/><ellipse cx="0" cy="8" rx="14" ry="7" fill="#c9e3a0" stroke="none"/>
+      <circle cx="-11" cy="-14" r="7" fill="#7ccf68"/><circle cx="11" cy="-14" r="7" fill="#7ccf68"/><circle cx="-11" cy="-15" r="3" fill="${ink}" stroke="none"/><circle cx="11" cy="-15" r="3" fill="${ink}" stroke="none"/>
+      <path d="M-8,-4 Q0,2 8,-4" fill="none"/><path d="M-3,18 q-6,6 -10,4" fill="none" stroke="${fin}" stroke-width="3"/></g>`;
+    const P = [
+      ["Eggs", `${egg(-14, 6, 12)}${egg(10, -4, 12)}${egg(8, 18, 12)}${egg(-6, -14, 11)}`],
+      ["Hatchling", tad({ k: 1, rx: 12, ry: 8, tl: 30, gills: true })],
+      ["Feeding tadpole", tad({ k: 1, rx: 20, ry: 14, tl: 44 })],
+      ["Back legs grow", tad({ k: 1, rx: 22, ry: 15, tl: 44, hind: 1 })],
+      ["Front legs, short tail", tad({ k: 1, rx: 22, ry: 15, tl: 20, hind: 1.4, fore: 1 })],
+      ["Froglet", frog],
+    ];
+    const cells = P.map(([t, g], i) => { const cx = 80 + (i % 3) * 160 + (i === 3 || i === 4 ? 14 : i === 2 ? 8 : 0), cy = 50 + Math.floor(i / 3) * 130; return `<g transform="translate(${cx} ${cy}) scale(1.35)">${g}</g><text x="${cx}" y="${cy + 58}" text-anchor="middle">${i + 1}. ${t}</text>`; }).join("");
+    return `<svg class="og-metaart" viewBox="0 0 480 250" role="img" aria-label="Six drawings in order: eggs, a hatchling with gills, a feeding tadpole, a tadpole with back legs, a tadpole with front legs and a short tail, and a froglet."><g font-family="Fredoka, 'IBM Plex Sans', Arial, sans-serif" font-weight="600" font-size="13.5" fill="#d6d0e2">${cells}</g></svg><p class="og-metacap">Simplified drawings, not to scale. Real frogs differ in how long each stage lasts.</p>`;
+  }
   function renderMeta() {
     const box = $("og-meta"); if (!box) return;
     box.innerHTML = CL && G.opts.young
-      ? `<h3>How metamorphosis works</h3><p>Metamorphosis means a body changes shape a lot as an animal grows up. A hormone called thyroid hormone helps tell the body when to change.</p><ul><li><b>Frogs:</b> the tadpole loses its tail, grows legs, and gets lungs to breathe air.</li><li><b>Butterflies:</b> a caterpillar rests in a chrysalis and comes out with wings.</li><li><b>Dragonflies:</b> a baby that lives in water climbs out and grows wings.</li><li><b>Axolotls:</b> they keep their young body their whole life.</li></ul>`
-      : `<h3>How metamorphosis works</h3><p>Metamorphosis is a fast rebuild of a body, timed by hormones.</p><ul><li><b>Frogs:</b> rising thyroid hormone tells tissues to change. The tail is absorbed, legs grow, gills give way to lungs, the long plant-eating gut shortens, and the skin and brain remodel.</li><li><b>Salamanders:</b> many also use thyroid hormone. Some, like axolotls, keep their larval form for life.</li><li><b>Insects:</b> ecdysone and juvenile hormone drive the change from larva to pupa to adult in butterflies, beetles, and flies. Dragonflies skip the pupa.</li><li><b>Other animals:</b> some flatfish move an eye across the head, and sea squirt larvae lose their tails.</li></ul><p>Species differ. Scientists ask whether some pollutants can disturb the hormone signal that times these changes. That question is being tested. <a href="${SC}#refs">See the sources to verify →</a></p>`;
+      ? `<h3>How metamorphosis works</h3><p>Metamorphosis means a body changes shape a lot as an animal grows up. A hormone called thyroid hormone helps tell the body when to change.</p>${metaArt()}<ul><li><b>Frogs:</b> the tadpole loses its tail, grows legs, and gets lungs to breathe air.</li><li><b>Butterflies:</b> a caterpillar rests in a chrysalis and comes out with wings.</li><li><b>Dragonflies:</b> a baby that lives in water climbs out and grows wings.</li><li><b>Axolotls:</b> they keep their young body their whole life.</li></ul>`
+      : `<h3>How metamorphosis works</h3><p>Metamorphosis is a fast rebuild of a body, timed by hormones.</p>${metaArt()}<ul><li><b>Frogs:</b> rising thyroid hormone tells tissues to change. The tail is absorbed, legs grow, gills give way to lungs, the long plant-eating gut shortens, and the skin and brain remodel.</li><li><b>Salamanders:</b> many also use thyroid hormone. Some, like axolotls, keep their larval form for life.</li><li><b>Insects:</b> ecdysone and juvenile hormone drive the change from larva to pupa to adult in butterflies, beetles, and flies. Dragonflies skip the pupa.</li><li><b>Other animals:</b> some flatfish move an eye across the head, and sea squirt larvae lose their tails.</li></ul><p>Species differ. Scientists ask whether some pollutants can disturb the hormone signal that times these changes. That question is being tested. <a href="${SC}#refs">See the sources to verify →</a></p>`;
   }
 
   /* ---------- Picture icons ---------- */

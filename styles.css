@@ -1218,3 +1218,5 @@ body.tg-big .og-meta { font-size: 1.22em; line-height: 1.5; }
 .home-game p { color: #d6d0e2; }
 .home-game .btn { justify-self: start; }
 @media (prefers-reduced-motion: reduce) { .home-game { transition: none; } }
+.og-metaart { width: 100%; max-width: 34rem; height: auto; justify-self: center; background: rgba(255, 255, 255, .04); border-radius: 12px; }
+.og-metacap { font-size: .8rem !important; color: #a79fbb !important; text-align: center; }

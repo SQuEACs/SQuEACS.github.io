@@ -452,6 +452,7 @@
       case "replay": return S(`<path d="M 76 50 A 26 26 0 1 1 64 28" stroke="${INK}" stroke-width="10" fill="none" stroke-linecap="round"/>` + path("M 56 14 L 80 26 L 60 42 Z", INK, { "stroke-width": 3 }));
       case "print": return S(`<rect x="24" y="12" width="52" height="28" fill="#fff" stroke="${INK}" stroke-width="6"/><rect x="10" y="38" width="80" height="34" rx="8" fill="#a47bff" stroke="${INK}" stroke-width="6"/><rect x="24" y="60" width="52" height="28" fill="#fff" stroke="${INK}" stroke-width="6"/>`);
       case "hat": return S(path("M 10 64 Q 50 74 90 64 Q 84 56 72 56 Q 70 26 50 24 Q 30 26 28 56 Q 16 56 10 64 Z", "#8a6440", { "stroke-width": 6 }) + `<path d="M 30 50 Q 50 56 70 50" stroke="${INK}" stroke-width="5" fill="none"/>`);
+      case "crayon": return S(`<g transform="rotate(35 50 50)">` + path("M 38 22 L 50 2 L 62 22 Z", "#ff5fa2", { "stroke-width": 5 }) + `<rect x="38" y="22" width="24" height="70" rx="5" fill="#ff5fa2" stroke="${INK}" stroke-width="5"/><rect x="38" y="40" width="24" height="14" fill="#fff" stroke="${INK}" stroke-width="4"/></g>`);
       case "gear": return S(circ(50, 50, 26, "#c9c5cf", { "stroke-width": 6 }) + circ(50, 50, 9, "#fff", { "stroke-width": 5 }) + [0, 45, 90, 135, 180, 225, 270, 315].map(d => `<rect x="44" y="10" width="12" height="14" rx="3" fill="${INK}" transform="rotate(${d} 50 50)"/>`).join(""));
     }
     return "";

@@ -17,7 +17,7 @@
    ============================================================ */
 (function () {
   const PHOTOS = {
-    otter:     { src: "", credit: "" },
+    otter:     { src: "assets/mammal-mystery/photos/otter.jpg", credit: 'Photo: Dmitry Azovtsev (<a href="http://www.daphoto.info" target="_blank" rel="noopener">daphoto.info</a>), <a href="https://creativecommons.org/licenses/by-sa/3.0" target="_blank" rel="noopener">CC BY-SA 3.0</a>, via <a href="https://commons.wikimedia.org/wiki/File:LutraCanadensis_fullres.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>' },
     raccoon:   { src: "", credit: "" },
     fox:       { src: "", credit: "" },
     lion:      { src: "", credit: "" },

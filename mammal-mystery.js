@@ -21,7 +21,7 @@
   const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   /* ---------- saved progress ---------- */
-  const S = Object.assign({ grade: null, found: {}, cousins: 0, mute: false, opts: { lock: "", slow: false, caps: true, cases: 0 } }, load());
+  const S = Object.assign({ grade: null, found: {}, art: {}, cousins: 0, mute: false, opts: { lock: "", slow: false, caps: true, cases: 0 } }, load());
   function load() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } }
   function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* private mode: progress just isn't kept */ } }
   const urlGrade = new URLSearchParams(location.search).get("grade");
@@ -155,19 +155,20 @@
       ["guide", ART.icon("folder"), "Field guide"],
     ];
     if (g === "g2") items.push(["family", ART.icon("tree"), "Family secrets"]);
+    if (g === "pk" || g === "k") items.push(["color", ART.icon("crayon"), "Coloring"]);
     const locked = CL && S.opts.lock;
     show("menu", `
       <div class="mm-head">${ART.detective()}<p class="mm-q">${D.GRADES[g].say}</p></div>
       <div class="mm-menu">${items.map(([k, ic, t], i) => btn("mm-tile mm-act" + (i === 0 ? " mm-main" : ""), `data-k="${k}" aria-label="${t}"`, `${ic}<b>${t}</b>`)).join("")}</div>
       ${locked ? "" : btn("mm-chip", 'id="mm-chg" aria-label="Change grade"', `<span class="mm-grade-dots sm">${"<i></i>".repeat(Object.keys(D.GRADES).indexOf(g) + 1)}</span>Change grade`)}`);
-    const lines = { case: "Solve a mystery", guide: "your field guide", family: "family secrets" };
-    if (greet) prompt(g === "g2" ? "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder for your field guide, or the tree for family secrets." : "Let's be detectives! Tap the magnifying glass to solve a mystery, or the folder to see your field guide.");
+        if (greet) prompt(g === "g2" ? "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder for your field guide, or the tree for family secrets."
+      : g === "pk" || g === "k" ? "Let's be detectives! Tap the magnifying glass to solve a mystery, the folder to see your field guide, or the crayon to color an animal."
+      : "Let's be detectives! Tap the magnifying glass to solve a mystery, or the folder to see your field guide.");
     view.querySelectorAll(".mm-act").forEach(b => b.addEventListener("click", () => {
       sfx.tap(); const k = b.dataset.k;
-      if (k === "case") startRound(); else if (k === "guide") guide(); else family();
+      if (k === "case") startRound(); else if (k === "guide") guide(); else if (k === "color") colorPick(); else family();
     }));
     const chg = $("mm-chg"); if (chg) chg.addEventListener("click", () => { sfx.tap(); grades(); });
-    void lines;
   }
 
   /* ---------- the mystery round ---------- */
@@ -377,6 +378,72 @@
     view.querySelectorAll(".mm-card[data-id]").forEach(b => b.addEventListener("click", () => { sfx.tap(); caseFile(b.dataset.id, () => { renderBar(); }); }));
   }
 
+
+  /* ---------- Pre-K and K: tap to color ---------- */
+  const CRAYONS = [["red", "#e8494f"], ["orange", "#ff9f40"], ["yellow", "#ffd23f"], ["green", "#6fc35a"], ["blue", "#4aa3df"], ["purple", "#a47bff"],
+    ["pink", "#ff9fc8"], ["brown", "#8a5a3b"], ["tan", "#e3bc8a"], ["gray", "#9aa1ae"], ["black", "#2a2233"], ["white", "#ffffff"]];
+  function colorPick() {
+    show("colorpick", `
+      <div class="mm-head">${ART.icon("crayon")}<p class="mm-q">Pick an animal to color!</p></div>
+      <div class="mm-guide">${D.IDS.map(id => btn("mm-card", `data-id="${id}" aria-label="Color the ${nm(id)}"`, (S.art[id] && Object.values(S.art[id]).some(Boolean) ? colored(id) : ART.animal(id, { line: true })) + `<span>${cap1(nm(id))}</span>`)).join("")}</div>`);
+    prompt("Pick an animal to color!");
+    view.querySelectorAll(".mm-card").forEach(b => b.addEventListener("click", () => { sfx.tap(); colorPage(b.dataset.id); }));
+  }
+  // The line drawing with this child's saved colors put back in.
+  function colored(id, face) {
+    const host = document.createElement("div");
+    host.innerHTML = ART.animal(id, { line: true, face, label: "Your " + nm(id) });
+    const svg = host.firstChild; prepColor(svg);
+    const saved = S.art[id] || {};
+    paintables(svg).forEach((el, i) => { if (saved[i]) paint(el, saved[i]); });
+    return host.innerHTML;
+  }
+  function prepColor(svg) { svg.querySelectorAll(".mm-hit").forEach(h => h.remove()); }
+  // Shapes a child can fill: anything drawn white in the line art (a fill, or a wide white stroke such as a tail).
+  function paintables(svg) {
+    return [...svg.querySelectorAll("path, ellipse, circle, rect")].filter(el => {
+      if (el.dataset.paint) return true;
+      const f = (el.getAttribute("fill") || "").toLowerCase(), st = (el.getAttribute("stroke") || "").toLowerCase();
+      if (f === "#ffffff" || f === "#fff") { el.dataset.paint = "fill"; return true; }
+      if ((f === "none" || !f) && (st === "#ffffff" || st === "#fff") && +el.getAttribute("stroke-width") >= 4) { el.dataset.paint = "stroke"; return true; }
+      return false;
+    });
+  }
+  function paint(el, c) { el.setAttribute(el.dataset.paint, c); }
+  function colorPage(id) {
+    let cur = CRAYONS[pick([0, 1, 2, 3, 4, 5])];
+    show("color", `
+      <div class="mm-colorwrap">
+        <div class="mm-canvas" id="mm-canvas">${ART.animal(id, { line: true, label: "Coloring page: " + nm(id) })}</div>
+        <div class="mm-crayons" role="radiogroup" aria-label="Crayons">${CRAYONS.map(([n, c]) => btn("mm-crayon", `data-c="${c}" data-n="${n}" role="radio" aria-checked="false" aria-label="${n}" style="--c:${c}"`, `<svg viewBox="0 0 40 90" aria-hidden="true"><path d="M8 30 L20 4 L32 30 Z" fill="${c}" stroke="#2a2233" stroke-width="3" stroke-linejoin="round"/><rect x="8" y="30" width="24" height="56" rx="4" fill="${c}" stroke="#2a2233" stroke-width="3"/><rect x="8" y="44" width="24" height="12" fill="rgba(255,255,255,.55)"/></svg>`)).join("")}</div>
+        <div class="mm-row">${btn("mm-round mm-clear", 'id="mm-clear" aria-label="Start over"', ART.icon("replay"))}${btn("mm-big mm-go", 'id="mm-color-done" aria-label="Done"', `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 21 L17 29 L32 11" fill="none" stroke="#0b0a10" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`)}</div>
+      </div>`);
+    const svg = view.querySelector("#mm-canvas svg"); prepColor(svg);
+    const shapes = paintables(svg), saved = S.art[id] = S.art[id] || {};
+    shapes.forEach((el, i) => { el.dataset.i = i; if (saved[i]) paint(el, saved[i]); });
+    const setCur = (b) => { view.querySelectorAll(".mm-crayon").forEach(x => x.setAttribute("aria-checked", String(x === b))); cur = [b.dataset.n, b.dataset.c]; };
+    view.querySelectorAll(".mm-crayon").forEach(b => { if (b.dataset.c === cur[1]) setCur(b); b.addEventListener("click", () => { sfx.tap(); setCur(b); say(cap1(b.dataset.n) + "!"); }); });
+    prompt(G() === "k" ? `Let's color the ${nm(id)}! Tap a crayon, then tap a body part to color it.` : `Let's color the ${nm(id)}! Tap a crayon, then tap the picture.`);
+    let lastPart = "", lastT = 0;
+    svg.addEventListener("click", e => {
+      const el = e.target.closest("[data-paint]"); if (!el) return;
+      paint(el, cur[1]); saved[el.dataset.i] = cur[1] === "#ffffff" ? undefined : cur[1]; save();
+      tone(500 + Math.random() * 400, 0, 0.08, "triangle", 0.04);
+      // Kindergarten hears the body part's name too, which practices the words from the mysteries.
+      const part = (el.closest("[data-part]") || {}).dataset ? el.closest("[data-part]").dataset.part : "";
+      const now = Date.now();
+      if (G() === "k" && part && (part !== lastPart || now - lastT > 4000)) say(`${cap1(cur[0])} ${partWord(id, part)}!`);
+      else if (now - lastT > 2500) say(cap1(cur[0]) + "!");
+      lastPart = part; lastT = now;
+    });
+    $("mm-clear").addEventListener("click", () => { sfx.tap(); shapes.forEach(el => paint(el, "#ffffff")); S.art[id] = {}; save(); say("Fresh page!"); colorPage(id); });
+    $("mm-color-done").addEventListener("click", async () => {
+      sfx.win(); confetti(view);
+      const ok = await say(`Beautiful ${nm(id)}! ${D.ANIMALS[id].facts.pk[0]}`);
+      if (ok && screenName === "color") colorPick();
+    });
+  }
+
   /* ---------- 2nd grade: Family secrets ---------- */
   let F = null;
   function family() {
@@ -513,6 +580,13 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !pop.hidden) { closePop(); } });
   document.addEventListener("visibilitychange", () => { if (document.hidden) stopTalk(); });
 
+  // Photo credits under the game, built from the PHOTOS list.
+  const credits = $("mm-credits");
+  if (credits) {
+    const list = D.IDS.filter(id => D.PHOTOS[id] && D.PHOTOS[id].src).map(id => `<li>${cap1(nm(id))}: ${D.PHOTOS[id].credit}</li>`);
+    credits.hidden = !list.length; if (list.length) credits.innerHTML = `<b>Photo credits</b><ul>${list.join("")}</ul>`;
+  }
+
   title();
-  window.MM_GAME = { title, grades, menu, guide, family, bigTree, startRound, S, round: () => R };
+  window.MM_GAME = { title, grades, menu, guide, family, bigTree, startRound, colorPick, colorPage, S, round: () => R };
 })();

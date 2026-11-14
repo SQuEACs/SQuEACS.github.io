@@ -515,18 +515,29 @@
     for (let i = 0; i < sp.count; i++) { sk.copy(hor).lerp(top, smooth(0, 160, sp.getY(i))); sc.push(sk.r, sk.g, sk.b); }
     skyG.setAttribute("color", new T3.Float32BufferAttribute(sc, 3));
     const sky = new T3.Mesh(skyG, new T3.MeshBasicMaterial({ vertexColors: true, side: T3.BackSide, fog: false, depthWrite: false })); scene.add(sky);
+    const dummy = new T3.Object3D(), col = new T3.Color();
+    const bladeGeo = new T3.PlaneGeometry(0.2, 1, 1, 5); bladeGeo.translate(0, 0.5, 0);
+    { const bp = bladeGeo.attributes.position; for (let i = 0; i < bp.count; i++) { const y = bp.getY(i); bp.setX(i, bp.getX(i) * (1 - 0.85 * y)); bp.setZ(i, 0.35 * y * y); } bladeGeo.computeVertexNormals(); }
+    const bladeMat = new T3.MeshStandardMaterial({ roughness: 0.8, side: T3.DoubleSide });
+    function inst(geo, mat, list, parent) {
+      const im = new T3.InstancedMesh(geo, mat, list.length);
+      list.forEach((o, i) => { dummy.position.set(o.x, o.y, o.z); dummy.rotation.set(o.rx || 0, o.ry || 0, o.rz || 0); dummy.scale.set(o.sx, o.sy === undefined ? o.sx : o.sy, o.sz === undefined ? o.sx : o.sz); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); col.setHex(o.c); im.setColorAt(i, col); });
+      im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; im.frustumCulled = false; parent.add(im); return im;
+    }
+    const GREENS = [0x2f7a4a, 0x3f8a45, 0x4f9a4f, 0x5aa84f, 0x6fc36a, 0x7a9a3c];
     scene.add(new T3.HemisphereLight(0xffffff, 0x6b7a58, 0.85));
     const sun = new T3.DirectionalLight(0xfff4e0, 0.9); sun.position.set(30, 60, 20); scene.add(sun);
     // Terrain: pond floor stained by metals and PFAS, grassy banks
     const geo = new T3.PlaneGeometry(220, 220, 140, 140); geo.rotateX(-Math.PI / 2);
-    const pos = geo.attributes.position, cols = [], mud = new T3.Color(0x6b5a40), sand = new T3.Color(0xcdb98a), grassA = new T3.Color(0x4a8a46), grassB = new T3.Color(0x3a7a3e), tmp = new T3.Color(), stain = new T3.Color();
+    const pos = geo.attributes.position, cols = [], mud = new T3.Color(0x6b5a40), sand = new T3.Color(0xcdb98a), grassA = new T3.Color(0x4a8a46), grassB = new T3.Color(0x3a7a3e), tmp = new T3.Color(), stain = new T3.Color(), wet = new T3.Color(0x4a3d2a);
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), z = pos.getZ(i), d = pd(x, z); pos.setY(i, groundY(x, z));
-      if (d < 0) { tmp.copy(sand).lerp(mud, smooth(0, 7, -d));
+      if (d < 0) { tmp.copy(sand).lerp(mud, smooth(0, 7, -d)); tmp.lerp(wet, 0.55 * (1 - smooth(0, 2.2, -d)));
         zones.forEach(zn => { if (zn.kind === "metal" || zn.kind === "pfas") { const s = strength(zn, x, z); if (s > 0) { stain.setHex(ZK[zn.kind].color); tmp.lerp(stain, s * 0.55); } } });
         if (Math.hypot(x - CLEAN.x, z - CLEAN.z) < CLEAN.r) tmp.lerp(new T3.Color(0x9bc97a), 0.5);
       } else tmp.copy(grassA).lerp(grassB, 0.5 + 0.5 * Math.sin(x * 0.11) * Math.cos(z * 0.08)).lerp(sand, 1 - smooth(0.4, 3, d));
-      cols.push(tmp.r, tmp.g, tmp.b);
+      const nz = 0.9 + 0.2 * (0.5 + 0.25 * Math.sin(x * 1.9 + z * 0.7) + 0.25 * Math.cos(z * 2.3 - x * 0.6)) + 0.06 * Math.sin(x * 5.1) * Math.sin(z * 4.7);
+      cols.push(tmp.r * nz, tmp.g * nz, tmp.b * nz);
     }
     geo.setAttribute("color", new T3.Float32BufferAttribute(cols, 3)); geo.computeVertexNormals();
     scene.add(new T3.Mesh(geo, new T3.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })));
@@ -538,31 +549,59 @@
     const reedMat = M(0x3f8a45), reedLight = M(0x6fc36a);
     for (let c = 0; c < 18; c++) {
       let [x, z] = randWater(5); if (zones.some(zn => (zn.kind === "plastic" || zn.kind === "paper") && Math.hypot(zn.x - x, zn.z - z) < zn.r * 0.8)) { [x, z] = randWater(5); }
-      cover.push([x, z]); const gy = groundY(x, z), n = Math.floor(rand(6, 11));
-      for (let i = 0; i < n; i++) { const h = rand(1.8, Math.min(4.2, -gy + 0.2)), r = new T3.Mesh(new T3.CylinderGeometry(0.04, 0.07, Math.max(1.4, h), 5), i % 2 ? reedMat : reedLight); r.position.set(x + rand(-1, 1), gy + h / 2, z + rand(-1, 1)); r.rotation.set(rand(-0.12, 0.12), 0, rand(-0.12, 0.12)); plants.add(r); }
+      cover.push([x, z]); const gy = groundY(x, z), n = Math.floor(rand(22, 32)), bl = [];
+      for (let i = 0; i < n; i++) { const h = rand(1.8, Math.max(2, Math.min(4.4, -gy + 0.3))); bl.push({ x: x + rand(-1.3, 1.3), y: gy, z: z + rand(-1.3, 1.3), ry: rand(0, 6.28), rx: rand(-0.2, 0.2), sx: rand(0.8, 1.5), sy: h, sz: 1, c: pick(GREENS) }); }
+      inst(bladeGeo, bladeMat, bl, plants);
     }
     // Shoreline cattails and trees for scenery
     for (let i = 0; i < 46; i++) { const a = rand(0, 6.28), x = Math.cos(a) * POND.rx * 1.02, z = Math.sin(a) * POND.rz * 1.02; const d = pd(x, z); if (d < -1 || d > 6) continue;
       const h = rand(2.2, 3.6), st = new T3.Mesh(new T3.CylinderGeometry(0.05, 0.06, h, 5), reedMat); st.position.set(x, groundY(x, z) + h / 2, z); plants.add(st); const hd = new T3.Mesh(new T3.CylinderGeometry(0.12, 0.12, 0.6, 6), M(0x6b4a2b)); hd.position.set(x, groundY(x, z) + h, z); plants.add(hd); }
-    for (let i = 0; i < 30; i++) { const a = rand(0, 6.28), k = rand(1.25, 1.9), x = Math.cos(a) * POND.rx * k, z = Math.sin(a) * POND.rz * k * 1.2; const h = rand(5, 9);
-      const tr = new T3.Mesh(new T3.CylinderGeometry(0.4, 0.55, h * 0.45, 6), M(0x6b4a2b)); tr.position.set(x, 1 + h * 0.22, z); plants.add(tr);
-      const lf = new T3.Mesh(new T3.SphereGeometry(h * 0.38, 8, 6), M(pick([0x2f7a45, 0x3a8a4a, 0x2a6b3f]))); lf.position.set(x, 1 + h * 0.62, z); plants.add(lf); }
+    const blobGeo = new T3.IcosahedronGeometry(1, 1), coneGeo = new T3.ConeGeometry(1, 1, 7), trunkGeo = new T3.CylinderGeometry(0.3, 0.55, 1, 7);
+    { const bp = blobGeo.attributes.position; for (let i = 0; i < bp.count; i++) { const x = bp.getX(i), y = bp.getY(i), zz = bp.getZ(i), j = 1 + 0.16 * Math.sin(9.1 * x + 5.3 * y + 3.7 * zz); bp.setXYZ(i, x * j, y * j * 0.85, zz * j); } blobGeo.computeVertexNormals(); }
+    const barkM = M(0x5e4430), leafMs = [0x2f7a45, 0x3a8a4a, 0x2a6b3f, 0x4a9a4a, 0x6a9a3a].map(c => M(c, { flatShading: true })), pineMs = [0x1f5a3a, 0x246a42].map(c => M(c, { flatShading: true }));
+    for (let i = 0; i < 34; i++) { const a = rand(0, 6.28), k = rand(1.22, 1.9), x = Math.cos(a) * POND.rx * k, z = Math.sin(a) * POND.rz * k * 1.2; const h = rand(6, 11), gy = groundY(x, z);
+      const tk = new T3.Mesh(trunkGeo, barkM); tk.scale.set(1, h * 0.55, 1); tk.position.set(x, gy + h * 0.27, z); plants.add(tk);
+      if (i % 3 === 0) { const pm = pick(pineMs); for (let c = 0; c < 4; c++) { const cn = new T3.Mesh(coneGeo, pm); const w = h * (0.32 - c * 0.06); cn.scale.set(w, h * 0.34, w); cn.position.set(x, gy + h * (0.4 + c * 0.2), z); cn.rotation.y = rand(0, 6); plants.add(cn); } }
+      else { const lm = pick(leafMs); for (let c = 0; c < 4; c++) { const bl = new T3.Mesh(blobGeo, lm); const w = h * rand(0.22, 0.32); bl.scale.set(w, w, w); bl.position.set(x + rand(-1.4, 1.4), gy + h * (0.6 + rand(0, 0.28)), z + rand(-1.4, 1.4)); plants.add(bl); } } }
     // Lily pads
-    for (let i = 0; i < 16; i++) { const [x, z] = randWater(3); const p = new T3.Mesh(new T3.CircleGeometry(rand(0.7, 1.2), 10), M(0x4fa84f)); p.rotation.x = -Math.PI / 2; p.position.set(x, 0.03, z); plants.add(p); }
+    const padGeo = new T3.CircleGeometry(1, 18, 0.35, 5.6); padGeo.rotateX(-Math.PI / 2);
+    const padMat = new T3.MeshStandardMaterial({ roughness: 0.6, side: T3.DoubleSide }), pads = [], flowers = [];
+    for (let i = 0; i < 30; i++) { const [x, z] = randWater(3), sx = rand(0.6, 1.2); pads.push({ x, y: 0.03 + (i % 5) * 0.004, z, ry: rand(0, 6.28), sx, sy: 1, sz: sx, c: pick([0x3f9a45, 0x4fa84f, 0x5aa84f, 0x2f8a4a]) }); if (i % 5 === 0) flowers.push({ x: x + 0.1, y: 0.12, z, sx: rand(0.28, 0.38), sy: 0.22, sz: rand(0.28, 0.38), c: pick([0xfff1f6, 0xffb3d1, 0xffffff]) }); }
+    inst(padGeo, padMat, pads, plants); inst(new T3.IcosahedronGeometry(1, 0), M(0xffffff, { flatShading: true }), flowers, plants);
     // Clean habitat: dense plants, clear water, a beacon
     const ch = new T3.Group(); scene.add(ch);
     const cd = new T3.Mesh(new T3.CircleGeometry(CLEAN.r, 28), MB(0xbfffe8, 0.28)); cd.rotation.x = -Math.PI / 2; cd.position.set(CLEAN.x, 0.05, CLEAN.z); ch.add(cd);
-    for (let i = 0; i < 46; i++) { const a = rand(0, 6.28), d = rand(1, CLEAN.r - 1), x = CLEAN.x + Math.cos(a) * d, z = CLEAN.z + Math.sin(a) * d, gy = groundY(x, z), h = rand(1.6, 3.6); const r = new T3.Mesh(new T3.CylinderGeometry(0.04, 0.07, h, 5), i % 2 ? M(0x4fb85a) : M(0x7fd37a)); r.position.set(x, gy + h / 2, z); ch.add(r); }
-    for (let i = 0; i < 7; i++) { const a = rand(0, 6.28), d = rand(2, CLEAN.r - 2); const p = new T3.Mesh(new T3.CircleGeometry(rand(0.8, 1.3), 10), M(0x5fc45f)); p.rotation.x = -Math.PI / 2; p.position.set(CLEAN.x + Math.cos(a) * d, 0.04, CLEAN.z + Math.sin(a) * d); ch.add(p); }
+    { const bl = [], pl = [], fl = [];
+      for (let i = 0; i < 170; i++) { const a = rand(0, 6.28), d = Math.sqrt(Math.random()) * (CLEAN.r - 1), x = CLEAN.x + Math.cos(a) * d, z = CLEAN.z + Math.sin(a) * d, gy = groundY(x, z); bl.push({ x, y: gy, z, ry: rand(0, 6.28), rx: rand(-0.2, 0.2), sx: rand(0.9, 1.6), sy: rand(1.6, 3.8), sz: 1, c: pick([0x4fb85a, 0x7fd37a, 0x6fc36a, 0x8fe08a, 0x3f9a55]) }); }
+      for (let i = 0; i < 9; i++) { const a = rand(0, 6.28), d = rand(2, CLEAN.r - 2), x = CLEAN.x + Math.cos(a) * d, z = CLEAN.z + Math.sin(a) * d, sx = rand(0.8, 1.3); pl.push({ x, y: 0.04, z, ry: rand(0, 6.28), sx, sy: 1, sz: sx, c: 0x5fc45f }); if (i % 2) fl.push({ x: x + 0.1, y: 0.13, z, sx: 0.34, sy: 0.24, sz: 0.34, c: 0xffd1e6 }); }
+      inst(bladeGeo, bladeMat, bl, ch); inst(padGeo, padMat, pl, ch); inst(new T3.IcosahedronGeometry(1, 0), M(0xffffff, { flatShading: true }), fl, ch); }
     const beacon = new T3.Mesh(new T3.CylinderGeometry(0.5, 0.5, 34, 8, 1, true), MB(0xffe066, 0.35)); beacon.position.set(CLEAN.x, 17, CLEAN.z); ch.add(beacon);
     cover.push([CLEAN.x, CLEAN.z]);
     // Outfall pipe on the west bank
     let px = -50; while (px > -90 && pd(px, 0) < 0.5) px -= 0.5;
     const pipe = new T3.Mesh(new T3.CylinderGeometry(1.2, 1.2, 8, 12), M(0x7a7488)); pipe.rotation.z = Math.PI / 2; pipe.position.set(px - 1.5, groundY(px, 0) + 1.6, 0); scene.add(pipe);
     const stainP = new T3.Mesh(new T3.CylinderGeometry(1.0, 1.0, 0.3, 12), M(0xd9822b)); stainP.rotation.z = Math.PI / 2; stainP.position.set(px + 2.6, groundY(px, 0) + 1.6, 0); scene.add(stainP);
+    // Realism: pebbles, boulders, bank grass, fallen logs, drifting motes, light shafts
+    const detail = new T3.Group(); scene.add(detail);
+    const rockGeo = new T3.IcosahedronGeometry(1, 1);
+    { const rp = rockGeo.attributes.position; for (let i = 0; i < rp.count; i++) { const x = rp.getX(i), y = rp.getY(i), zz = rp.getZ(i), j = 1 + 0.22 * Math.sin(13.1 * x + 7.7 * y + 3.3 * zz); rp.setXYZ(i, x * j, y * j * 0.72, zz * j); } rockGeo.computeVertexNormals(); }
+    const rockMat = M(0xffffff, { flatShading: true, roughness: 1 }), ROCKC = [0x8a867c, 0x6f6b63, 0x9a9488, 0x7d786d, 0xa59f90];
+    const peb = []; for (let i = 0; i < 520; i++) { const [x, z] = randWater(1.5), sx = rand(0.1, 0.34); peb.push({ x, y: groundY(x, z) + 0.02, z, ry: rand(0, 6.28), sx, sy: sx * rand(0.4, 0.7), sz: sx * rand(0.7, 1.3), c: pick(ROCKC) }); }
+    inst(rockGeo, rockMat, peb, detail);
+    const bou = []; for (let i = 0, tries = 0; i < 44 && tries < 900; tries++) { const x = rand(-80, 80), z = rand(-50, 50), d = pd(x, z); if (d < -4.5 || d > 4 || (x < -44 && Math.abs(z) < 7) || Math.hypot(x - CLEAN.x, z - CLEAN.z) < CLEAN.r + 1) continue; const sx = rand(0.5, 1.7); bou.push({ x, y: groundY(x, z) + sx * 0.2, z, ry: rand(0, 6.28), sx, sy: sx * rand(0.6, 1), sz: sx * rand(0.8, 1.3), c: pick(ROCKC) }); i++; }
+    inst(rockGeo, rockMat, bou, detail);
+    const gr = []; for (let i = 0, tries = 0; i < 1100 && tries < 4000; tries++) { const x = rand(-105, 105), z = rand(-70, 70), d = pd(x, z); if (d < 1.2 || d > 46) continue; gr.push({ x, y: groundY(x, z) - 0.05, z, ry: rand(0, 6.28), rx: rand(-0.15, 0.15), sx: rand(0.7, 1.4), sy: rand(0.5, 1.4), sz: 1, c: pick([0x4a8a46, 0x5a9a4a, 0x6a9a3a, 0x7a8f3a, 0x3a7a3e]) }); i++; }
+    inst(bladeGeo, bladeMat, gr, detail);
+    const logGeo = new T3.CylinderGeometry(0.4, 0.46, 1, 9);
+    for (let i = 0, tries = 0; i < 4 && tries < 400; tries++) { const x = rand(-60, 36), z = rand(-36, 36), d = pd(x, z); if (d < -2.5 || d > -0.2 || (x < -44 && Math.abs(z) < 8)) continue; const L = rand(4.5, 7), lg = new T3.Mesh(logGeo, barkM); lg.scale.set(rand(0.8, 1.1), L, 1); lg.rotation.set(0, rand(0, 3.1), Math.PI / 2); lg.rotation.order = "YXZ"; lg.position.set(x, -0.12, z); detail.add(lg); i++; }
+    const moteN = 520, mp = new Float32Array(moteN * 3); for (let i = 0; i < moteN; i++) { const [x, z] = randWater(1), fl = groundY(x, z); mp[i * 3] = x; mp[i * 3 + 1] = rand(fl + 0.3, -0.5); mp[i * 3 + 2] = z; }
+    const moteG = new T3.BufferGeometry(); moteG.setAttribute("position", new T3.BufferAttribute(mp, 3));
+    const motes = new T3.Points(moteG, new T3.PointsMaterial({ color: 0xe8f7ee, size: 0.1, transparent: true, opacity: 0.55, depthWrite: false })); motes.frustumCulled = false; scene.add(motes);
+    const shaftM = new T3.MeshBasicMaterial({ color: 0xcff6ff, transparent: true, opacity: 0.07, depthWrite: false, blending: T3.AdditiveBlending, side: T3.DoubleSide });
+    for (let i = 0; i < 9; i++) { const [x, z] = randWater(6), sh = new T3.Mesh(new T3.CylinderGeometry(1.2, 3.4, 9, 10, 1, true), shaftM); sh.position.set(x, -4.4, z); sh.rotation.set(0.18, 0, -0.22); detail.add(sh); }
     // Pollutant plumes
     const zm = zones.map(z => zoneMesh(z, scene));
-    return { scene, water, cover, sky, sun, zm, wbase: wgeo.attributes.position.array.slice(), beacon };
+    return { scene, water, cover, sky, sun, zm, wbase: wgeo.attributes.position.array.slice(), beacon, motes };
   }
 
   /* ============================================================
@@ -793,7 +832,7 @@
     for (let i = 0; i < wp.count; i++) { const x = base[i * 3], z = base[i * 3 + 2]; wp.array[i * 3 + 1] = Math.sin(x * 0.3 - t * 1.4) * 0.05 + Math.cos(z * 0.27 + t * 1.1) * 0.035; }
     wp.needsUpdate = true; if ((S.frame = S.frame + 1) % 3 === 0) S.world.water.geometry.computeVertexNormals();
     S.world.zm.forEach(zm => zm.items.forEach(it => { it.m.position.y = it.by + Math.sin(t * 1.2 + it.ph) * it.amp; it.m.rotation.y += it.spin * 0.016; }));
-    S.world.beacon.rotation.y = t * 0.4;
+    S.world.beacon.rotation.y = t * 0.4; S.world.motes.rotation.y = t * 0.004;
     // camera
     const cam = R3.cam, back = 3.2 + 2.2 * sc, up = 1.0 + 0.7 * sc, cy = S.camYaw;
     const want = new T3.Vector3(S.x - Math.sin(cy) * back, S.y + up, S.z - Math.cos(cy) * back); want.y = Math.min(want.y, -0.25);

@@ -23,8 +23,8 @@
                 L: { hx: 200, hy: 150, hr: 66, bx: 200, by: 278, brx: 80, bry: 86 } },
     raccoon:  { plan: "sit", fur: "#8f8a96", belly: "#c9c5cf", muzzle: "#f2f0f4", paw: "#4a4452", ears: "point", earIn: "#f2f0f4", earSize: 0.85, tail: "ringed", tailDark: INK, mask: true, whisk: true, claws: true, head: "fox",
                 L: { hx: 200, hy: 150, hr: 72, bx: 200, by: 285, brx: 86, bry: 80 } },
-    fox:      { plan: "sit", fur: "#e8742f", belly: "#fff6ea", muzzle: "#fff6ea", paw: "#3a2a2a", leg: "#3a2a2a", ears: "point", earIn: "#3a2a2a", earSize: 1.25, tail: "bushy", tailTip: "#fff6ea", whisk: true, claws: true, head: "fox",
-                L: { hx: 200, hy: 155, hr: 68, bx: 200, by: 288, brx: 76, bry: 80 } },
+    fox:      { plan: "fox", fur: "#e8742f", belly: "#fff6ea", muzzle: "#fff6ea", paw: "#3a2a2a", earIn: "#fff6ea", tailTip: "#fff6ea",
+                L: { hx: 200, hy: 140, hr: 60, bx: 200, by: 300, brx: 70, bry: 70 } },
     lion:     { plan: "sit", fur: "#e0a845", belly: "#f2cf87", muzzle: "#f7e2b5", paw: "#e0a845", ears: "round", earIn: "#b87a2a", earSize: 0.7, tail: "tuft", tuft: "#6b3510", mane: "#a8571e", whisk: true,
                 L: { hx: 200, hy: 148, hr: 64, bx: 200, by: 285, brx: 86, bry: 82 } },
     polarbear:{ plan: "sit", fur: "#f4f1e6", belly: "#e8e1cb", muzzle: "#fbfaf4", paw: "#ebe6d6", ears: "small", tail: "stub", claws: true, bigPaws: true,
@@ -35,9 +35,8 @@
                 L: { hx: 200, hy: 112, hr: 50, bx: 200, by: 262, brx: 58, bry: 108 } },
     rabbit:   { plan: "sit", fur: "#b88d6a", belly: "#efe0cf", muzzle: "#f3e7da", paw: "#efe0cf", ears: "long", earIn: "#f3b7b7", tail: "puff", tailColor: "#ffffff", whisk: true, buckTeeth: true,
                 L: { hx: 200, hy: 175, hr: 60, bx: 200, by: 295, brx: 84, bry: 74 } },
-    kangaroo: { plan: "sit", fur: "#c27a4a", belly: "#ecc7a2", muzzle: "#ecc7a2", paw: "#8a5230", ears: "tall", earIn: "#ecc7a2", tail: "roo", bigFeet: true, pouch: true, pawsUp: true, claws: true, head: "fox",
-                neckUp: true,
-                L: { hx: 200, hy: 90, hr: 46, bx: 196, by: 270, brx: 74, bry: 98 } },
+    kangaroo: { plan: "roo", fur: "#c27a4a", belly: "#ecc7a2", muzzle: "#ecc7a2", paw: "#8a5230", earIn: "#ecc7a2", legDark: "#9a5c34",
+                L: { hx: 160, hy: 108, hr: 40, bx: 228, by: 280, brx: 60, bry: 80 } },
     elephant: { plan: "stand", fur: "#9aa1ae", belly: "#9aa1ae", ears: "elephant", earIn: "#d9a8b5", trunk: true, tusks: true, feet: "feet", tail: "tuft", tuft: INK, nose: "none", mouth: false,
                 L: { hx: 118, hy: 168, hr: 62, bx: 248, by: 238, brx: 118, bry: 82, legW: 40, legDark: "#878d9a" } },
     giraffe:  { plan: "stand", fur: "#f2c062", belly: "#f6d48c", muzzle: "#f6d48c", ears: "leaf", earIn: "#f6d48c", horns: true, neck: "giraffe", spots: "#b86a2b", feet: "hooves", tail: "tuft", tuft: "#4a2a10", nose: "dots", maneColor: "#b86a2b",
@@ -319,17 +318,101 @@
     return "M " + pts.map(([x, y], i) => `${r1(cx + x * r * (i % 2 ? 1.1 : 0.95))} ${r1(cy + y * r * 0.85)}`).join(" L ") + " Z";
   }
 
+  /* ---------- red fox: drawn by hand so it reads as a fox, not a cat or bear ----------
+     Slim sitting body, long narrow snout, white bib and cheeks, black "socks",
+     big black-tipped ears, and a long bushy tail with a white tip. */
+  const MIRROR = 'transform="matrix(-1 0 0 1 400 0)"';
+  const both = s => s + `<g ${MIRROR}>${s}</g>`;   // draw the left side, then mirror it for the right
+  function foxArt(a, P) {
+    const lay = [];
+    // tail: a long plume lying beside the fox and curling up, white tip
+    lay.push({ p: "tail", s:
+      path("M 250 352 C 300 360 352 362 374 334 C 394 308 384 270 358 262 C 336 256 322 276 334 296 C 344 314 320 330 286 330 C 272 330 262 332 252 334 Z", P(a.fur)) +
+      path("M 358 262 C 336 256 322 276 334 296 C 346 296 362 300 382 306 C 386 286 378 268 358 262 Z", P(a.tailTip)) +
+      hit(hitEll(330, 316, 62, 46)) });
+    // back feet peeking out beside the haunches
+    const hind = ell(138, 364, 22, 9, P(a.paw));
+    // body: narrow chest, wide haunches
+    lay.push({ p: "fur", s:
+      path("M 166 196 Q 150 232 150 268 Q 126 298 124 336 Q 126 368 162 370 L 238 370 Q 274 368 276 336 Q 274 298 250 268 Q 250 232 234 196 Z", P(a.fur)) +
+      both(path("M 128 334 Q 130 296 162 296 Q 182 318 176 352 Q 168 370 146 368 Q 128 360 128 334 Z", P(a.fur))) +
+      path("M 172 200 Q 174 244 200 300 Q 226 244 228 200 Z", P(a.belly)) });
+    // front legs: orange at the top, black socks below
+    // Open path: no outline across the top, so the legs flow out of the chest.
+    lay.push({ p: "fur", s: both(path("M 172 262 Q 170 296 177 320 L 196 320 Q 199 294 197 262", P(a.fur))) });
+    lay.push({ p: "paws", s: both(path("M 177 318 Q 179 340 177 356 Q 186 368 198 358 Q 196 340 196 318 Z", P(a.paw)) + hind) +
+      hit(hitEll(186, 340, 20, 30) + hitEll(214, 340, 20, 30) + hitEll(138, 362, 26, 16) + hitEll(262, 362, 26, 16)) });
+    // ears: big triangles, black tips, pale inside
+    const ear = path("M 150 110 Q 128 72 128 34 Q 164 50 186 98 Z", P(a.fur)) + path("M 155 104 Q 140 78 139 54 Q 160 68 176 98 Z", P(a.earIn), { "stroke-width": 3 }) + path("M 128 34 Q 131 50 135 58 Q 146 50 156 48 Q 143 38 128 34 Z", P(a.paw), { "stroke-width": 3 });
+    lay.push({ p: "ears", head: 1, s: both(ear) + hit(hitEll(150, 70, 28, 40) + hitEll(250, 70, 28, 40)) });
+    // head: wide fluffy cheeks narrowing to a long snout
+    lay.push({ p: "fur", head: 1, s:
+      path("M 200 92 Q 160 90 146 108 Q 134 128 122 160 L 142 164 L 134 177 Q 160 186 178 200 Q 190 214 200 217 Q 210 214 222 200 Q 240 186 266 177 L 258 164 L 278 160 Q 266 128 254 108 Q 240 90 200 92 Z", P(a.fur)) +
+      path("M 122 160 L 142 164 L 134 177 Q 160 186 178 200 Q 190 214 200 217 Q 210 214 222 200 Q 240 186 266 177 L 258 164 L 278 160 Q 252 172 232 160 Q 214 150 200 168 Q 186 150 168 160 Q 148 172 122 160 Z", P(a.muzzle), { "stroke-width": 3 }) });
+    // eyes: almond shaped, slanting up at the outside
+    const eye = ell(177, 129, 10, 8.5, P(INK, true), { "stroke-width": 0, transform: "rotate(-14 177 129)" }) + `<circle cx="180" cy="125.5" r="3.2" fill="#fff"/>` + `<path d="M 163 131 Q 160 134 156 135" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
+    lay.push({ p: "eyes", head: 1, s: both(eye) + hit(hitEll(176, 130, 18, 14) + hitEll(224, 130, 18, 14)) });
+    lay.push({ p: "nose", head: 1, s: ell(200, 205, 10, 7, P(INK, true), { "stroke-width": 2 }) + hit(hitEll(200, 205, 18, 14)) });
+    lay.push({ p: "mouth", head: 1, s: `<path d="M 200 212 V 216" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` + hit(hitEll(200, 216, 14, 8)) });
+    lay.push({ p: "whiskers", head: 1, s: both(`<path d="M 186 198 Q 168 196 152 200 M 188 204 Q 170 206 156 212" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>`) + hit(hitEll(166, 204, 20, 12) + hitEll(234, 204, 20, 12)) });
+    return lay;
+  }
+
+  /* ---------- kangaroo: side view, upright on huge back legs ----------
+     Long feet flat on the ground, thick tail as a third leg, small arms,
+     a pouch with a joey peeking out, a deer-like head and tall ears. */
+  function rooArt(a, P) {
+    const lay = [];
+    lay.push({ p: "tail", s: path("M 270 296 C 300 330 338 352 394 364 Q 400 370 392 374 C 340 376 296 364 252 338 Z", P(a.fur)) + hit(hitEll(330, 350, 66, 26)) });
+    // far foot, behind
+    lay.push({ p: "paws", s: path("M 250 360 Q 232 366 190 366 Q 178 367 180 372 L 276 372 Q 280 362 270 354 Z", P(a.legDark)) });
+    // body, leaning forward, with a pale belly
+    lay.push({ p: "fur", s:
+      path("M 194 118 C 198 144 210 164 226 178 C 262 208 284 246 288 288 C 292 330 270 354 236 356 C 200 358 172 332 168 290 C 164 250 168 214 178 188 C 172 168 166 150 160 130 Z", P(a.fur)) +
+      path("M 182 194 C 176 240 176 292 196 332 C 210 346 228 348 238 342 C 220 300 206 250 198 198 Z", P(a.belly), { "stroke-width": 3 }) });
+    // pouch with a joey peeking out
+    lay.push({ p: "pouch", s:
+      ell(204, 276, 12, 11, P(a.fur), { "stroke-width": 3 }) + ell(197, 266, 4, 9, P(a.fur), { "stroke-width": 3, transform: "rotate(-20 197 266)" }) +
+      `<circle cx="201" cy="275" r="2.6" fill="${INK}"/><circle cx="193" cy="280" r="2" fill="${INK}"/>` +
+      path("M 180 284 Q 200 294 230 286 Q 236 316 220 336 Q 196 342 186 320 Q 178 302 180 284 Z", P(a.belly)) +
+      hit(hitEll(206, 304, 30, 34)) });
+    // big back leg: thigh, shin, and long foot
+    lay.push({ p: "fur", s:
+      ell(250, 300, 46, 58, P(a.fur), { transform: "rotate(-18 250 300)" }) +
+      path("M 262 336 Q 282 352 268 366 L 244 366 Q 246 352 238 342 Z", P(a.fur)) });
+    lay.push({ p: "paws", s: path("M 244 352 Q 222 360 166 362 Q 150 364 152 372 L 268 372 Q 276 362 266 350 Z", P(a.paw)) +
+      hit(hitEll(212, 364, 64, 18)) });
+    // small arms held in front
+    const arm = "M 188 204 Q 168 222 160 244";
+    lay.push({ p: "fur", s: `<path d="${arm}" fill="none" stroke="${INK}" stroke-width="17" stroke-linecap="round"/><path d="${arm}" fill="none" stroke="${P(a.fur)}" stroke-width="8" stroke-linecap="round"/>` + ell(158, 248, 8, 6, P(a.paw), { "stroke-width": 3 }) });
+    // tall ears (far one first)
+    lay.push({ p: "ears", head: 1, s:
+      ell(196, 62, 10, 28, P(a.legDark), { transform: "rotate(22 196 62)", "stroke-width": 4 }) +
+      ell(178, 58, 12, 32, P(a.fur), { transform: "rotate(8 178 58)", "stroke-width": 4 }) + ell(177, 62, 5, 22, P(a.earIn), { transform: "rotate(8 177 62)", "stroke-width": 0 }) +
+      hit(hitEll(186, 60, 30, 40)) });
+    // head: rounded skull and a long deer-like snout pointing left
+    lay.push({ p: "fur", head: 1, s:
+      path("M 196 100 C 196 82 176 76 162 80 C 146 84 140 96 132 104 C 118 112 112 122 116 130 C 120 138 132 138 146 136 C 164 134 178 134 190 126 C 196 120 196 110 196 100 Z", P(a.fur)) +
+      path("M 118 130 C 124 140 146 140 162 134 C 150 132 132 132 118 130 Z", P(a.muzzle), { "stroke-width": 3 }) });
+    lay.push({ p: "eyes", head: 1, s: ell(160, 98, 5.5, 7, P(INK, true), { "stroke-width": 0 }) + `<circle cx="162" cy="95" r="2" fill="#fff"/>` + `<path d="M 153 91 Q 160 87 167 90" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>` + hit(hitEll(160, 98, 14, 14)) });
+    lay.push({ p: "nose", head: 1, s: path("M 114 118 Q 116 110 124 112 Q 128 118 122 124 Q 114 124 114 118 Z", P(INK, true), { "stroke-width": 2 }) + hit(hitEll(120, 118, 14, 12)) });
+    lay.push({ p: "mouth", head: 1, s: `<path d="M 122 129 Q 132 133 144 131" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` + hit(hitEll(132, 131, 16, 8)) });
+    return lay;
+  }
+
   /* ---------- public: draw an animal ---------- */
   const cache = {};
   function layers(id, line) {
     const key = id + (line ? ":l" : "");
-    if (!cache[key]) { const a = A[id]; const P = painter(line); cache[key] = a.plan === "stand" ? stand(a, P) : sit(a, P); }
+    if (!cache[key]) { const a = A[id]; const P = painter(line); cache[key] = a.plan === "fox" ? foxArt(a, P) : a.plan === "roo" ? rooArt(a, P) : a.plan === "stand" ? stand(a, P) : sit(a, P); }
     return cache[key];
   }
   function headBox(id) {
     const a = A[id], { hx, hy, hr } = a.L;
     if (id === "elephant") return [hx - hr * 2.05, hy - hr * 1.3, hr * 4.1, hr * 4.1];
     if (id === "giraffe") return [hx - hr * 2, hy - hr * 1.85, hr * 4, hr * 4];
+    if (id === "fox") return [100, 26, 200, 200];
+    if (id === "kangaroo") return [100, 24, 116, 116];
     if (a.mane) return [hx - hr * 1.75, hy - hr * 1.7, hr * 3.5, hr * 3.5];
     if (a.ears === "long" || a.ears === "tall") return [hx - hr * 1.65, hy - hr * 2.05, hr * 3.3, hr * 3.3];
     return [hx - hr * 1.55, hy - hr * 1.5, hr * 3.1, hr * 3.1];

@@ -39,8 +39,14 @@ then open http://localhost:8000.
 | `tadpole-classroom.html` | Tadpole Trek classroom edition (unlisted) |
 | `tadpole-teachers.html` | Tadpole Trek teacher guide (unlisted) |
 | `tadpole-worksheets.html` | Printable Tadpole Trek worksheets (unlisted) |
+| `mammal-mystery.html` | Mammal Mystery, the pre-K to 2nd grade detective game (shared files: `mammal-mystery-art.js`, `-data.js`, `.js`, `.css`) |
+| `mammal-mystery-classroom.html` | Mammal Mystery classroom edition (unlisted) |
+| `mammal-mystery-teachers.html` | Mammal Mystery teacher guide |
+| `mammal-mystery-coloring.html` | Printable source for the Mammal Mystery coloring PDF (rebuild with `tools/build_mammal_mystery_pdf.js`) |
+| `tablet-install.html` | QR codes and steps to put the games on an iPad or Fire tablet (unlisted) |
+| `mystery/` | Short link that forwards to Mammal Mystery |
 
-The three unlisted classroom pages carry a `noindex` tag so search engines skip them. Share their links directly with teachers.
+The unlisted classroom pages carry a `noindex` tag so search engines skip them. Share their links directly with teachers.
 
 ## Other files
 
@@ -56,6 +62,11 @@ The three unlisted classroom pages carry a `noindex` tag so search engines skip 
 | `sitemap.xml`, `robots.txt` | Help search engines find the public pages |
 | `googleb2d71b5d6eddac78.html` | Google Search Console verification. Leave it in place |
 | `favicon.*`, `apple-touch-icon.png`, `icon-512.png` | Site icons |
+| `sw.js` | Offline support for the games on tablets. Add new game files to `CORE` and bump `VERSION` |
+| `*.webmanifest`, `assets/app/` | Home screen names and icons for each game |
+| `assets/qr/` | QR codes for `tablet-install.html` (made with the Python `segno` package) |
+| `assets/mammal-mystery/photos/` | Openly licensed animal photos for Mammal Mystery, with credits in `mammal-mystery-data.js` |
+| `CLAUDE.md` | Working notes, including the rule that game changes also go into the classroom editions |
 
 ## Common edits
 

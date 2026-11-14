@@ -1,7 +1,7 @@
 /* ============================================================
-   OFFLINE SUPPORT for the games (Tadpole Trek, its classroom
-   edition, and Otter Evolution) when installed on a tablet's
-   home screen.
+   OFFLINE SUPPORT for the games (Tadpole Trek, Otter Evolution,
+   Mammal Mystery, and the classroom editions) when installed on
+   a tablet's home screen.
 
    - Game pages: always try the internet first, so tablets get
      updates whenever they are online; use the saved copy offline.
@@ -17,7 +17,7 @@
    one that only calls self.registration.unregister(); tablets pick
    it up the next time they open a game online.
    ============================================================ */
-const VERSION = "games-v1";
+const VERSION = "games-v2";
 
 const CORE = [
   "tadpole-game.html",
@@ -28,7 +28,7 @@ const CORE = [
   "tadpole-teachers.html",
   "styles.css?v=40",
   "script.js?v=9",
-  "tadpole-game.js?v=15",
+  "tadpole-game.js?v=16",
   "otter-game.js?v=43",
   "assets/vendor/three-r149.min.js?v=1",
   "models/tadpole-cns.glb",
@@ -43,7 +43,23 @@ const CORE = [
   "assets/app/tadpole-classroom-192.png",
   "assets/app/tadpole-classroom-512.png",
   "assets/app/otter-evolution-192.png",
-  "assets/app/otter-evolution-512.png"
+  "assets/app/otter-evolution-512.png",
+  "mammal-mystery.html",
+  "mammal-mystery-classroom.html",
+  "mammal-mystery-teachers.html",
+  "mammal-mystery.css?v=3",
+  "mammal-mystery-art.js?v=3",
+  "mammal-mystery-data.js?v=3",
+  "mammal-mystery.js?v=3",
+  "assets/mammal-mystery/photos/otter.jpg",
+  "mammal-mystery.webmanifest",
+  "mammal-mystery-classroom.webmanifest",
+  "assets/app/mammal-mystery-180.png",
+  "assets/app/mammal-mystery-192.png",
+  "assets/app/mammal-mystery-512.png",
+  "assets/app/mammal-mystery-classroom-180.png",
+  "assets/app/mammal-mystery-classroom-192.png",
+  "assets/app/mammal-mystery-classroom-512.png"
 ];
 
 // From other sites. Saved if reachable; the games still run without them.
@@ -91,7 +107,7 @@ const OFFLINE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0a10;color:#efeaf6;font:18px/1.5 system-ui,sans-serif;text-align:center;padding:24px}
 a{display:inline-block;margin:8px;padding:12px 20px;border-radius:999px;background:#a47bff;color:#0b0a10;font-weight:700;text-decoration:none}</style></head>
 <body><div><h1>This page needs the internet</h1><p>The games work offline:</p>
-<a href="tadpole-game.html">Tadpole Trek</a><a href="otter-game.html">Otter Evolution</a></div></body></html>`;
+<a href="tadpole-game.html">Tadpole Trek</a><a href="otter-game.html">Otter Evolution</a><a href="mammal-mystery.html">Mammal Mystery</a></div></body></html>`;
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;

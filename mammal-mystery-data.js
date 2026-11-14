@@ -145,7 +145,7 @@
       partWhy: { claws: "long claws for digging", eyes: "dark eye patches", tail: "a skinny tail for balance", ears: "small ears that close" },
     },
     rabbit: {
-      name: "rabbit", where: "many parts of the world", hab: "grassland", diet: "plants", group: "other",
+      name: "rabbit", where: "many parts of the world", hab: "grassland", scene: "meadow", diet: "plants", group: "other",
       clues: {
         pk: [["part", "ears", "I have long, long ears!"], ["part", "tail", "I have a puffy white tail."], ["part", "mouth", "I have two big front teeth."], ["shadow", "", "Here is my shadow!"]],
         k:  [["part", "ears", "My long ears turn to catch sounds."], ["part", "mouth", "My front teeth never stop growing."], ["part", "tail", "My fluffy tail looks like a cotton ball."], ["part", "nose", "My nose wiggles when I sniff."]],
@@ -161,7 +161,7 @@
       partWhy: { ears: "long ears that turn", mouth: "front teeth that keep growing", tail: "a puffy tail", nose: "a wiggly nose", paws: "strong feet for hopping" },
     },
     kangaroo: {
-      name: "kangaroo", where: "Australia", hab: "grassland", diet: "plants", group: "marsupial",
+      name: "kangaroo", where: "Australia", hab: "grassland", scene: "outback", diet: "plants", group: "marsupial",
       clues: {
         pk: [["part", "paws", "I have big, long feet for jumping!"], ["part", "pouch", "I have a pocket for my baby."], ["part", "tail", "My tail is big and thick."], ["shadow", "", "Here is my shadow!"]],
         k:  [["part", "pouch", "My baby rides in a pouch on my belly."], ["part", "paws", "My long feet help me jump far."], ["part", "tail", "My thick tail helps me balance."], ["part", "ears", "My tall ears can turn to listen."]],
@@ -254,21 +254,49 @@
   ];
 
   /* The whole family tree, as nested groups. Each group has a name and what it means. */
+  // Family tree. Tapping a dot tells kids about the whole group, including relatives that are not in the game.
+  // more: extra sentences read aloud and shown on the card. also: other members, not in the game.
   const TREE = {
     k: "mammals", label: "Mammals", name: "Mammals", say: "Mammals. They all have fur or hair, and their mothers make milk for their babies.",
-    c: ["kangaroo", {
-      k: "placental", label: "Placentals", name: "Placental mammals", say: "Placental mammals. Their babies grow inside their mother until they are bigger.",
+    more: ["There are more than 6,000 kinds of mammals.", "Bats, whales, mice, and people are mammals too.", "The platypus and the echidna are mammals that lay eggs!"],
+    also: ["bats", "whales", "mice", "people", "platypus", "echidnas"],
+    c: [{
+      k: "marsup", label: "Marsupials", name: "Marsupials", say: "Marsupials. Their babies are born very tiny and keep growing in their mother's pouch.", teeth: "kangaroo", teethSay: "Teeth clue: kangaroos have long front teeth to snip grass and flat back teeth to grind it.",
+      more: ["A newborn kangaroo, called a joey, is about the size of a jellybean.", "Most marsupials live in Australia and nearby islands.", "The opossum is a marsupial that lives in North and South America."],
+      also: ["koalas", "wombats", "Tasmanian devils", "opossums", "sugar gliders"],
+      c: ["kangaroo"] }, {
+      k: "placental", label: "Placentals", name: "Placental mammals", say: "Placental mammals. Their babies grow inside their mother until they are bigger.", teeth: "elephant", teethSay: "Teeth clue: an elephant's tusks are giant front teeth that never stop growing!",
+      more: ["Most mammals are placentals, from tiny shrews to giant blue whales.", "Elephants are on their own early branch. Their closest cousins are manatees and little furry hyraxes!"],
+      also: ["manatees", "hyraxes", "aardvarks", "sloths", "armadillos", "shrews", "blue whales"],
       c: ["elephant", {
-        k: "boreo", name: "", say: "These animals share an even more recent great-great-grandparent.",
+        k: "boreo", label: "Northern", name: "Northern placentals", say: "Northern placentals. Long, long ago, their great-great-grandparents lived in the northern part of the world.",
+        more: ["Scientists call this group Boreoeutheria.", "Rabbits are on the branch with rodents like mice and squirrels. Monkeys and people are on that branch too!"],
+        also: ["mice", "squirrels", "beavers", "hares", "monkeys", "people"],
         c: ["rabbit", {
-          k: "laura", name: "", say: "Carnivorans and hoofed animals are cousins!",
-          c: [{ k: "hoofed", label: "Hoofed", name: "Two-toed hoofed animals", say: "Two-toed hoofed animals, like giraffes and camels.", c: ["giraffe", "camel"] },
-              { k: "carn", label: "Carnivorans", name: "Carnivorans", say: "Carnivorans. They share special cheek teeth for slicing food.", c: [
-                { k: "catb", label: "Cat branch", name: "Cat branch", say: "The cat branch, with lions and meerkats.", c: ["lion", "meerkat"] },
-                { k: "dogb", label: "Dog branch", name: "Dog branch", say: "The dog branch, with foxes, bears, otters, and raccoons.", c: ["fox", {
-                  k: "arct", name: "", say: "Bears, otters, and raccoons.", c: [
-                    { k: "bears", label: "Bears", name: "Bears", say: "Bears.", c: ["polarbear", "panda"] },
-                    { k: "must", label: "Weasel branch", name: "Weasel and raccoon branch", say: "The weasel and raccoon branch.", c: ["otter", "raccoon"] }] }] }] }] }] }] }],
+          k: "laura", label: "Laurasians", name: "Laurasians", say: "Carnivorans and hoofed animals are cousins!",
+          more: ["Scientists call this big group Laurasiatheria.", "Bats, hedgehogs, horses, and scaly pangolins belong to it too."],
+          also: ["bats", "hedgehogs", "moles", "horses", "rhinos", "pangolins"],
+          c: [{ k: "hoofed", label: "Hoofed", name: "Two-toed hoofed animals", say: "Two-toed hoofed animals, like giraffes and camels.", teeth: "giraffe", teethSay: "Teeth clue: most have wide, flat back teeth with ridges for grinding plants. Many chew their food twice!",
+                more: ["They walk on two toes on each foot, tipped with hooves.", "Cows, pigs, deer, and hippos are in this group.", "Surprise! Whales and dolphins belong here too. Their great-great-grandparents walked on land."],
+                also: ["cows", "pigs", "deer", "hippos", "whales", "dolphins"], c: ["giraffe", "camel"] },
+              { k: "carn", label: "Carnivorans", name: "Carnivorans", say: "Carnivorans. They share special cheek teeth for slicing food.", teeth: "lion", teethSay: "Teeth clue: carnivorans have a special pair of back teeth called carnassials. They work like scissors to slice food.",
+                more: ["There are about 300 kinds of carnivorans, on land and in the sea.", "Most eat meat, but not all. Giant pandas eat bamboo!", "Scientists at the SQuEACs Lab study the skulls and brains of river otters, which are carnivorans."],
+                also: ["dogs", "wolves", "tigers", "hyenas", "seals", "walruses"], c: [
+                { k: "catb", label: "Cat branch", name: "Cat branch", say: "The cat branch, with lions and meerkats.", teeth: "lion", teethSay: "Teeth clue: cats have very sharp, blade-like back teeth and almost no flat ones. They are meat specialists.",
+                  more: ["Scientists call it Feliformia, which means cat-shaped.", "Meerkats are a kind of mongoose. Hyenas look like dogs, but they are on the cat branch!"],
+                  also: ["tigers", "cheetahs", "house cats", "hyenas", "mongooses", "civets"], c: ["lion", "meerkat"] },
+                { k: "dogb", label: "Dog branch", name: "Dog branch", say: "The dog branch, with foxes, bears, otters, and raccoons.", teeth: "fox", teethSay: "Teeth clue: many on the dog branch have slicing teeth plus bumpy back teeth, so they can eat lots of different foods.",
+                  more: ["Scientists call it Caniformia, which means dog-shaped.", "Seals, sea lions, and walruses are on the dog branch. They are sea-going carnivorans!"],
+                  also: ["wolves", "pet dogs", "coyotes", "seals", "sea lions", "walruses"], c: ["fox", {
+                  k: "arct", label: "Bear-weasel", name: "Bears, weasels, and seals", say: "Bears, otters, and raccoons.",
+                  more: ["Scientists call this group Arctoidea, which means bear-like.", "Seals and walruses belong in this group too. Their closest land cousins are bears and weasels."],
+                  also: ["seals", "sea lions", "walruses", "skunks", "red pandas"], c: [
+                    { k: "bears", label: "Bears", name: "Bears", say: "Bears.", teeth: "panda", teethSay: "Teeth clue: bears have big fangs, but their back teeth are wide and flat-topped for crushing. Pandas have the flattest of all, for bamboo.",
+                      more: ["There are eight kinds of bears in the world.", "The giant panda is a real bear. It just eats bamboo!", "Polar bears are the biggest carnivorans that live on land."],
+                      also: ["grizzly bears", "black bears", "sun bears", "sloth bears", "spectacled bears", "moon bears"], c: ["polarbear", "panda"] },
+                    { k: "must", label: "Weasel branch", name: "Weasel and raccoon branch", say: "The weasel and raccoon branch.", teeth: "raccoon", teethSay: "Teeth clue: otters have pointy teeth for grabbing fish. Raccoons have bumpier back teeth for eating almost anything.",
+                      more: ["Scientists call it Musteloidea.", "Otters are part of the weasel family, along with badgers and wolverines.", "Raccoons have cousins called coatis and kinkajous. Skunks and red pandas are on this branch too."],
+                      also: ["weasels", "badgers", "wolverines", "skunks", "red pandas", "coatis", "kinkajous"], c: ["otter", "raccoon"] }] }] }] }] }] }] }],
   };
 
   const GRADES = {

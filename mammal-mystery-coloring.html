@@ -60,8 +60,8 @@
   .foot { position: absolute; bottom: .3in; left: 0; right: 0; text-align: center; font-size: 11px; color: #6a6275; }
   @media print { html, body { background: #fff; } .bar { display: none; } .sheet { margin: 0; } }
 </style>
-<script src="mammal-mystery-art.js?v=2"></script>
-<script src="mammal-mystery-data.js?v=2"></script>
+<script src="mammal-mystery-art.js?v=3"></script>
+<script src="mammal-mystery-data.js?v=3"></script>
 </head>
 <body>
 <div class="bar"><button type="button" onclick="window.print()">Print all sheets</button><span>Letter paper. Each sheet prints on its own page.</span></div>
@@ -89,7 +89,7 @@
     out.push(`<section class="sheet">${top("FIELD GUIDE")}
       ${word(cap(a.name))}
       <div class="big">${ART.animal(id, { line: true })}</div>
-      <div class="row"><div class="hab">${ART.habitat(a.hab, { line: true })}</div><p class="say" style="text-align:left;max-width:3.6in">${a.facts.pk[0]} ${a.facts.k[0]}<br><span style="font-size:14px">Lives in: ${a.where}</span></p></div>${foot}</section>`);
+      <div class="row"><div class="hab">${ART.habitat(a.scene || a.hab, { line: true })}</div><p class="say" style="text-align:left;max-width:3.6in">${a.facts.pk[0]} ${a.facts.k[0]}<br><span style="font-size:14px">Lives in: ${a.where}</span></p></div>${foot}</section>`);
   });
 
   // Pre-K and K: color by body part

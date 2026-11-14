@@ -23,11 +23,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="styles.css?v=32">
+<link rel="stylesheet" href="styles.css?v=34">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <script src="assets/vendor/three-r149.min.js?v=1" defer></script>
 <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
-<script src="tadpole-game.js?v=8" defer></script>
+<script src="tadpole-game.js?v=9" defer></script>
 </head>
 <body>
 
@@ -69,7 +69,7 @@
       <div class="og tg">
         <div class="og-stage">
           <canvas id="og-canvas" aria-hidden="true"></canvas>
-          <canvas id="og-3d" tabindex="0" hidden aria-label="Tadpole Trek 3D pond. Arrow keys or WASD to move, Space to swim up, Shift or E to dive."></canvas>
+          <canvas id="og-3d" tabindex="0" hidden aria-label="Tadpole Trek 3D pond. Arrow keys or WASD to move, Space to swim up, Down arrow or S to dive."></canvas>
           <div class="og-flash" id="og-stage-flash" aria-hidden="true"></div>
           <div class="og-hud" id="og-hud" hidden>
             <div class="og-hud-top">
@@ -85,7 +85,7 @@
             </div>
             <div class="tg-exp" id="tg-exp" aria-label="Pollutant exposure meters"></div>
             <div class="og-tasks" id="og-tasks"></div>
-            <canvas class="og-map" id="og-map" width="120" height="120" aria-hidden="true"></canvas>
+            <canvas class="og-map" id="og-map" width="180" height="180" aria-hidden="true"></canvas>
           </div>
           <div class="og-touch" id="og-touch" hidden>
             <div class="og-stick" id="og-stick" aria-hidden="true"><i id="og-knob"></i></div>
@@ -106,7 +106,7 @@
           <button type="button" class="og-slot" data-win="dex" aria-label="Pond-dex (X)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="16" cy="19" rx="10" ry="8" fill="#5fae4e"/><circle cx="10" cy="11" r="4" fill="#7ccf68"/><circle cx="22" cy="11" r="4" fill="#7ccf68"/><circle cx="10" cy="11" r="1.6" fill="#0b0a10" stroke="none"/><circle cx="22" cy="11" r="1.6" fill="#0b0a10" stroke="none"/><path d="M11 21 Q16 25 21 21" fill="none" stroke-width="1.8"/></svg><span>Pond-dex</span><kbd>X</kbd><b class="og-badge-new" hidden>!</b></button>
           <button type="button" class="og-slot" data-win="treasure" aria-label="Treasures (T)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 14 Q16 6 28 14 L28 26 L4 26 Z" fill="#8a6440"/><path d="M4 14 L28 14 M4 18 L28 18" fill="none"/><rect x="13" y="16" width="6" height="5" rx="1" fill="#ffd23f"/><path d="M9 9 L11 6 L13 9 Z M20 8 L23 5 L25 9 Z" fill="#a47bff" stroke-width="1.5"/></svg><span>Treasures</span><kbd>T</kbd><b class="og-badge-new" hidden>!</b></button>
         </nav>
-        <p class="og-help"><b>Touch:</b> left thumb to swim, right thumb to swipe and look, plus Up and Dive buttons. <b>Keyboard:</b> arrows or WASD to swim · Space to swim up · Shift or E to dive. Each stage ends when you finish its three goals (or tap End stage). Watch the three exposure meters: the longer your tadpole stays in a plume, the more it fills. Tap the menu slots, or press J, L, K, V, O, X, or T, to open your Journal, Life story, Anatomy, Growth chart, Wardrobe, Pond-dex, and Treasure chest. Opening a menu pauses the game.</p>
+        <p class="og-help"><b>Touch:</b> left thumb to swim, right thumb to swipe and look, plus Up and Dive buttons. <b>Keyboard:</b> arrows or WASD to swim · Space to swim up · Down arrow or S to dive. Each stage ends when you finish its three goals (or tap End stage). Watch the three exposure meters: the longer your tadpole stays in a plume, the more it fills. Tap the menu slots, or press J, L, K, V, O, X, or T, to open your Journal, Life story, Anatomy, Growth chart, Wardrobe, Pond-dex, and Treasure chest. Opening a menu pauses the game.</p>
 
         <div class="og-modal" id="og-modal" hidden role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
           <div class="og-modal-box">
@@ -133,21 +133,21 @@
   <circle cx="112" cy="72" r="13" fill="#15121e" stroke="#efe6d2" stroke-width="2"/><circle cx="112" cy="71" r="6.5" fill="#0b0a10"/><circle cx="114.5" cy="68.5" r="2" fill="#fff"/>
   <circle cx="70" cy="100" r="2" fill="#0b0a10"/>
   <path d="M72 138 Q96 150 122 140" fill="none" stroke="#efe6d2" stroke-width="2"/>
-  <path d="M228 100 C300 100 420 106 530 112" fill="none" stroke="#cfa8f6" stroke-width="5" stroke-linecap="round"/>
+  <path d="M228 100 C300 100 420 106 530 112" fill="none" stroke="#c300ff" stroke-width="5" stroke-linecap="round"/>
   <ellipse cx="76" cy="108" rx="11" ry="8" fill="#ff00e4" stroke="#0b0a10" stroke-width="1.5"/>
   <ellipse cx="108" cy="106" rx="23" ry="15" fill="#ff5900" stroke="#0b0a10" stroke-width="1.5"/>
   <ellipse cx="142" cy="112" rx="12" ry="11" fill="#ffbf00" stroke="#0b0a10" stroke-width="1.5"/>
   <ellipse cx="166" cy="100" rx="17" ry="13" fill="#36ff00" stroke="#0b0a10" stroke-width="1.5"/>
-  <ellipse cx="194" cy="105" rx="9" ry="10" fill="#00b1ff" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="194" cy="105" rx="9" ry="10" fill="#0000ff" stroke="#0b0a10" stroke-width="1.5"/>
   <ellipse cx="220" cy="107" rx="21" ry="9" fill="#8300ff" stroke="#0b0a10" stroke-width="1.5"/>
   <g font-family="Fredoka, 'IBM Plex Sans', Arial, sans-serif" font-weight="700" font-size="12.5">
     <path d="M72 101 L30 38" stroke="#ff00e4" stroke-width="1.3"/><text x="8" y="32" fill="#ff7bf0">Olfactory bulb</text>
     <path d="M128 99 L150 20" stroke="#ff5900" stroke-width="1.3"/><text x="100" y="14" fill="#ff9a5c">Telencephalon</text>
     <path d="M142 102 L196 38" stroke="#ffbf00" stroke-width="1.3"/><text x="176" y="32" fill="#ffd45c">Diencephalon</text>
     <path d="M166 88 L300 20" stroke="#36ff00" stroke-width="1.3"/><text x="290" y="14" fill="#7dff5c">Optic tectum</text>
-    <path d="M194 115 L214 196" stroke="#00b1ff" stroke-width="1.3"/><text x="176" y="210" fill="#5cc9ff">Cerebellum</text>
+    <path d="M194 115 L214 196" stroke="#5a6bff" stroke-width="1.3"/><text x="176" y="210" fill="#8c98ff">Cerebellum</text>
     <path d="M226 115 L284 190" stroke="#8300ff" stroke-width="1.3"/><text x="262" y="204" fill="#c493ff">Medulla oblongata</text>
-    <path d="M420 108 L438 168" stroke="#cfa8f6" stroke-width="1.3"/><text x="398" y="182" fill="#cfa8f6">Spinal cord</text>
+    <path d="M420 108 L438 168" stroke="#d24dff" stroke-width="1.3"/><text x="398" y="182" fill="#df80ff">Spinal cord</text>
     <text x="112" y="52" font-size="11" fill="#efe6d2" text-anchor="middle" opacity="0">.</text>
     <text x="58" y="70" font-size="12" fill="#efe6d2">Eye</text><path d="M82 65 L99 68" stroke="#efe6d2" stroke-width="1.1"/>
   </g>

@@ -44,7 +44,7 @@
     { k: "olf",   name: "Olfactory bulb",  color: "#ff00e4", wM: 0.9, wP: 0.6, job: "smell, so the minimap's food radar" },
     { k: "tel",   name: "Telencephalon",   color: "#ff5900", wM: 1.2, wP: 0.8, job: "memory, so how clearly the minimap shows plumes and rings" },
     { k: "tect",  name: "Optic tectum",    color: "#36ff00", wM: 1.1, wP: 0.6, job: "vision, so how far you can see underwater" },
-    { k: "cereb", name: "Cerebellum",      color: "#00b1ff", wM: 0.7, wP: 1.2, job: "coordination, so steering and swimming speed" },
+    { k: "cereb", name: "Cerebellum",      color: "#0000ff", wM: 0.7, wP: 1.2, job: "coordination, so steering and swimming speed" },
     { k: "med",   name: "Medulla",         color: "#8300ff", wM: 0.5, wP: 1.0, job: "basic body functions, so how fast energy drains" },
   ];
   const RK = REGIONS.map(r => r.k);
@@ -290,7 +290,7 @@
     // regions: [key, [cx, cy, rx, ry] left side (mirrored), color]; spinal cord is a fixed tail
     const R = {
       olf:   [[-8, -44, 6, 8], "#ff00e4"], tel: [[-14, -26, 12, 15], "#ff5900"], die: [[-6, -8, 7, 6], "#ffbf00"],
-      tect:  [[-14, 6, 11, 11], "#36ff00"], cereb: [[0, 22, 17, 5], "#00b1ff"], med: [[0, 38, 8, 14], "#8300ff"],
+      tect:  [[-14, 6, 11, 11], "#36ff00"], cereb: [[0, 22, 17, 5], "#0000ff"], med: [[0, 38, 8, 14], "#8300ff"],
     };
     const f = key => key === "die" ? 1 : 0.35 + 0.65 * clamp(sc[key], 0, 100) / 100;
     const shape = (key, mirror, fill, ghost) => {
@@ -299,7 +299,7 @@
       if (ghost) { c.setLineDash([3, 3]); c.strokeStyle = "rgba(255,255,255,0.55)"; c.lineWidth = 1; c.stroke(); c.setLineDash([]); }
       else { c.fillStyle = fill; c.fill(); c.strokeStyle = "#0b0a10"; c.lineWidth = 1.3; c.stroke(); }
     };
-    c.strokeStyle = "#cfa8f6"; c.lineWidth = 4; c.lineCap = "round"; c.beginPath(); c.moveTo(0, 48); c.lineTo(0, 58); c.stroke();
+    c.strokeStyle = "#c300ff"; c.lineWidth = 4; c.lineCap = "round"; c.beginPath(); c.moveTo(0, 48); c.lineTo(0, 58); c.stroke();
     if (!opts.noGhost) Object.keys(R).forEach(key => { if (key === "cereb" || key === "med") shape(key, false, null, true); else { shape(key, false, null, true); shape(key, true, null, true); } });
     Object.keys(R).forEach(key => {
       const dim = key !== "die" && sc[key] < 70 ? 0.78 : 1; c.globalAlpha = dim;
@@ -706,14 +706,14 @@
 
   let mapBase = null;
   function paintMapBase() {
-    mapBase = document.createElement("canvas"); mapBase.width = mapBase.height = 120; const c = mapBase.getContext("2d");
+    mapBase = document.createElement("canvas"); mapBase.width = mapBase.height = 180; const c = mapBase.getContext("2d"); c.scale(1.5, 1.5);
     c.fillStyle = "#103a33"; c.fillRect(0, 0, 120, 120);
     const k = 120 / (ARENA * 2);
     for (let py = 0; py < 120; py += 2) for (let px = 0; px < 120; px += 2) { const x = (px - 60) / k, z = (py - 60) / k, d = pd(x, z); if (d < 0) { c.fillStyle = d < -8 ? "#1a7f8e" : "#2fa3ae"; c.fillRect(px, py, 2, 2); } }
   }
   function drawMap() {
     const cv = $("og-map"), c = cv.getContext("2d"), k = 120 / (ARENA * 2), mx = x => 60 + x * k, mz = z => 60 + z * k, b = BR();
-    c.clearRect(0, 0, 120, 120); if (mapBase) c.drawImage(mapBase, 0, 0);
+    c.setTransform(1.5, 0, 0, 1.5, 0, 0); c.clearRect(0, 0, 120, 120); if (mapBase) c.drawImage(mapBase, 0, 0, 120, 120);
     // plumes: how clearly you remember them depends on the telencephalon
     const al = 0.3 + 0.7 * b.tel / 100;
     S.zones.forEach(z => { c.globalAlpha = 0.55 * al; c.fillStyle = ZK[z.kind].css; c.beginPath(); c.arc(mx(z.x), mz(z.z), z.r * k, 0, 7); c.fill(); if (CL && G.opts.pat) { c.fillStyle = patFor(c, z.kind); c.fill(); } });
@@ -742,14 +742,14 @@
     if (S.ending > 0) { S.ending -= dt; if (S.ending <= 0) { endStage(); return; } }
     const k = keys, alive = !S.dead;
     const L = alive && (k.ArrowLeft || k.a || k.A), Rr = alive && (k.ArrowRight || k.d || k.D), U = alive && (k.ArrowUp || k.w || k.W), D = alive && (k.ArrowDown || k.s || k.S);
-    const UP = alive && k[" "], DV = alive && (k.Shift || k.e || k.E || k.q || k.Q || k.c || k.C || k.dive);
+    const UP = alive && k[" "], DV = alive && (k.ArrowDown || k.s || k.S || k.dive);
     // Cerebellum: coordination sets steering and top speed
     const agi = 0.7 + 0.3 * b.cereb / 100, turn = 2.7 * agi, top = (S.energy <= 0 ? 3.2 : 6.2) * (0.8 + 0.2 * b.cereb / 100);
     let target = 0;
     if (stick.active && alive) {
       const m = Math.min(1, Math.hypot(stick.x, stick.y));
       if (m > 0.15) { const y = S.camYaw, dx = Math.sin(y) * -stick.y - Math.cos(y) * stick.x, dz = Math.cos(y) * -stick.y + Math.sin(y) * stick.x; S.heading = lerpAngle(S.heading, Math.atan2(dx, dz), Math.min(1, turn * 2.6 * dt)); target = top * m; }
-    } else { if (L) S.heading += turn * dt; if (Rr) S.heading -= turn * dt; target = U ? top : D ? -top * 0.4 : 0; }
+    } else { if (L) S.heading += turn * dt; if (Rr) S.heading -= turn * dt; target = U ? top : 0; }
     if (!touchMode) S.camYaw = S.heading; else if (!look && Math.abs(S.speed) > 1) S.camYaw = lerpAngle(S.camYaw, S.heading, Math.min(1, 0.7 * dt));
     S.speed = lerp(S.speed, target, 0.12);
     let nx = S.x + Math.sin(S.heading) * S.speed * dt, nz = S.z + Math.cos(S.heading) * S.speed * dt;
@@ -1009,7 +1009,7 @@
     const ESC = { heron: [ICON.heron, [ICON.dive], "Dive deep when its shadow shows"], nymph: [ICON.nymph, [ICON.away], "Swim away fast"], fish: [ICON.fish, [ICON.hide], "Hide in the plants"] };
     const controls = (coarse || touchMode)
       ? `<div class="og-ctl"><span class="og-keys-row"><span class="og-mini-stick"><i></i></span></span><small>Left thumb: swim</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("↔")}</span><small>Right thumb: swipe to look</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("Up")}</span><small>Swim up</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("Dive")}</span><small>Dive</small></div>`
-      : `<div class="og-ctl"><span class="og-arrows">${KEY("▲")}<span>${KEY("◀")}${KEY("▼")}${KEY("▶")}</span></span><small>Swim</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("Space")}</span><small>Swim up</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("Shift")}</span><small>Dive</small></div>`;
+      : `<div class="og-ctl"><span class="og-arrows">${KEY("▲")}<span>${KEY("◀")}${KEY("▼")}${KEY("▶")}</span></span><small>Swim</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("Space")}</span><small>Swim up</small></div><div class="og-ctl"><span class="og-keys-row">${KEY("▼")}</span><small>Dive</small></div>`;
     screen(`<div class="og-card og-wide og-brief">${G.history.length ? BACK : ""}
       <p class="og-badge">Stage ${G.stage + 1} of ${NSTAGE} · ${st.name}</p>
       <p class="og-sub og-small">${st.gosner} (stage names follow the standard Gosner scheme, simplified)</p>
@@ -1356,7 +1356,7 @@
   $("og-home").addEventListener("click", goHome);
 
   /* ---------- Input ---------- */
-  const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S", "Shift", "e", "E", "q", "Q", "c", "C"];
+  const GAME_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "a", "d", "w", "s", "A", "D", "W", "S"];
   window.addEventListener("keydown", e => { if (G.screen === "season" && !openK && GAME_KEYS.includes(e.key)) { keys[e.key] = true; e.preventDefault(); } });
   window.addEventListener("keyup", e => { keys[e.key] = false; });
   window.addEventListener("blur", () => { keys = {}; });

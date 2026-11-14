@@ -1190,3 +1190,12 @@ body.tg-big .og-sub.og-small { font-size: 1em; }
 }
 .tg-tog .tg-ic { grid-row: span 2; text-align: center; }
 @media print { .tc, .tc * { color: #000 !important; border-color: #333 !important; } .tc .tc-band > div { border-color: #333 !important; } }
+
+/* Tadpole Trek: bigger minimap */
+.tg .og-stage .og-map { width: 190px; height: 190px; }
+.tg .og-stage.touch .og-map { width: 130px; height: 130px; }
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) { .tg .og-stage.touch .og-map { width: 112px; height: 112px; } }
+.tg-lab { top: calc(8.6rem + 190px + 12px); }
+.og-stage.touch .tg-lab { top: calc(6.6rem + 130px + 12px); }
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) { .og-stage.touch .tg-lab { top: 6.6rem; right: 122px; grid-template-columns: repeat(2, auto); } }
+@media (max-width: 640px) { .tg-lab { top: 8.6rem; right: 140px; } }

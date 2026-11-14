@@ -659,7 +659,34 @@
     if (hab === "snow") { const c = new T3.Mesh(new T3.SphereGeometry(3.2, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0xdff3ff)); g.add(c); const d = new T3.Mesh(new T3.CircleGeometry(1.3, 16), M(0x2a3a5a)); d.position.set(0, 1.1, 3.1); g.add(d); }
     else if (hab === "desert") { g.add(new T3.Mesh(new T3.CylinderGeometry(0.6, 0.9, 5, 8), M(0x6b4a2b))); for (let i = 0; i < 5; i++) { const l = ball(rand(1.6, 2.4), 0x6f9f3a); l.position.set(rand(-1.5, 1.5), 5 + rand(-0.5, 1), rand(-1.5, 1.5)); g.add(l); } g.children[0].position.y = 2.5; }
     else if (hab === "fast") { const r = new T3.Mesh(new T3.DodecahedronGeometry(3, 0), M(0x7a7486)); r.position.y = 2; g.add(r); const fall = new T3.Mesh(new T3.PlaneGeometry(2.4, 4), new T3.MeshBasicMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.8, side: T3.DoubleSide })); fall.position.set(0, 2, 2.6); g.add(fall); }
-    else if (hab === "slow") { for (let i = 0; i < 26; i++) { const st = new T3.Mesh(new T3.CylinderGeometry(0.12, 0.12, rand(3, 4.5), 5), M(0x7a5232)); const a = i / 26 * Math.PI * 2; st.position.set(Math.cos(a) * 1.4, 1.4, Math.sin(a) * 1.4); st.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5); g.add(st); } }
+    else if (hab === "slow") {
+      // Beaver lodge: a low, lumpy dome of mud and sticks at the water's edge, with a food cache of branches nearby
+      const dome = new T3.IcosahedronGeometry(1, 3), dp = dome.attributes.position;
+      for (let i = 0; i < dp.count; i++) { const k = 1 + (Math.random() - 0.5) * 0.18; dp.setXYZ(i, dp.getX(i) * k, Math.max(dp.getY(i), -0.2) * k, dp.getZ(i) * k); }
+      dome.computeVertexNormals();
+      const mud = new T3.Mesh(dome, M(0x4f3a28, { flatShading: true, roughness: 1 })); mud.scale.set(3.4, 2.4, 3.0); mud.position.y = -0.35; g.add(mud);
+      const up = new T3.Vector3(0, 1, 0), tmp = new T3.Vector3(), q = new T3.Quaternion();
+      const stickMats = [M(0xc8b48a, { roughness: 0.9 }), M(0x6b4a30, { roughness: 0.9 }), M(0x8a6a48, { roughness: 0.9 })];
+      for (let i = 0; i < 110; i++) {
+        const th = Math.random() * Math.PI * 2, ph = Math.acos(Math.random() * 0.95);                 // upper part of the dome
+        const nx = Math.sin(ph) * Math.cos(th), ny = Math.cos(ph), nz = Math.sin(ph) * Math.sin(th);
+        const px = nx * 3.4, py = ny * 2.4 - 0.35, pz = nz * 3.0;
+        const len = rand(0.9, 2.4), st = new T3.Mesh(new T3.CylinderGeometry(rand(0.035, 0.075), rand(0.05, 0.09), len, 6), stickMats[i % 3]);
+        const n = new T3.Vector3(nx / 3.4, ny / 2.4, nz / 3.0).normalize();
+        const dir = tmp.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).cross(n).normalize();
+        q.setFromUnitVectors(up, dir); st.quaternion.copy(q);
+        st.position.set(px + n.x * 0.06, py + n.y * 0.06, pz + n.z * 0.06); g.add(st);
+      }
+      for (let i = 0; i < 7; i++) {                                                                   // a few branches poking out of the top
+        const br = new T3.Mesh(new T3.CylinderGeometry(0.04, 0.07, rand(1.2, 2), 6), stickMats[1]);
+        br.position.set(rand(-1, 1), 1.95, rand(-0.9, 0.9)); br.rotation.set(rand(-0.9, 0.9), rand(0, 6), rand(-0.9, 0.9)); g.add(br);
+      }
+      for (let i = 0; i < 14; i++) {                                                                  // food cache of cut branches in the water
+        const br = new T3.Mesh(new T3.CylinderGeometry(0.05, 0.06, rand(1.4, 2.6), 6), stickMats[i % 3]);
+        br.position.set(rand(3.0, 5.0), -0.05 + rand(-0.05, 0.12), rand(-1.6, 1.6)); br.rotation.set(Math.PI / 2 + rand(-0.3, 0.3), rand(0, 6), rand(-0.2, 0.2)); g.add(br);
+        if (i % 3 === 0) { const leaf = new T3.Mesh(new T3.IcosahedronGeometry(0.25, 0), M(0x5f8a3a, { flatShading: true })); leaf.position.copy(br.position).add(new T3.Vector3(0, 0.1, 0)); g.add(leaf); }
+      }
+    }
     else if (hab === "murky") { const hull = new T3.Mesh(new T3.BoxGeometry(2.4, 1, 5), M(0x6b4a2b)); hull.rotation.set(0.25, 0.4, 0.2); g.add(hull); }
     else { const sl = new T3.Mesh(new T3.BoxGeometry(2.2, 0.3, 8), M(0x8a6440)); sl.rotation.x = 0.35; sl.position.y = 1.4; g.add(sl); }
     g.position.set(x, y, z); return g;
@@ -836,7 +863,11 @@
     if (G.hab === "lake") {
       for (let i = 0; i < 3; i++) { const [x, z] = randWater(4); const f = buildOtter({ size: 55, fur: 55, ext: 45, brain: 60, cochlea: 50, canal: 50 }); scene.add(f); S.friends.push({ m: f, x, z, hx: x, hz: z, a: rand(0, 6), met: false }); }
     } else {
-      const [lx, lz] = shorePoint(); scene.add(landmark(G.hab, lx, lz));
+      let [lx, lz] = shorePoint();
+      if (G.hab === "slow") { for (let i = 0; i < 600; i++) { const x = rand(-50, 50), z = rand(-50, 50), d = sdf(x, z); if (d > -0.6 && d < 0.4 && Math.hypot(x, z) > 20) { lx = x; lz = z; break; } } }
+      const lm = landmark(G.hab, lx, lz);
+      if (G.hab === "slow") { lm.position.y = Math.max(groundY(lx, lz), -0.6); let wx = 0, wz = 0; for (let a = 0; a < 6.28; a += 0.3) { const dd = sdf(lx + Math.cos(a) * 4, lz + Math.sin(a) * 4); if (dd < 0) { wx += Math.cos(a); wz += Math.sin(a); } } lm.rotation.y = Math.atan2(wz, wx) * -1; }
+      scene.add(lm);
       const beacon = new T3.Mesh(new T3.CylinderGeometry(0.4, 0.4, 30, 8, 1, true), new T3.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.35, side: T3.DoubleSide, depthWrite: false }));
       beacon.position.set(lx, 15, lz); scene.add(beacon);
       S.place = { x: lx, z: lz, beacon, found: false };

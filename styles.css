@@ -1012,3 +1012,30 @@ body.og-noscroll { overflow: hidden; }
 .og-cmp i { font-style: normal; font-weight: 700; color: #7a3fd0; font-size: 0.8rem; }
 .og-tcan { display: block; width: 3.6rem; height: 2.8rem; margin: 0 auto 0.15rem; background: #1b1530; border-radius: 8px; }
 .og-table td span { display: block; }
+/* ---------- How Otter Evolution works ---------- */
+.how > p, .how-list, .how-steps p { max-width: 46rem; }
+.how .people-sub { margin-top: 2.6rem; }
+.how > p { color: #d6d0e2; margin-top: 0.6rem; }
+.how-list { display: grid; gap: 0.55rem; padding-left: 1.2rem; margin-top: 0.8rem; color: #d6d0e2; }
+.how-list b { color: var(--fg); }
+.how-steps { list-style: none; counter-reset: st; padding: 0; margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.9rem; }
+.how-steps li { counter-increment: st; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 12px; padding: 1rem 1.1rem; display: grid; gap: 0.5rem; align-content: start; }
+.how-steps h3::before { content: counter(st); display: inline-grid; place-items: center; width: 1.8rem; height: 1.8rem; margin-right: 0.5rem; border-radius: 50%; background: var(--teal); color: var(--ink); font-size: 0.95rem; }
+.how-steps h3 { font-size: var(--step-1); display: flex; align-items: center; }
+.how-steps p { color: #d6d0e2; font-size: 0.9375rem; }
+.how-table-wrap { overflow-x: auto; margin-top: 1rem; border: 1px solid var(--line-strong); border-radius: 10px; }
+.how-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 40rem; }
+.how-table th, .how-table td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--line); text-align: center; }
+.how-table th[scope="row"], .how-table td:last-child { text-align: left; }
+.how-table thead th { background: var(--panel-2); color: var(--fg); font-weight: 600; }
+.how-table td { color: #d6d0e2; }
+.how-table tr.start td, .how-table tr.start th { color: var(--muted); }
+.how-cols { columns: 2 18rem; column-gap: 2rem; padding-left: 1.2rem; margin-top: 0.8rem; color: #d6d0e2; }
+.how-cols li { margin-bottom: 0.4rem; break-inside: avoid; }
+/* Journal link card */
+.og-how { display: grid; gap: 0.5rem; background: #e6f6fb; border: 3px solid #0b0a10; border-radius: 16px; padding: 0.8rem 1rem; color: #1b1530; }
+.og-how b { font: 700 1.05rem/1.2 var(--og-font); }
+.og-how ol { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.og-how li { font: 600 0.85rem/1 var(--og-font); background: #fff; border: 2px solid #0b0a10; border-radius: 999px; padding: 0.3rem 0.6rem; }
+.og-how li span { color: #7a3fd0; margin-right: 0.25rem; }
+.og-how a { font: 700 0.95rem/1.2 var(--og-font); color: #7a3fd0; }

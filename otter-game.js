@@ -112,7 +112,7 @@
   try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; } } catch (e) {}
   const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30) })); } catch (e) {} };
 
-  const startTraits = () => ({ size: 50 + gauss() * 10, fur: 50 + gauss() * 10, ext: 50 + gauss() * 10, cochlea: 50 + gauss() * 10, canal: valOfDeg(84) + gauss() * 8, brain: 50 + gauss() * 10 });
+  const startTraits = () => ({ size: 50 + gauss() * 14, fur: 50 + gauss() * 14, ext: 50 + gauss() * 14, cochlea: 50 + gauss() * 14, canal: valOfDeg(84) + gauss() * 11, brain: 50 + gauss() * 14 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
   function newPopulation() { return Array.from({ length: POP }, (_, i) => ({ t: clampT(startTraits()), lead: i === 0 })); }
   const meanTraits = pop => { const m = {}; TRAITS.forEach(({ k }) => m[k] = pop.reduce((s, o) => s + o.t[k], 0) / pop.length); return m; };
@@ -120,7 +120,7 @@
   function fitness(t, hab) {
     const opt = HAB[hab].opt, w = { size: 1, fur: 1, ext: 1, cochlea: 1, canal: 1, brain: 0.7 };
     let s = 0, ws = 0; for (const k in w) { s += w[k] * (t[k] - opt[k]) ** 2; ws += w[k]; }
-    return Math.exp(-(s / ws) / (2 * 22 * 22));
+    return Math.exp(-(s / ws) / (2 * 12 * 12));   // narrower curve = stronger selection
   }
 
   /* ---------- Sizing ---------- */
@@ -1147,7 +1147,7 @@
     G.pop.forEach((o, i) => {
       if (o.lead && S.dead) { o.alive = false; return; }
       if (o.lead && done >= 2) { o.alive = true; return; }
-      o.alive = Math.random() < clamp(0.15 + yr().surv + 0.8 * f[i] * (G.plan && G.plan.year === "hard" ? 0.85 : 1), 0.05, 0.98);
+      o.alive = Math.random() < clamp(0.25 + yr().surv + 0.7 * f[i] * (G.plan && G.plan.year === "hard" ? 0.85 : 1), 0.05, 0.98);
     });
     let alive = G.pop.filter(o => o.alive);
     while (alive.length < 3) { const i = ranked.find(j => !G.pop[j].alive && !(G.pop[j].lead && S.dead)); if (i === undefined) break; G.pop[i].alive = true; alive = G.pop.filter(o => o.alive); }
@@ -1157,7 +1157,7 @@
   }
   function breed() {
     const surv = G.pop.filter(o => o.alive);
-    const fw = surv.map(o => 0.2 + fitness(o.t, G.hab));
+    const fw = surv.map(o => 0.02 + fitness(o.t, G.hab) ** 2);   // fitter parents raise many more pups
     const pick = () => { let r = Math.random() * fw.reduce((a, b) => a + b, 0); for (let i = 0; i < surv.length; i++) { r -= fw[i]; if (r <= 0) return surv[i]; } return surv[surv.length - 1]; };
     const leadParent = surv.find(o => o.lead);
     const extra = leadParent ? G.lastDone + (G.lastGolden ? 1 : 0) : 0;
@@ -1165,7 +1165,7 @@
     for (let i = 0; i < POP; i++) {
       const a = i < extra ? leadParent : pick(); let b = pick(); if (b === a && surv.length > 1) b = surv.find(o => o !== a);
       const t = {}; let mut = false;
-      TRAITS.forEach(({ k }) => { let v = (a.t[k] + b.t[k]) / 2 + gauss() * 4; if (Math.random() < 0.025) { v += gauss() * 16; mut = true; } t[k] = v; });
+      TRAITS.forEach(({ k }) => { let v = (a.t[k] + b.t[k]) / 2 + gauss() * 6; if (Math.random() < 0.025) { v += gauss() * 16; mut = true; } t[k] = v; });
       pups.push({ t: clampT(t), lead: false, mut, fromLead: a === leadParent });
       if (mut) mutated = true;
     }

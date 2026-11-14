@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Otter Evolution Works</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="How the SQuEACs Lab's Otter Evolution game simulates natural selection, inheritance, mutation, and drift in river otters.">
+<link rel="canonical" href="https://squeacs.github.io/otter-evolution-science.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SQuEACs Lab">
+<meta property="og:title" content="How Otter Evolution Works">
+<meta property="og:description" content="How the SQuEACs Lab's Otter Evolution game simulates natural selection, inheritance, mutation, and drift in river otters.">
+<meta property="og:url" content="https://squeacs.github.io/otter-evolution-science.html">
+<meta property="og:image" content="https://squeacs.github.io/assets/skull-endocast-ct.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css?v=24">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html">3D Models</a></li>
+          <li class="sub"><a href="otter-game.html">Otter Evolution</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<main id="top" class="subpage">
+  <section id="how-otter-evolution">
+    <div class="wrap how">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / <a class="crumb" href="otter-game.html">Otter Evolution</a> / How it works</p>
+        <h1 class="page-title">How Otter Evolution works</h1>
+        <p>Otter Evolution simulates a small population of river otters evolving over eight generations. This page lays out exactly what the game does each generation, so teachers, parents, and curious players can see the science behind it. The numbers are illustrative. They show how evolution works, not measurements from real otters.</p>
+        <p><a class="btn primary" href="otter-game.html">Play Otter Evolution →</a></p>
+      </div>
+
+      <h2 class="people-sub">The population</h2>
+      <p>Each game starts with 12 otters. Every otter carries six heritable traits, each scored from 0 to 100:</p>
+      <ul class="how-list">
+        <li><b>Body size.</b> Bigger bodies hold heat; smaller bodies shed it.</li>
+        <li><b>Fur thickness.</b> Thick fur insulates; thin fur keeps an otter cool.</li>
+        <li><b>Ears and tail.</b> Long extremities release heat; short ones conserve it.</li>
+        <li><b>Cochlea shape.</b> Higher scores mean a flatter, longer spiral, which the game links to hearing in water.</li>
+        <li><b>Canal angle.</b> The angle between the front and back semicircular canals of the inner ear, from 65° to 100°.</li>
+        <li><b>Brain size.</b> Relative size of the endocast.</li>
+      </ul>
+      <p>The starting otters vary around the middle of each scale, so natural selection has differences to act on.</p>
+
+      <h2 class="people-sub">What each habitat favors</h2>
+      <p>Each habitat sets a target value for every trait. Lab hypotheses inspired the direction of each target; the exact values are invented for the game.</p>
+      <div class="how-table-wrap"><table class="how-table"><thead><tr><th scope="col">Habitat</th><th scope="col">Body size</th><th scope="col">Fur</th><th scope="col">Ears and tail</th><th scope="col">Cochlea</th><th scope="col">Canal angle</th><th scope="col">Brain</th><th scope="col">Inspired by</th></tr></thead><tbody><tr><th scope="row">Starting otters (average)</th><td>50</td><td>50</td><td>50</td><td>50</td><td>84°</td><td>50</td><td></td></tr><tr><th scope="row">Snowy North</th><td>82</td><td>90</td><td>18</td><td>45</td><td>86°</td><td>50</td><td>Bergmann's and Allen's rules</td></tr><tr><th scope="row">Desert River</th><td>30</td><td>14</td><td>86</td><td>35</td><td>86°</td><td>35</td><td>Allen's rule; expensive tissue hypothesis</td></tr><tr><th scope="row">Fast Mountain River</th><td>55</td><td>50</td><td>50</td><td>75</td><td>93°</td><td>66</td><td>Agility hypothesis; cognitive buffer hypothesis</td></tr><tr><th scope="row">Slow Marsh Stream</th><td>55</td><td>45</td><td>55</td><td>75</td><td>74°</td><td>50</td><td>Relaxed selection; cochlear shape</td></tr><tr><th scope="row">Murky Pond</th><td>50</td><td>45</td><td>50</td><td>86</td><td>82°</td><td>60</td><td>Sensory drive; cochlear shape</td></tr><tr><th scope="row">Deep Clear Lake</th><td>64</td><td>55</td><td>45</td><td>92</td><td>86°</td><td>76</td><td>Social brain hypothesis; cochlear shape</td></tr></tbody></table></div>
+
+      <h2 class="people-sub">Five steps each generation</h2>
+      <ol class="how-steps">
+        <li><h3>Fitness</h3><p>The game scores each otter by how close its traits sit to the habitat's targets, averaged across all six traits. Brain size counts at 70% of the others. The score follows a bell curve: an otter right on target scores 1.0, an otter 10 units off on average scores 0.71, 20 units off scores 0.25, and 30 units off scores 0.04.</p></li>
+        <li><h3>Natural selection</h3><p>Each otter survives the season with a chance of 25% plus 70% of its fitness. A perfect fit survives 95% of the time, an otter 10 units off 75%, 20 units off 42%, and 30 units off 28%. At least three otters always survive, so the population never disappears.</p></li>
+        <li><h3>Inheritance</h3><p>Survivors pair up and raise 12 pups. The game picks parents in proportion to fitness squared, so the best-suited otters raise many more pups than poorly suited ones. Each pup's trait equals the average of its two parents plus a small random difference of about 6 units.</p></li>
+        <li><h3>Mutation</h3><p>Each trait in each pup has a 2.5% chance of a larger jump of about 16 units, up or down. About one pup in seven carries at least one mutation.</p></li>
+        <li><h3>Genetic drift</h3><p>The game does not add drift as a separate step. Drift comes from the chance built into survival and parent choice. With only 12 otters, luck matters: a well-suited otter can die and a poorly suited one can thrive.</p></li>
+      </ol>
+
+      <h2 class="people-sub">Good years and hard years</h2>
+      <p>The first season in a habitat is always a normal year. Each later season there rolls a good year (30%), a normal year (32%), or a hard year (38%).</p>
+      <ul class="how-list">
+        <li><b>Hard years</b> raise the bar. Survival starts 10 points lower, fitness counts at 85%, food is scarcer, energy drains faster, eagles strike more often, and goals grow larger. Selection gets stronger.</li>
+        <li><b>Good years</b> ease up. Survival starts 10 points higher, food is plentiful, and goals shrink. More otters survive regardless of fit.</li>
+      </ul>
+      <p>This mirrors fluctuating selection in wild populations, such as Darwin's finches after droughts.</p>
+
+      <h2 class="people-sub">The player's otter</h2>
+      <ul class="how-list">
+        <li>Finishing at least two of the season's three goals guarantees the player's otter survives. Each finished goal, plus the rare golden fish, adds an extra pup to its family.</li>
+        <li>An otter that loses all its hearts dies, and the player continues as a pup from another family.</li>
+        <li>The otter's traits shape play: thin fur drains energy in the snow, thick fur overheats on desert land, canals near 93° steer better in rapids, a flatter and longer cochlea extends sight in murky water, and a bigger brain widens the minimap's food radar.</li>
+        <li>Because the player's skill decides those extra pups, the player's family acts more like luck than like natural selection from the population's point of view.</li>
+      </ul>
+
+      <h2 class="people-sub">Plasticity is not evolution</h2>
+      <p>During a season, the player's otter grows thicker fur in the snow and thinner fur in the desert. That change happens within one lifetime and never passes to pups. Only the heritable traits above evolve.</p>
+
+      <h2 class="people-sub">What to expect after eight generations</h2>
+      <p>Average results from 300 simulated runs of eight generations in one habitat, without a player. Single games vary because of drift.</p>
+      <div class="how-table-wrap"><table class="how-table"><thead><tr><th scope="col">Habitat</th><th scope="col">Body size</th><th scope="col">Fur</th><th scope="col">Ears and tail</th><th scope="col">Cochlea</th><th scope="col">Canal angle</th><th scope="col">Brain</th></tr></thead><tbody><tr class="start"><th scope="row">Starting otters</th><td>50</td><td>50</td><td>50</td><td>50</td><td>84°</td><td>50</td></tr><tr><th scope="row">Snowy North</th><td>69</td><td>73</td><td>30</td><td>47</td><td>85°</td><td>51</td></tr><tr><th scope="row">Desert River</th><td>38</td><td>28</td><td>72</td><td>41</td><td>85°</td><td>42</td></tr><tr><th scope="row">Fast Mountain River</th><td>54</td><td>50</td><td>50</td><td>69</td><td>90°</td><td>60</td></tr><tr><th scope="row">Slow Marsh Stream</th><td>54</td><td>46</td><td>54</td><td>69</td><td>77°</td><td>50</td></tr><tr><th scope="row">Murky Pond</th><td>50</td><td>46</td><td>50</td><td>77</td><td>82°</td><td>56</td></tr><tr><th scope="row">Deep Clear Lake</th><td>60</td><td>54</td><td>47</td><td>78</td><td>85°</td><td>65</td></tr></tbody></table></div>
+
+      <h2 class="people-sub">What the game simplifies</h2>
+      <ul class="how-list">
+        <li>Each trait evolves independently; real traits often share genes.</li>
+        <li>Otters have no sexes, ages, or overlapping generations.</li>
+        <li>Eight generations of change happen far faster than in real populations.</li>
+        <li>Habitat targets and trait values are illustrative, not data.</li>
+      </ul>
+
+      <h2 class="people-sub">Concepts and hypotheses in the Science Journal</h2>
+      <p>The hypotheses below are ideas our lab and others are testing, not settled answers.</p>
+      <ul class="how-cols"><li>Phenotypic plasticity</li><li>Darwinian fitness</li><li>Natural selection (Darwin &amp; Wallace, 1858)</li><li>Heredity and heritability</li><li>Mutation and genetic variation</li><li>Genetic drift (Wright, 1931)</li><li>Fluctuating selection (Grant &amp; Grant, 2002)</li><li>Local adaptation and intraspecific variation</li><li>Bergmann's rule (Bergmann, 1847)</li><li>Allen's rule (Allen, 1877)</li><li>Expensive tissue hypothesis (Aiello &amp; Wheeler, 1995)</li><li>Cognitive buffer hypothesis (Allman et al., 1993; Sol, 2009)</li><li>Social brain hypothesis (Dunbar, 1998)</li><li>Agility hypothesis (Spoor et al., 2007); canal orthogonality (Malinzak et al., 2012)</li><li>Relaxed selection (Lahti et al., 2009)</li><li>Sensory drive hypothesis (Endler, 1992)</li><li>Cochlear shape and hearing range (West, 1985; Manoussaki et al., 2008)</li></ul>
+      <p><a class="btn primary" href="otter-game.html">Play Otter Evolution →</a></p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js?v=9"></script>
+</body>
+</html>

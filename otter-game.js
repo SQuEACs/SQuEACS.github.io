@@ -153,11 +153,17 @@
     vol = clamp(vol, 0.005, 0.25); const t = a.currentTime, g = a.createGain(); g.connect(a.destination);
     const osc = (type, f) => { const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); return o; };
     const lfoTo = (param, rate, depth, dur) => { const l = osc("sine", rate), lg = a.createGain(); lg.gain.value = depth; l.connect(lg); lg.connect(param); l.start(t); l.stop(t + dur); };
-    if (kind === "eagle") {           // low wing whoosh plus a deep two-note warning (no high screech)
-      const n = a.createBufferSource(); n.buffer = noise(a);
-      const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(180, t); f.frequency.linearRampToValueAtTime(520, t + 0.25); f.frequency.linearRampToValueAtTime(160, t + 0.6);
-      n.connect(f); f.connect(g); env(a, g, vol * 1.4, 0.12, 0.65); n.start(t); n.stop(t + 0.7);
-      [[147, 0], [131, 0.22]].forEach(([fr, dt]) => { const o = a.createOscillator(), gg = a.createGain(); o.type = "triangle"; o.frequency.value = fr; o.connect(gg); gg.connect(a.destination); const st = t + dt; gg.gain.setValueAtTime(0.0001, st); gg.gain.exponentialRampToValueAtTime(vol * 0.9, st + 0.02); gg.gain.exponentialRampToValueAtTime(0.0001, st + 0.2); o.start(st); o.stop(st + 0.22); });
+    if (kind === "eagle") {           // red-tailed-hawk style "kee-eeer", pitched down (~900 -> 400 Hz) so it's not shrill
+      const o = osc("sawtooth", 620);
+      o.frequency.linearRampToValueAtTime(900, t + 0.12);
+      o.frequency.exponentialRampToValueAtTime(420, t + 0.95);
+      lfoTo(o.frequency, 22, 28, 1.0);                       // raspy flutter
+      const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 1400; f.Q.value = 3;
+      o.connect(f); f.connect(g);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.08); g.gain.setValueAtTime(vol, t + 0.45); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+      o.start(t); o.stop(t + 1.05);
+      const n = a.createBufferSource(); n.buffer = noise(a); const bp = a.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 700; bp.Q.value = 1.2;
+      const gn = a.createGain(); n.connect(bp); bp.connect(gn); gn.connect(a.destination); env(a, gn, vol * 0.35, 0.08, 0.9); n.start(t); n.stop(t + 0.95);
     } else if (kind === "growl") {    // low coyote growl
       const o = osc("sawtooth", 80); lfoTo(o.frequency, 13, 22, 0.7);
       const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 450; o.connect(f); f.connect(g);
@@ -986,7 +992,7 @@
         const range = { eagle: 45, coyote: 26, gator: 18 }[near.kind];
         if (nd < range) {
           const k = 1 - nd / range;
-          if (near.kind === "eagle") { sfx("eagle", near.state === "swoop" ? 0.22 : 0.06 + 0.12 * k); S.sndT = near.state === "swoop" ? 0.5 : 0.9 - 0.5 * k; }
+          if (near.kind === "eagle") { sfx("eagle", near.state === "swoop" ? 0.2 : 0.07 + 0.11 * k); S.sndT = near.state === "swoop" ? 1.1 : 1.6 - 0.4 * k; }
           else if (near.kind === "coyote") { if (near.chasing) { sfx("growl", 0.06 + 0.16 * k); S.sndT = 0.25 + (1 - k) * 0.9; } else { sfx("howl", 0.03 + 0.06 * k); S.sndT = 4; } }
           else { sfx("gator", 0.04 + (near.state === "lunge" || near.state === "aim" ? 0.16 : 0.08) * k); S.sndT = near.state === "lunge" ? 0.35 : 0.8 + (1 - k) * 1.4; }
         }

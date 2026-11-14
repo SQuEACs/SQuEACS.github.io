@@ -140,16 +140,16 @@
   /* ---------- Game state ---------- */
   const SAVE_KEY = CL ? "squeacs-tadpole-trek-classroom" : "squeacs-tadpole-trek";
   const newBrain = () => ({ olf: 100, tel: 100, tect: 100, cereb: 100, med: 100 });
-  let G = { screen: "title", stage: 0, brain: newBrain(), size: 0, history: [], life: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, nature: {}, gallery: [], opts: { ...OPT0 }, inRun: false, totals: { eaten: 0, finds: 0, gems: 0 }, retry: 0 };
+  let G = { screen: "title", stage: 0, brain: newBrain(), size: 0, history: [], life: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, nature: {}, gallery: [], opts: { ...OPT0 }, runId: 0, inRun: false, totals: { eaten: 0, finds: 0, gems: 0 }, retry: 0 };
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
     if (s.v === 1) {
       ["unlocked", "worn", "dex", "treasure", "nature", "seen"].forEach(k => { if (s[k]) G[k] = s[k]; });
-      if (s.opts) G.opts = { ...OPT0, ...s.opts }; if (s.gallery) G.gallery = s.gallery; if (s.totals) G.totals = s.totals; if (s.life) G.life = s.life;
+      if (s.opts) G.opts = { ...OPT0, ...s.opts }; if (s.runId) G.runId = s.runId; if (s.gallery) G.gallery = s.gallery; if (s.totals) G.totals = s.totals; if (s.life) G.life = s.life;
       if (s.run && s.run.history) { Object.assign(G, s.run); G.inRun = true; }
     }
   } catch (e) {}
-  const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, unlocked: G.unlocked, worn: G.worn, dex: G.dex, treasure: G.treasure, nature: G.nature, seen: G.seen, opts: G.opts, gallery: G.gallery.slice(-30), totals: G.totals, life: G.life.slice(-60),
+  const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, runId: G.runId || 0, unlocked: G.unlocked, worn: G.worn, dex: G.dex, treasure: G.treasure, nature: G.nature, seen: G.seen, opts: G.opts, gallery: G.gallery.slice(-30), totals: G.totals, life: G.life.slice(-60),
     run: G.inRun ? { stage: G.stage, brain: G.brain, size: G.size, history: G.history } : null })); } catch (e) {} };
   const hasCollections = () => Object.keys(G.unlocked).length || Object.keys(G.dex).length || Object.keys(G.treasure).length || G.gallery.length || Object.keys(G.seen).length || Object.keys(G.nature).length;
 
@@ -950,7 +950,7 @@
     running = false; keys = {}; $("og-hud").hidden = true; glc.hidden = true; canvas.hidden = false; $("og-touch").hidden = true; endTouch();
     stageEl.appendChild($("og-corner"));
   }
-  function logLife(e) { G.life.push(e); }
+  function logLife(e) { G.life.push({ ...e, run: G.runId || 0 }); }
   function endStage() {
     if (S && S.lab) { endLab(); return; }
     const st = st0(), wasQuick = S && S.quick; leaveSeason();
@@ -964,7 +964,7 @@
     RK.forEach(k => { after[k] = clamp(before[k] - loss[k], 25, 100); });
     const gain = 20 * clamp(S.eaten / eatN(st), 0.25, 1) * (1 - 0.25 * E.litter / 100), size = Math.min(100, G.size + gain);
     const entry = { stage: G.stage, name: st.name, E, eaten: S.eaten, target: eatN(st), gain, size, before, after, loss, hurts: S.hurts, finds: S.finds.slice(), ev: { ...S.ev }, gems: S.gems.slice(), reached: S.reached, penalty, retries: G.retry, zt: { ...S.zt } };
-    G.brain = after; G.size = size; G.history.push(entry); G.gallery.push({ label: `Stage ${G.stage + 1}: ${st.name}`, scores: { ...after } });
+    G.brain = after; G.size = size; G.history.push(entry); G.gallery.push({ label: `Stage ${G.stage + 1}: ${st.name}`, scores: { ...after }, run: G.runId || 0 });
     G.inRun = true; logLife({ stage: G.stage, name: st.name, dead: false, E, eaten: S.eaten, finds: entry.finds, ev: entry.ev, gems: entry.gems, gain, reached: S.reached, after: { ...after } });
     G.retry = 0; G.stage++;
     // outfit rules
@@ -1022,7 +1022,7 @@
     onBack(back);
   }
   function newGame() {
-    G.inRun = false; G.stage = 0; G.brain = newBrain(); G.size = 0; G.history = []; G.retry = 0; PRED = {}; save(); updatePanels();
+    G.inRun = false; G.stage = 0; G.brain = newBrain(); G.size = 0; G.history = []; G.retry = 0; PRED = {}; G.runId = (G.runId || 0) + 1; save(); updatePanels();
     if (window.SQ_track && !CL) window.SQ_track("play", "tadpole-game");
     screenSettings(() => screenBriefing());
   }
@@ -1055,7 +1055,7 @@
       <div class="og-actions"><button type="button" class="og-btn og-danger" id="og-erase-yes">Yes, erase everything</button><button type="button" class="og-btn ghost" id="og-erase-no">Keep my stuff</button></div></div>`);
     onBack(screenTitle); $("og-erase-no").addEventListener("click", screenTitle); $("og-erase-no").focus({ preventScroll: true });
     $("og-erase-yes").addEventListener("click", () => {
-      Object.assign(G, { stage: 0, brain: newBrain(), size: 0, history: [], life: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, nature: {}, gallery: [], inRun: false, totals: { eaten: 0, finds: 0, gems: 0 }, retry: 0 });
+      Object.assign(G, { runId: 0, stage: 0, brain: newBrain(), size: 0, history: [], life: [], seen: {}, unlocked: {}, worn: {}, dex: {}, treasure: {}, nature: {}, gallery: [], inRun: false, totals: { eaten: 0, finds: 0, gems: 0 }, retry: 0 });
       save(); renderCloset(); renderDex(); renderTreasure(); renderNature(); updatePanels(); resetJournal();
       document.querySelectorAll(".og-slot .og-badge-new").forEach(x => { x.hidden = true; x.parentElement.classList.remove("has-new"); }); $("og-bag").classList.remove("has-new");
       beep(165, 0.15, "triangle", 0.05); screenTitle(); toast("Everything erased. Fresh start!");
@@ -1243,26 +1243,40 @@
   /* ============================================================
      MENU WINDOWS
      ============================================================ */
+
+  // Life story and brain collection are grouped by tadpole: the current (or most recent) one stays open, earlier ones collapse.
+  function runIds(list) { return [...new Set(list.map(x => x.run || 0))].sort((a, b) => b - a); }
+  function currentRun(ids) { const r = G.runId || 0; return G.inRun && ids.includes(r) ? r : ids[0]; }
+  const runName = id => id ? "Tadpole " + id : "Earlier tadpoles";
   function renderLife() {
     const box = $("og-life"); if (!box) return;
     if (!G.life.length) { box.innerHTML = '<p class="og-panel-sub">Your tadpole\'s story starts after your first stage. Every stage adds a page.</p>'; return; }
     const tot = { eaten: 0, finds: 0, stages: 0, caught: 0, dodges: 0, gems: 0 };
     G.life.forEach(e => { tot.eaten += e.eaten || 0; tot.finds += (e.finds || []).length; tot.gems += (e.gems || []).length; if (e.dead) tot.caught++; else tot.stages++; Object.entries(e.ev || {}).forEach(([k, n]) => { if (/^(dodge|escape|hide)/.test(k)) tot.dodges += n; }); });
     const chip = (ic, n, label) => `<span class="og-lchip">${ic}<b>${n}</b><small>${label}</small></span>`;
-    const entries = G.life.slice().reverse().map(e => {
+    const entryHtml = e => {
       const esc = Object.entries(e.ev || {}).filter(([k]) => /^(dodge|escape|hide)/.test(k)).map(([k, n]) => { const [kind, who] = k.split(":"); return kind === "dodge" ? `dodged a heron${n > 1 ? " ×" + n : ""}` : kind === "hide" ? `hid from a fish${n > 1 ? " ×" + n : ""}` : `slipped away from a ${who}${n > 1 ? " ×" + n : ""}`; });
       if (e.dead) return `<article class="og-lentry"><header><b>Stage ${e.stage + 1} · ${e.name}</b><span>Try again</span></header><p>${e.cause}</p><p class="og-lout lost">Caught before the stage ended.</p></article>`;
       const ex = e.E; const worst = ["metal", "pfas", "litter"].sort((a, b) => ex[b] - ex[a])[0];
       return `<article class="og-lentry"><header><b>Stage ${e.stage + 1} · ${e.name}</b><span>${e.reached ? "Reached clean habitat" : "Stayed in the pond"}</span></header>
         <p>Ate ${e.eaten} algae. Most exposure: ${ex[worst] < 5 ? "almost none" : GRP[worst].name.toLowerCase() + " (" + pct(ex[worst]) + ")"}.${esc.length ? " " + esc.join(", ").replace(/^./, c => c.toUpperCase()) + "." : ""}${e.finds && e.finds.length ? " Found " + e.finds.join(", ") + "." : ""}${e.gems && e.gems.length ? " Popped " + e.gems.join(", ") + "." : ""}</p></article>`;
-    }).join("");
-    box.innerHTML = `<div class="og-lsum"><div><h4>Trek record</h4><div class="og-lchips">${chip(ICON.flag, tot.stages, tot.stages === 1 ? "stage" : "stages")}${chip(ICON.algae, tot.eaten, "algae eaten")}${chip(ICON.ring, tot.finds, tot.finds === 1 ? "find" : "finds")}${chip(ICON.gem, tot.gems, tot.gems === 1 ? "treasure" : "treasures")}${chip(ICON.hide, tot.dodges, "close calls")}${chip(ICON.heart, tot.caught, tot.caught === 1 ? "catch" : "catches")}</div></div></div><h4 class="og-mini">Stage by stage</h4><div class="og-lentries">${entries}</div>`;
+    };
+    const lifeGroups = () => {
+      const ids = runIds(G.life), cur = currentRun(ids), prev = ids.filter(id => id !== cur);
+      const of = id => G.life.filter(e => (e.run || 0) === id).reverse(), body = id => `<div class="og-lentries">${of(id).map(entryHtml).join("")}</div>`;
+      const sum = id => { const l = of(id), done = l.filter(e => !e.dead).length, caught = l.length - done; return `${Math.min(done, NSTAGE)} of ${NSTAGE} stages${caught ? ` · ${caught} ${caught === 1 ? "catch" : "catches"}` : ""}${done >= NSTAGE ? " · became a froglet" : ""}`; };
+      return `<h4 class="og-gcur">${G.inRun && cur === (G.runId || 0) ? "This tadpole" : "Most recent tadpole"}${cur ? ` <span>${runName(cur)}</span>` : ""}</h4>${body(cur)}${prev.length ? `<h4 class="og-gcur">Earlier tadpoles <span>Tap to open</span></h4>${prev.map(id => `<details class="og-gprev"><summary><b>${runName(id)}</b><span>${sum(id)}</span></summary>${body(id)}</details>`).join("")}` : ""}`;
+    };
+    box.innerHTML = `<div class="og-lsum"><div><h4>Trek record</h4><div class="og-lchips">${chip(ICON.flag, tot.stages, tot.stages === 1 ? "stage" : "stages")}${chip(ICON.algae, tot.eaten, "algae eaten")}${chip(ICON.ring, tot.finds, tot.finds === 1 ? "find" : "finds")}${chip(ICON.gem, tot.gems, tot.gems === 1 ? "treasure" : "treasures")}${chip(ICON.hide, tot.dodges, "close calls")}${chip(ICON.heart, tot.caught, tot.caught === 1 ? "catch" : "catches")}</div></div></div>${lifeGroups()}`;
   }
   function renderGallery() {
     const box = $("og-gallery"); if (!box) return;
     if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Finish a stage to add your first brain.</p>'; return; }
-    box.innerHTML = G.gallery.slice().reverse().map((g, i) => `<figure class="og-gtile" style="--gc:#ff5900"><div><canvas data-g="${i}" aria-hidden="true"></canvas></div><figcaption><b>${g.label}</b></figcaption></figure>`).join("");
-    const arr = G.gallery.slice().reverse(); box.querySelectorAll("canvas[data-g]").forEach(cv => drawBrain(arr[+cv.dataset.g].scores, cv));
+    const all = G.gallery.map((g, i) => ({ g, i })), ids = runIds(G.gallery), cur = currentRun(ids), prev = ids.filter(id => id !== cur);
+    const tiles = id => `<div class="og-gallery-grid">${all.filter(x => (x.g.run || 0) === id).reverse().map(x => `<figure class="og-gtile" style="--gc:#ff5900"><div><canvas data-gi="${x.i}" aria-hidden="true"></canvas></div><figcaption><b>${x.g.label}</b></figcaption></figure>`).join("")}</div>`;
+    box.innerHTML = `<h4 class="og-gcur">${G.inRun && cur === (G.runId || 0) ? "This tadpole" : "Most recent tadpole"}${cur ? ` <span>${runName(cur)}</span>` : ""}</h4>${tiles(cur)}${prev.length ? `<h4 class="og-gcur">Earlier tadpoles <span>Tap to open</span></h4>${prev.map(id => `<details class="og-gprev"><summary><b>${runName(id)}</b><span>${all.filter(x => (x.g.run || 0) === id).length} brains</span></summary>${tiles(id)}</details>`).join("")}` : ""}`;
+    const draw = root => root.querySelectorAll("canvas[data-gi]").forEach(cv => { if (cv.closest("details:not([open])")) return; drawBrain(G.gallery[+cv.dataset.gi].scores, cv); });
+    draw(box); box.querySelectorAll("details.og-gprev").forEach(d => d.addEventListener("toggle", () => { if (d.open) draw(d); }));
   }
   function drawChart() {
     const cv = $("og-chart"); if (!cv || !cv.getBoundingClientRect().width) return;

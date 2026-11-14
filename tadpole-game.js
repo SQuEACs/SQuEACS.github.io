@@ -151,6 +151,27 @@
   } catch (e) {}
   const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, runId: G.runId || 0, unlocked: G.unlocked, worn: G.worn, dex: G.dex, treasure: G.treasure, nature: G.nature, seen: G.seen, opts: G.opts, gallery: G.gallery.slice(-30), totals: G.totals, life: G.life.slice(-60),
     run: G.inRun ? { stage: G.stage, brain: G.brain, size: G.size, history: G.history } : null })); } catch (e) {} };
+  // Saves from before tadpoles were numbered have no run on their Life story and brain entries, so every earlier
+  // tadpole lumped into one group. Split them back into tadpoles from the stage order, then renumber so the
+  // oldest tadpole is 1 and later ones follow.
+  (function splitOldTadpoles() {
+    const oldLife = G.life.filter(e => !e.run), oldGal = G.gallery.filter(g => !g.run);
+    if (!oldLife.length && !oldGal.length) return;
+    const galStage = g => { const m = /^Stage (\d+)/.exec(g.label || ""); return m ? +m[1] - 1 : -1; };
+    // a new tadpole starts unless this entry retries the stage the last one was caught in, or is the next stage after one it finished
+    const split = (list, stageOf, deadOf) => { let id = 0; list.forEach((e, i) => { const p = list[i - 1]; if (!p || !(deadOf(p) ? stageOf(e) === stageOf(p) : stageOf(e) === stageOf(p) + 1)) id++; e.run = id; }); return id; };
+    // brains are saved with the stages that were finished, so match them to finished Life story stages from the newest back
+    const done = oldLife.filter(e => !e.dead); let n = 0;
+    while (n < oldGal.length && n < done.length && galStage(oldGal[oldGal.length - 1 - n]) === done[done.length - 1 - n].stage) n++;
+    const extra = oldGal.slice(0, oldGal.length - n), u = split(extra, galStage, () => false);
+    const k = split(oldLife, e => e.stage, e => !!e.dead), K = u + k;
+    oldLife.forEach(e => { e.run += u; });
+    oldGal.slice(oldGal.length - n).forEach((g, j) => { g.run = done[done.length - n + j].run; });
+    G.life.concat(G.gallery).forEach(x => { if (oldLife.indexOf(x) < 0 && oldGal.indexOf(x) < 0) x.run += K; });
+    // a tadpole still in progress from before the update keeps its place as the newest one
+    G.runId = G.runId ? G.runId + K : K;
+    save();
+  })();
   const hasCollections = () => Object.keys(G.unlocked).length || Object.keys(G.dex).length || Object.keys(G.treasure).length || G.gallery.length || Object.keys(G.seen).length || Object.keys(G.nature).length;
 
   /* ---------- Sizing ---------- */
@@ -1274,7 +1295,7 @@
     if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Finish a stage to add your first brain.</p>'; return; }
     const all = G.gallery.map((g, i) => ({ g, i })), ids = runIds(G.gallery), cur = currentRun(ids), prev = ids.filter(id => id !== cur);
     const tiles = id => `<div class="og-gallery-grid">${all.filter(x => (x.g.run || 0) === id).reverse().map(x => `<figure class="og-gtile" style="--gc:#ff5900"><div><canvas data-gi="${x.i}" aria-hidden="true"></canvas></div><figcaption><b>${x.g.label}</b></figcaption></figure>`).join("")}</div>`;
-    box.innerHTML = `<h4 class="og-gcur">${G.inRun && cur === (G.runId || 0) ? "This tadpole" : "Most recent tadpole"}${cur ? ` <span>${runName(cur)}</span>` : ""}</h4>${tiles(cur)}${prev.length ? `<h4 class="og-gcur">Earlier tadpoles <span>Tap to open</span></h4>${prev.map(id => `<details class="og-gprev"><summary><b>${runName(id)}</b><span>${all.filter(x => (x.g.run || 0) === id).length} brains</span></summary>${tiles(id)}</details>`).join("")}` : ""}`;
+    box.innerHTML = `<h4 class="og-gcur">${G.inRun && cur === (G.runId || 0) ? "This tadpole" : "Most recent tadpole"}${cur ? ` <span>${runName(cur)}</span>` : ""}</h4>${tiles(cur)}${prev.length ? `<h4 class="og-gcur">Earlier tadpoles <span>Tap to open</span></h4>${prev.map(id => `<details class="og-gprev"><summary><b>${runName(id)}</b><span>${((n) => n + (n === 1 ? " brain" : " brains"))(all.filter(x => (x.g.run || 0) === id).length)}</span></summary>${tiles(id)}</details>`).join("")}` : ""}`;
     const draw = root => root.querySelectorAll("canvas[data-gi]").forEach(cv => { if (cv.closest("details:not([open])")) return; drawBrain(G.gallery[+cv.dataset.gi].scores, cv); });
     draw(box); box.querySelectorAll("details.og-gprev").forEach(d => d.addEventListener("toggle", () => { if (d.open) draw(d); }));
   }

@@ -17,12 +17,17 @@
   const view = $("mm-view"), cap = $("mm-cap"), pop = $("mm-pop");
   const SAVE_KEY = CL ? "squeacs-mammal-mystery-classroom" : "squeacs-mammal-mystery";
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  // Say it a different way each time: deal phrases from a shuffled pile, never the same one twice in a row.
+  // Say it a different way each time: deal from a shuffled pile of wordings, never the same one twice in a row.
+  // The pile holds positions, not the sentences themselves, because many wordings name the current
+  // animal or body part and must be rebuilt from the list passed in on every call.
   const piles = {}, lastSaid = {};
   function vary(key, list) {
     let p = piles[key];
-    if (!p || !p.length) { p = piles[key] = shuffle(list); if (p.length > 1 && p[p.length - 1] === lastSaid[key]) p.unshift(p.pop()); }
-    return (lastSaid[key] = p.pop());
+    if (!p || !p.length || p.n !== list.length) {
+      p = piles[key] = shuffle(list.map((_, i) => i)); p.n = list.length;
+      if (p.length > 1 && p[p.length - 1] === lastSaid[key]) p.unshift(p.pop());
+    }
+    return list[(lastSaid[key] = p.pop())];
   }
   const PH = {
     yes: ["Yes!", "You got it!", "That's right!", "Hooray!", "Wow, yes!", "Nice work!", "Great spotting!"],

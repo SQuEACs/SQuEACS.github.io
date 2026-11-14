@@ -3,7 +3,7 @@
    Paste the Web app URL from counter/Code.gs here (see README).
    Leave it empty to turn counting off.
    ============================================================ */
-const COUNTER_URL = "";
+const COUNTER_URL = "https://script.google.com/macros/s/AKfycbwX39W08Ex43gFEn0304uEZ386CL40Azq_WrvVnqJ6Faic6dcPQ8u9J7pmzw4o6awcn/exec";
 
 // Sends one event to the lab's Sheet. Fire-and-forget; never blocks the page.
 function track(event, model, label) {

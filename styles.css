@@ -1074,3 +1074,9 @@ body.og-noscroll { overflow: hidden; }
 .og-lentry header b { font: 700 1rem/1 var(--og-font); } .og-lentry header span { font: 600 0.8rem/1 var(--og-font); color: #6b6380; }
 .og-lentry p { font-size: 0.9rem; line-height: 1.4; }
 .og-lout { font-weight: 700; } .og-lout.ok { color: #138a4a; } .og-lout.lost { color: #c2185b; }
+/* Anatomy collection grouped by habitat */
+.og-gallery { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
+.og-ghab { background: #f3eefc; border-radius: 14px; padding: 0.6rem; box-shadow: inset 5px 0 0 var(--gc, #a47bff); }
+.og-ghab h4 { display: flex; align-items: baseline; gap: 0.5rem; font: 700 1rem/1 var(--og-font); color: #1b1530; margin: 0 0 0.5rem 0.4rem; }
+.og-ghab h4 span { font-size: 0.78rem; font-weight: 600; color: #6b6380; }
+.og-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem; }

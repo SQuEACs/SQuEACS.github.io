@@ -1587,10 +1587,14 @@
   function renderGallery() {
     const box = $("og-gallery"); if (!box) return;
     if (!G.gallery.length) { box.innerHTML = '<p class="og-panel-sub">Play a season to start collecting brains and inner ears.</p>'; return; }
-    box.innerHTML = G.gallery.slice().reverse().map((g, i) => `<figure class="og-gtile og-g-${g.hab}"><div><canvas data-gi="${i}" data-kind="brain"></canvas><canvas data-gi="${i}" data-kind="ear"></canvas></div>
-      <figcaption><b>${g.label || "Gen " + g.gen} · ${HAB[g.hab].name}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`).join("");
-    const list = G.gallery.slice().reverse();
-    box.querySelectorAll("canvas[data-gi]").forEach(cv => { const g = list[+cv.dataset.gi]; (cv.dataset.kind === "brain" ? drawBrain : drawEar)(g, cv); });
+    // Group by habitat (in habitat order), oldest generation first within each group
+    const tile = (g, i) => `<figure class="og-gtile og-g-${g.hab}"><div><canvas data-gi="${i}" data-kind="brain"></canvas><canvas data-gi="${i}" data-kind="ear"></canvas></div>
+      <figcaption><b>${g.label || "Gen " + g.gen}</b><span>Brain ${g.brain} · Cochlea ${(1.8 + g.cochlea / 100 * 1.1).toFixed(1)} turns · Canals ${degOf(g.canal)}°</span></figcaption></figure>`;
+    box.innerHTML = ORDER.filter(h => G.gallery.some(g => g.hab === h)).map(h => {
+      const items = G.gallery.map((g, i) => ({ g, i })).filter(x => x.g.hab === h);
+      return `<section class="og-ghab og-g-${h}"><h4>${HAB[h].name}<span>${items.length} ${items.length === 1 ? "generation" : "generations"}</span></h4><div class="og-gallery-grid">${items.map(x => tile(x.g, x.i)).join("")}</div></section>`;
+    }).join("");
+    box.querySelectorAll("canvas[data-gi]").forEach(cv => { const g = G.gallery[+cv.dataset.gi]; (cv.dataset.kind === "brain" ? drawBrain : drawEar)(g, cv); });
   }
   function updatePanels() {
     const pop = G.pop.length ? G.pop : newPopulation(), m = meanTraits(pop);

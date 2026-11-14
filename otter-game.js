@@ -153,10 +153,11 @@
     vol = clamp(vol, 0.005, 0.25); const t = a.currentTime, g = a.createGain(); g.connect(a.destination);
     const osc = (type, f) => { const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); return o; };
     const lfoTo = (param, rate, depth, dur) => { const l = osc("sine", rate), lg = a.createGain(); lg.gain.value = depth; l.connect(lg); lg.connect(param); l.start(t); l.stop(t + dur); };
-    if (kind === "eagle") {           // high, rasping screech
-      const o = osc("sawtooth", 2500); o.frequency.exponentialRampToValueAtTime(1300, t + 0.5); lfoTo(o.frequency, 30, 140, 0.6);
-      const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1900; f.Q.value = 1.5; o.connect(f); f.connect(g);
-      env(a, g, vol, 0.03, 0.55); o.start(t); o.stop(t + 0.6);
+    if (kind === "eagle") {           // low wing whoosh plus a deep two-note warning (no high screech)
+      const n = a.createBufferSource(); n.buffer = noise(a);
+      const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(180, t); f.frequency.linearRampToValueAtTime(520, t + 0.25); f.frequency.linearRampToValueAtTime(160, t + 0.6);
+      n.connect(f); f.connect(g); env(a, g, vol * 1.4, 0.12, 0.65); n.start(t); n.stop(t + 0.7);
+      [[147, 0], [131, 0.22]].forEach(([fr, dt]) => { const o = a.createOscillator(), gg = a.createGain(); o.type = "triangle"; o.frequency.value = fr; o.connect(gg); gg.connect(a.destination); const st = t + dt; gg.gain.setValueAtTime(0.0001, st); gg.gain.exponentialRampToValueAtTime(vol * 0.9, st + 0.02); gg.gain.exponentialRampToValueAtTime(0.0001, st + 0.2); o.start(st); o.stop(st + 0.22); });
     } else if (kind === "growl") {    // low coyote growl
       const o = osc("sawtooth", 80); lfoTo(o.frequency, 13, 22, 0.7);
       const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 450; o.connect(f); f.connect(g);
@@ -892,7 +893,7 @@
       if (p.kind === "eagle") {
         if (p.state === "circle") {
           p.a += dt * 0.4; p.x = S.x + Math.cos(p.a) * 30; p.z = S.z + Math.sin(p.a) * 30; p.y = 28; p.cd -= dt;
-          if (p.cd <= 0 && alive) { p.state = "warn"; p.timer = 1.8; p.tx = S.x; p.tz = S.z; toast("Eagle! Dive underwater or hide under a tree!"); beep(1200, 0.15, "square", 0.05); }
+          if (p.cd <= 0 && alive) { p.state = "warn"; p.timer = 1.8; p.tx = S.x; p.tz = S.z; toast("Eagle! Dive underwater or hide under a tree!"); sfx("eagle", 0.14); }
         } else if (p.state === "warn") {
           p.timer -= dt; p.tx = lerp(p.tx, S.x, 0.06); p.tz = lerp(p.tz, S.z, 0.06);
           p.x = lerp(p.x, p.tx, 0.03); p.z = lerp(p.z, p.tz, 0.03);

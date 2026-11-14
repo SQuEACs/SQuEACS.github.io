@@ -148,8 +148,8 @@
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: true }, gallery: [], inRun: false, nature: {}, life: [] };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.gallery = s.gallery || []; G.seen = s.seen || {}; G.nature = s.nature || {};
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: false }, gallery: [], inRun: false, nature: {}, life: [] };
+  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.opts.timer = false;   // timer mode retired: seasons end when goals are done G.gallery = s.gallery || []; G.seen = s.seen || {}; G.nature = s.nature || {};
     if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; } } } catch (e) {}
   const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-30), seen: G.seen, nature: G.nature,
     run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life } : null })); } catch (e) {} };
@@ -1278,7 +1278,7 @@
       <p class="og-badge">Generation ${G.gen} · ${HAB[G.hab].name}</p>
       ${plan.year !== "normal" ? `<div class="og-year og-year-${plan.year}">${ICON[Y.icon]}<b>${Y.name}!</b><span>${YEAR_TEXT[plan.year][G.hab]} ${plan.year === "hard" ? "Goals are tougher and fewer otters will survive." : "Goals are easier and more otters will survive."}</span></div>` : ""}
       <h2 class="og-h">Your mission</h2>
-      <div class="og-modes"><span>${G.opts.preds ? "Predators on" : "No predators"}</span><span>${G.opts.timer ? "75-second timer" : "No timer"}</span><button type="button" class="og-link" id="og-change">Change settings</button></div>
+      <div class="og-modes"><span>${G.opts.preds ? "Predators on" : "No predators"}</span><button type="button" class="og-link" id="og-change">Change settings</button></div>
       <ul class="og-goals">${tasks.map(t => `<li>${taskIcon(t)}<span>${t.label}</span></li>`).join("")}</ul>
       <div class="og-brief-grid">
         <section><h3 class="og-mini">Danger!</h3>
@@ -1294,7 +1294,7 @@
         </section>
       </div>
       <div class="og-controls">${controls}</div>
-      <p class="og-sub og-small">${G.opts.timer ? "Finish 2 goals and your otter survives. Finish all 3 for the most pups!" : "Take your time! The season ends when you finish all 3 goals, or tap End season."}</p>${(coarse || touchMode) && matchMedia("(orientation: portrait)").matches ? '<p class="og-sub og-small">📱 Tip: turn your phone sideways for a bigger view.</p>' : ""}
+      <p class="og-sub og-small">Take your time! The season ends when you finish all 3 goals. Stuck? Tap <b>End season</b>. Finishing at least 2 goals still keeps your otter safe.</p>${(coarse || touchMode) && matchMedia("(orientation: portrait)").matches ? '<p class="og-sub og-small">📱 Tip: turn your phone sideways for a bigger view.</p>' : ""}
       <button type="button" class="og-btn" id="og-go">Start season ▶</button></div>`);
     $("og-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); startSeason(); });
     onBack(G.back);
@@ -1368,8 +1368,6 @@
       <h2 class="og-h">How do you want to play?</h2>
       <h3 class="og-mini">Predators</h3>
       <div class="og-opts">${opt("preds", true, ICON.eagle, "Predators on", "Eagles, coyotes, and alligators. More challenge!")}${opt("preds", false, ICON.friends, "No predators", "Relaxed exploring, great for little kids.")}</div>
-      <h3 class="og-mini">Timer</h3>
-      <div class="og-opts">${opt("timer", true, ICON.bolt, "Timer on", "Each season lasts 75 seconds.")}${opt("timer", false, ICON.flag, "No timer", "Play until you finish your goals.")}</div>
       <button type="button" class="og-btn" id="og-set-go">Let's go ▶</button></div>`);
     document.querySelectorAll(".og-opt").forEach(b => b.addEventListener("click", () => {
       G.opts[b.dataset.k] = b.dataset.v === "true"; save(); beep(560, 0.06, "triangle", 0.04);

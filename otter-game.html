@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="styles.css?v=28">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <script src="assets/vendor/three-r149.min.js?v=1" defer></script>
-<script src="otter-game.js?v=36" defer></script>
+<script src="otter-game.js?v=37" defer></script>
 </head>
 <body>
 
@@ -66,7 +66,7 @@
               <span class="og-pill pink" id="og-gen">GEN 1</span>
               <span class="og-pill" id="og-hab">Deep Clear Lake</span>
               <span class="og-timer" aria-hidden="true"><i id="og-time"></i></span>
-              <button type="button" class="og-pill og-end" id="og-end" hidden>End season ✓</button>
+              <button type="button" class="og-pill og-end" id="og-end" hidden>End season</button>
               <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
             </div>
             <div class="og-hud-row">
@@ -95,7 +95,7 @@
           <button type="button" class="og-slot" data-win="dex" aria-label="Otter-dex (X)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><circle cx="16" cy="18" r="9" fill="#9a6440"/><circle cx="9" cy="10" r="3.5" fill="#6b4a2b"/><circle cx="23" cy="10" r="3.5" fill="#6b4a2b"/><ellipse cx="16" cy="21" rx="5" ry="3.5" fill="#c99a6b"/><circle cx="12.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="19.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="16" cy="19.5" r="1.6" fill="#0b0a10" stroke="none"/></svg><span>Otter-dex</span><kbd>X</kbd><b class="og-badge-new" hidden>!</b></button>
           <button type="button" class="og-slot" data-win="treasure" aria-label="Treasures (T)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 14 Q16 6 28 14 L28 26 L4 26 Z" fill="#8a6440"/><path d="M4 14 L28 14 M4 18 L28 18" fill="none"/><rect x="13" y="16" width="6" height="5" rx="1" fill="#ffd23f"/><path d="M9 9 L11 6 L13 9 Z M20 8 L23 5 L25 9 Z" fill="#a47bff" stroke-width="1.5"/></svg><span>Treasures</span><kbd>T</kbd><b class="og-badge-new" hidden>!</b></button>
         </nav>
-        <p class="og-help"><b>Touch:</b> left thumb to move, right thumb to swipe and look, plus Jump and Dive buttons. <b>Keyboard:</b> arrows or WASD to move · Space to jump and swim up · Shift or E to dive. Each season has three goals, predators to escape, and an energy bar to keep full. Use the minimap to find the yellow landmark. Tap the menu slots, or press J, L, K, V, O, X, or T, to open your Journal, Life story, Anatomy, Evolution chart, Wardrobe, Otter-dex, and Treasure chest. Opening a menu pauses the game.</p>
+        <p class="og-help"><b>Touch:</b> left thumb to move, right thumb to swipe and look, plus Jump and Dive buttons. <b>Keyboard:</b> arrows or WASD to move · Space to jump and swim up · Shift or E to dive. Each season lasts until you finish its three goals (or tap End season), with predators to escape and an energy bar to keep full. Use the minimap to find the yellow landmark. Tap the menu slots, or press J, L, K, V, O, X, or T, to open your Journal, Life story, Anatomy, Evolution chart, Wardrobe, Otter-dex, and Treasure chest. Opening a menu pauses the game.</p>
 
         <div class="og-modal" id="og-modal" hidden role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
           <div class="og-modal-box">

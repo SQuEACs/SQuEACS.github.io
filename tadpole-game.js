@@ -62,6 +62,7 @@
   /* ---------- Journal: science cards ---------- */
   const SC = "tadpole-trek-science.html";
   const FACTS = {
+    howmeta:   { t: "How metamorphosis works", k: "Metamorphosis", x: "Metamorphosis is a fast rebuild of a body. In frogs, rising thyroid hormone tells tissues to change: the tail is absorbed, legs grow, gills give way to lungs, the long plant-eating gut shortens, and the skin and brain remodel. Many salamanders also use thyroid hormone. Insects use other hormones, ecdysone and juvenile hormone, to go from larva to pupa to adult in butterflies, beetles, and flies, while dragonflies skip the pupa. Some flatfish move an eye across the head, and sea squirt larvae lose their tails. Species differ, and some, like axolotls, keep their larval form. Scientists ask whether some pollutants can disturb the hormone signal that times these changes. That question is being tested.", h: SC + "#refs", l: "See the sources to verify" },
     why:       { t: "Tadpoles as sentinels", k: "Bioindicators", x: "Tadpoles absorb water through thin skin and live where pollutants collect, so they work as early-warning animals for pond and river health. Our lab studies the central nervous system of Lithobates heckscheri tadpoles to ask how pollutants might change brain development.", h: "research.html", l: "See the lab's tadpole project" },
     regions:   { t: "Meet the tadpole brain", k: "Brain regions", x: "A tadpole brain has an olfactory bulb for smell, a telencephalon (forebrain), a diencephalon, an optic tectum for vision, a cerebellum for coordination, and a medulla oblongata for basic body functions. You can spin all of them on our 3D model.", h: "models.html", l: "Explore the 3D tadpole brain" },
     cumulative:{ t: "Longer exposure, bigger effect", k: "Dose and duration", x: "How much a pollutant matters depends on how much a tadpole meets and for how long. In the game each meter fills the longer you stay in a plume. Researchers have compared continuous cadmium exposure with short pulses in tadpoles and reported stronger effects from continuous exposure.", h: SC + "#refs", l: "See the sources to verify" },
@@ -95,6 +96,7 @@
     pfas: "PFAS are chemicals that can float on top of the water as foam. In the game, dive down to take in less. Scientists are still learning how PFAS change tadpole brains. Some studies find changes and some do not.",
     litter: "Plastic and paper do not change the brain in this game. But trash can cover algae, so the tadpole finds less food. Less food means slower growth.",
     mixture: "Real ponds can have more than one kind of pollution at once. Scientists are asking whether two pollutants together do more than one alone. We do not know yet. That is a question being tested.",
+    howmeta: "Metamorphosis means a body changes shape a lot as an animal grows up. A tadpole loses its tail, grows legs, and gets lungs to breathe air. A hormone called thyroid hormone helps tell the body when to change. A caterpillar turns into a butterfly, and a baby dragonfly climbs out of the water and grows wings. Some animals, like axolotls, keep their young body their whole life.",
     metamorph: "At the end, a tadpole turns into a froglet. Its body changes a lot. Some parts of the brain change too. Scientists ask how dirty water in earlier stages might show up later.",
     species: "Different kinds of frogs and tadpoles may react in different ways to the same pollution. The game uses one tadpole, so it cannot show every species. Scientists study many kinds to find out."
   };
@@ -115,6 +117,15 @@
     { id: "glass",  name: "Sea-glass chip", c: "#7fe0c8", w: 14, rare: true, text: "Rare. Restores a heart." },
     { id: "seed",   name: "Cattail fluff",  c: "#d8c8a4", w: 10, rare: true, text: "Rare. Restores a heart." },
     { id: "gold",   name: "Golden bubble",  c: "#ffd23f", w: 6,  rare: true, text: "Very rare. Restores a heart." },
+    { id: "pebble", name: "Striped pebble", c: "#b7a98f", shape: "pebble", w: 16, text: "Smoothed by years of tumbling in the water." },
+    { id: "leaf",   name: "Autumn leaf",    c: "#d9822b", shape: "leaf",   w: 12, text: "It drifted in and sank. Leaves feed the tiny animals tadpoles share the pond with." },
+    { id: "shell",  name: "Pea clam shell", c: "#f3dfc6", shape: "shell",  w: 12, text: "A tiny freshwater clam lived in this shell. Clams filter bits out of the water." },
+    { id: "quartz", name: "Quartz crystal", c: "#c9e4ff", shape: "crystal",w: 12, text: "Sand is often made of tiny bits of quartz like this one." },
+    { id: "feather",name: "Heron feather",  c: "#e3e8ee", shape: "feather",w: 10, text: "Light and long. A heron may drop one while it hunts at the pond's edge." },
+    { id: "wing",   name: "Dragonfly wing", c: "#bfe7ff", shape: "wing",   w: 10, text: "Thin and veined. Dragonfly nymphs can live in the water a long time before they fly." },
+    { id: "moon",   name: "Moonstone",      c: "#cfd8ff", w: 8, rare: true, text: "Rare. Pale and shimmery. Restores a heart." },
+    { id: "firefly",name: "Firefly glow",   c: "#e8ff6a", shape: "glow",   w: 7, rare: true, text: "Rare. A speck of light from a summer evening. Restores a heart." },
+    { id: "garnet", name: "Garnet gem",     c: "#c43c5a", shape: "crystal",w: 5, rare: true, text: "Very rare. Deep red and sparkling. Restores a heart." },
   ];
   const NATURE = [
     { id: "duckweed", name: "Duckweed",       shape: "duck",   text: "Tiny floating plants that shade the water and shelter tadpoles." },
@@ -317,8 +328,19 @@
   function drawGem(c, tr, locked, w = 140, h = 100) {
     c.clearRect(0, 0, w, h); c.save(); c.translate(w / 2, h / 2);
     const col = locked ? "#2b2540" : tr.c; c.lineWidth = 3; c.strokeStyle = "#0b0a10";
-    c.fillStyle = col; c.beginPath(); c.arc(0, 4, 26, 0, 7); c.fill(); c.stroke();
-    if (!locked) { c.fillStyle = "rgba(255,255,255,0.65)"; c.beginPath(); c.ellipse(-9, -6, 8, 5, -0.6, 0, 7); c.fill(); }
+    c.fillStyle = col; c.lineJoin = "round"; c.lineCap = "round";
+    const hi = () => { if (!locked) { c.fillStyle = "rgba(255,255,255,0.65)"; c.beginPath(); c.ellipse(-9, -6, 8, 5, -0.6, 0, 7); c.fill(); } };
+    const line = (x1, y1, x2, y2) => { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); };
+    switch (tr.shape) {
+      case "pebble": c.beginPath(); c.ellipse(0, 6, 30, 19, -0.15, 0, 7); c.fill(); c.stroke(); if (!locked) { c.strokeStyle = "rgba(60,45,30,0.5)"; c.lineWidth = 2; line(-14, -2, 8, -8); line(-22, 8, 18, -2); line(-12, 16, 24, 8); } break;
+      case "leaf": c.beginPath(); c.moveTo(-30, 16); c.quadraticCurveTo(-18, -26, 28, -20); c.quadraticCurveTo(24, 22, -30, 16); c.closePath(); c.fill(); c.stroke(); if (!locked) { c.strokeStyle = "rgba(90,40,10,0.6)"; c.lineWidth = 2; line(-30, 16, 14, -10); } break;
+      case "shell": c.beginPath(); c.moveTo(0, 22); c.quadraticCurveTo(-34, 8, -26, -14); c.quadraticCurveTo(0, -24, 26, -14); c.quadraticCurveTo(34, 8, 0, 22); c.closePath(); c.fill(); c.stroke(); if (!locked) { c.strokeStyle = "rgba(120,90,60,0.55)"; c.lineWidth = 2; for (const r of [8, 15, 22]) { c.beginPath(); c.arc(0, 20, r, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); } } break;
+      case "crystal": c.beginPath(); c.moveTo(0, -28); c.lineTo(20, -8); c.lineTo(14, 24); c.lineTo(-14, 24); c.lineTo(-20, -8); c.closePath(); c.fill(); c.stroke(); if (!locked) { c.fillStyle = "rgba(255,255,255,0.5)"; c.beginPath(); c.moveTo(0, -28); c.lineTo(-20, -8); c.lineTo(-6, -4); c.closePath(); c.fill(); } break;
+      case "feather": c.beginPath(); c.moveTo(-28, 24); c.quadraticCurveTo(-30, -18, 22, -26); c.quadraticCurveTo(26, 14, -28, 24); c.closePath(); c.fill(); c.stroke(); line(-28, 24, 14, -16); break;
+      case "wing": c.beginPath(); c.moveTo(-30, 18); c.quadraticCurveTo(-8, -30, 32, -14); c.quadraticCurveTo(10, 18, -30, 18); c.closePath(); c.globalAlpha = locked ? 1 : 0.85; c.fill(); c.globalAlpha = 1; c.stroke(); if (!locked) { c.strokeStyle = "rgba(40,80,120,0.6)"; c.lineWidth = 1.6; line(-28, 17, 26, -12); line(-14, 10, 4, -14); line(-4, 14, 18, -2); } break;
+      case "glow": if (!locked) { const g = c.createRadialGradient(0, 4, 4, 0, 4, 34); g.addColorStop(0, "rgba(232,255,106,0.95)"); g.addColorStop(1, "rgba(232,255,106,0)"); c.fillStyle = g; c.beginPath(); c.arc(0, 4, 34, 0, 7); c.fill(); } c.fillStyle = col; c.beginPath(); c.arc(0, 4, 13, 0, 7); c.fill(); c.stroke(); break;
+      default: c.beginPath(); c.arc(0, 4, 26, 0, 7); c.fill(); c.stroke(); hi();
+    }
     c.restore();
   }
   function drawNature(c, n, locked, w = 140, h = 100) {
@@ -465,7 +487,8 @@
     g.scale.setScalar(1.5); g.userData.tail = t; return g;
   }
   function gemMesh(tr) {
-    const m = new T3.Mesh(new T3.SphereGeometry(0.4, 12, 10), M(new T3.Color(tr.c).getHex(), { emissive: new T3.Color(tr.c).getHex(), emissiveIntensity: 0.7, roughness: 0.3 }));
+    const geo = tr.shape === "crystal" ? new T3.OctahedronGeometry(0.5, 0) : new T3.SphereGeometry(0.4, 12, 10);
+    const m = new T3.Mesh(geo, M(new T3.Color(tr.c).getHex(), { emissive: new T3.Color(tr.c).getHex(), emissiveIntensity: 0.7, roughness: 0.3 }));
     const halo = new T3.Mesh(new T3.SphereGeometry(0.7, 12, 10), MB(0xffffff, 0.18)); m.add(halo); return m;
   }
   function ringMesh() {
@@ -682,6 +705,7 @@
     if (!lab) setTimeout(() => S && S.t < 12 && showFact(st.fact), 1500);
     if (si === 0 && !lab) setTimeout(() => S && showFact("cumulative"), 11000);
     if (si === 1 && !lab) setTimeout(() => S && showFact("species"), 9000);
+    if (si === 2 && !lab) setTimeout(() => S && showFact("howmeta"), 9000);
     keys = {}; running = true; lastT = performance.now(); glc.focus({ preventScroll: true }); requestAnimationFrame(loop);
   }
 

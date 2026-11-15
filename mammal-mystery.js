@@ -61,6 +61,11 @@
   function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* private mode: progress just isn't kept */ } }
   const urlGrade = new URLSearchParams(location.search).get("grade");
   if (urlGrade && D.GRADES[urlGrade]) S.grade = urlGrade;
+  // Colorings: up to 3 saved versions per animal (newest first). Older saves kept one live coloring per animal in S.art.
+  S.gallery = S.gallery || {};
+  for (const id in S.art || {}) { if (Object.values(S.art[id] || {}).some(Boolean) && !S.gallery[id]) S.gallery[id] = [S.art[id]]; }
+  S.art = {};
+  const KEEP = 3;
   if (CL && S.opts.lock && D.GRADES[S.opts.lock]) S.grade = S.opts.lock;
   const G = () => S.grade || "pk";
 
@@ -642,16 +647,17 @@
   function colorPick() {
     show("colorpick", `
       <div class="mm-head">${ART.icon("crayon")}<p class="mm-q">Pick an animal to color!</p></div>
-      <div class="mm-guide">${lvIds().map(id => btn("mm-card", `data-id="${id}" aria-label="Color the ${nm(id)}"`, (S.art[id] && Object.values(S.art[id]).some(Boolean) ? colored(id) : ART.animal(id, { line: true })) + `<span>${cap1(nm(id))}</span>`)).join("")}</div>`);
+      <div class="mm-guide">${lvIds().map(id => { const g = S.gallery[id] || [];
+        return btn("mm-card mm-colorcard", `data-id="${id}" aria-label="Color the ${nm(id)}${g.length ? `, ${g.length} saved` : ""}"`, (g.length ? colored(id, false, g[0]) : ART.animal(id, { line: true })) + `<span>${cap1(nm(id))}</span>` + (g.length ? `<em class="mm-savecount" aria-hidden="true">${"<i></i>".repeat(g.length)}</em>` : "")); }).join("")}</div>`);
     prompt("Pick an animal to color!");
     view.querySelectorAll(".mm-card").forEach(b => b.addEventListener("click", () => { sfx.tap(); colorPage(b.dataset.id); }));
   }
   // The line drawing with this child's saved colors put back in.
-  function colored(id, face) {
+  function colored(id, face, map) {
     const host = document.createElement("div");
     host.innerHTML = ART.animal(id, { line: true, face, label: "Your " + nm(id) });
     const svg = host.firstChild; prepColor(svg);
-    const saved = S.art[id] || {};
+    const saved = map || {};
     paintables(svg).forEach((el, i) => { if (saved[i]) paint(el, saved[i]); });
     return host.innerHTML;
   }
@@ -667,16 +673,18 @@
     });
   }
   function paint(el, c) { el.setAttribute(el.dataset.paint, c); }
-  function colorPage(id) {
+  // Every visit starts on a fresh page. The check button saves it (up to 3 per animal); tap a saved one to keep coloring it.
+  function colorPage(id, from) {
     let cur = CRAYONS[pick([0, 1, 2, 3, 4, 5])];
+    const gal = S.gallery[id] || [];
     show("color", `
       <div class="mm-colorwrap">
         <div class="mm-canvas" id="mm-canvas">${ART.animal(id, { line: true, label: "Coloring page: " + nm(id) })}</div>
         <div class="mm-crayons" role="radiogroup" aria-label="Crayons">${CRAYONS.map(([n, c]) => btn("mm-crayon", `data-c="${c}" data-n="${n}" role="radio" aria-checked="false" aria-label="${n}" style="--c:${c}"`, `<svg viewBox="0 0 40 90" aria-hidden="true"><path d="M8 30 L20 4 L32 30 Z" fill="${c}" stroke="#2a2233" stroke-width="3" stroke-linejoin="round"/><rect x="8" y="30" width="24" height="56" rx="4" fill="${c}" stroke="#2a2233" stroke-width="3"/><rect x="8" y="44" width="24" height="12" fill="rgba(255,255,255,.55)"/></svg>`)).join("")}</div>
-        <div class="mm-row">${btn("mm-round mm-clear", 'id="mm-clear" aria-label="Start over"', ART.icon("replay"))}${btn("mm-big mm-go", 'id="mm-color-done" aria-label="Done"', `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 21 L17 29 L32 11" fill="none" stroke="#0b0a10" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`)}</div>
+        <div class="mm-row">${gal.length ? `<div class="mm-saved" aria-label="Your saved colorings">${gal.map((m, i) => btn("mm-savedpic", `data-i="${i}" aria-label="Saved coloring ${i + 1}"`, colored(id, false, m))).join("")}</div>` : ""}${btn("mm-round mm-clear", 'id="mm-clear" aria-label="Fresh page"', ART.icon("replay"))}${btn("mm-big mm-go", 'id="mm-color-done" aria-label="Save"', `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 21 L17 29 L32 11" fill="none" stroke="#0b0a10" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`)}</div>
       </div>`);
     const svg = view.querySelector("#mm-canvas svg"); prepColor(svg);
-    const shapes = paintables(svg), saved = S.art[id] = S.art[id] || {};
+    const shapes = paintables(svg), saved = Object.assign({}, from || {});
     shapes.forEach((el, i) => { el.dataset.i = i; if (saved[i]) paint(el, saved[i]); });
     const setCur = (b) => { view.querySelectorAll(".mm-crayon").forEach(x => x.setAttribute("aria-checked", String(x === b))); cur = [b.dataset.n, b.dataset.c]; };
     view.querySelectorAll(".mm-crayon").forEach(b => { if (b.dataset.c === cur[1]) setCur(b); b.addEventListener("click", () => { sfx.tap(); setCur(b); say(cap1(b.dataset.n) + "!"); }); });
@@ -684,7 +692,7 @@
     let lastPart = "", lastT = 0;
     svg.addEventListener("click", e => {
       const el = e.target.closest("[data-paint]"); if (!el) return;
-      paint(el, cur[1]); saved[el.dataset.i] = cur[1] === "#ffffff" ? undefined : cur[1]; save();
+      paint(el, cur[1]); if (cur[1] === "#ffffff") delete saved[el.dataset.i]; else saved[el.dataset.i] = cur[1];
       tone(500 + Math.random() * 400, 0, 0.08, "triangle", 0.04);
       // Kindergarten hears the body part's name too, which practices the words from the mysteries.
       const part = (el.closest("[data-part]") || {}).dataset ? el.closest("[data-part]").dataset.part : "";
@@ -693,18 +701,23 @@
       else if (now - lastT > 2500) say(cap1(cur[0]) + "!");
       lastPart = part; lastT = now;
     });
-    $("mm-clear").addEventListener("click", () => { sfx.tap(); shapes.forEach(el => paint(el, "#ffffff")); S.art[id] = {}; save(); say("Fresh page!"); colorPage(id); });
-    $("mm-color-done").addEventListener("click", async () => {
-      sfx.win(); confetti(view);
-      const ok = await say(`${vary("pretty", PH.pretty)} ${nm(id)}! ${pick(D.ANIMALS[id].facts[G()] || D.ANIMALS[id].facts.pk)}`);
-      if (ok && screenName === "color") colorPick();
+    $("mm-clear").addEventListener("click", () => { sfx.tap(); colorPage(id); say("Fresh page!"); });
+    view.querySelectorAll(".mm-savedpic").forEach(b => b.addEventListener("click", () => { sfx.tap(); colorPage(id, gal[+b.dataset.i]); say("Here's one you saved. Keep coloring, then tap the check to save it again."); }));
+    let saving = false;
+    $("mm-color-done").addEventListener("click", () => {
+      if (saving) return;
+      if (!Object.keys(saved).length) { say("Color the picture first, then tap the check to save it!"); return; }
+      saving = true; sfx.win(); confetti(view);
+      const full = gal.length >= KEEP;
+      S.gallery[id] = [Object.assign({}, saved)].concat(gal).slice(0, KEEP); save();
+      onward(`${vary("pretty", PH.pretty)} ${nm(id)}! I saved it${full ? ", and put away your oldest one, so you have three" : ""}. ${pick(D.ANIMALS[id].facts[G()] || D.ANIMALS[id].facts.pk)}`, colorPick, { hold: 700 });
     });
   }
 
   /* ---------- 2nd grade: Family secrets ---------- */
   let F = null;
   function family() {
-    F = { list: shuffle(D.COUSINS).slice(0, 5), i: 0, right: 0 };
+    F = { list: shuffle(lvl() === 2 ? D.COUSINS2 : D.COUSINS).slice(0, 5), i: 0, right: 0 };
     familyRound(true);
   }
   function familyRound(first) {
@@ -761,8 +774,9 @@
       const kids = n.c.map(c => walk(c, depth + 1));
       const node = { n, x: kids.reduce((s, k) => s + k.x, 0) / kids.length, h: Math.max(...kids.map(k => k.h)) + 1, kids, tips: kids.flatMap(k => k.tips) };
       nodes.push(node); return node;
-    })(D.TREE, 0);
-    const Y = h => 92 + h * 34, W = tips.length * 80;
+    })(lvl() === 2 ? D.TREE2 : D.TREE, 0);
+    // The Level 2 tree is much deeper (a branch for each animal), so its levels get more room and labels don't sit on the next branch.
+    const deep = Math.max(...nodes.map(n => n.h)) > 7, Y = h => 92 + h * (deep ? 56 : 34), W = tips.length * 80;
     let lines = "", dots = "", labels = "";
     nodes.forEach(nd => {
       const y = Y(nd.h);
@@ -772,7 +786,7 @@
       if (nd.n.label) labels += `<text x="${nd.x}" y="${y + 36}" text-anchor="middle" class="mm-tlabel">${nd.n.label}</text>`;
     });
     const rootY = Y(Math.max(...nodes.map(n => n.h)));
-    show("tree", `<div class="mm-treewrap"><svg viewBox="0 0 ${W} ${rootY + 30}" class="mm-tree-svg big" role="img" aria-label="Family tree of the animals in this game">
+    show("tree", `<div class="mm-treewrap"><svg viewBox="0 0 ${W} ${rootY + 46}" class="mm-tree-svg big" role="img" aria-label="Family tree of the animals in this game">
       <path d="${lines} M ${nodes[nodes.length - 1].x} ${rootY} V ${rootY + 24}" fill="none" stroke="#2a2233" stroke-width="10" stroke-linecap="round"/>
       <path d="${lines}" fill="none" stroke="#a8784a" stroke-width="4" stroke-linecap="round" id="mm-tlines"/>
       ${tips.map((id, i) => `<g class="mm-tip" data-id="${id}">${face(id, i * 80 + 40, 40, 70)}</g>`).join("")}

@@ -11,6 +11,9 @@
   const ART = window.MM_ART, D = window.MM_DATA;
   // Picture behind an animal: rabbits get a meadow, kangaroos the outback, others their habitat.
   const sceneOf = id => D.ANIMALS[id].scene || D.ANIMALS[id].hab;
+  // Level 2 (twelve surprising mammals) opens once every Level 1 animal is in the sticker book.
+  const lvl = () => (S.level === 2 && S.unlock2 ? 2 : 1);
+  const lvIds = () => (lvl() === 2 ? D.IDS2 : D.IDS);
   const CL = !!window.MM_CLASSROOM;
   const $ = id => document.getElementById(id);
   const root = $("mm-stage"); if (!root) return;
@@ -53,7 +56,7 @@
   const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   /* ---------- saved progress ---------- */
-  const S = Object.assign({ grade: null, found: {}, powers: {}, solved: 0, art: {}, cousins: 0, mute: false, opts: { lock: "", slow: false, caps: true, cases: 0 } }, load());
+  const S = Object.assign({ grade: null, found: {}, powers: {}, solved: 0, art: {}, cousins: 0, level: 1, unlock2: false, mute: false, opts: { lock: "", slow: false, caps: true, cases: 0 } }, load());
   function load() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } }
   function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* private mode: progress just isn't kept */ } }
   const urlGrade = new URLSearchParams(location.search).get("grade");
@@ -178,8 +181,8 @@
     say(text).then(ok => { if (ok) setTimeout(go, 400); });
   }
   function renderBar() {
-    const n = Object.keys(S.found).length;
-    $("mm-badge").innerHTML = `${ART.icon("folder")}<b>${n}</b><span class="mm-sr"> of ${D.IDS.length} animals in your sticker book</span>`;
+    const ids = lvIds(), n = ids.filter(id => S.found[id]).length;
+    $("mm-badge").innerHTML = `${ART.icon("folder")}<b>${n}</b><span class="mm-sr"> of ${ids.length} animals in your sticker book${S.unlock2 ? `, level ${lvl()}` : ""}</span>`;
     $("mm-mute").setAttribute("aria-pressed", String(S.mute)); $("mm-mute").classList.toggle("off", S.mute);
   }
   const btn = (cls, attrs, inner) => `<button type="button" class="${cls}" ${attrs || ""}>${inner}</button>`;
@@ -229,9 +232,10 @@
     items.push(["color", ART.icon("crayon"), "Coloring"]);
     const locked = CL && S.opts.lock, rk = rankOf(S.solved || 0);
     show("menu", `
-      <div class="mm-head">${ART.detective()}<p class="mm-q">${D.GRADES[g].say}</p>${btn("mm-rankchip", 'id="mm-rank" aria-label="Your detective rank"', badge(rk) + `<b>${RANKS[rk][1]}</b>`)}</div>
+      <div class="mm-head">${ART.detective()}<p class="mm-q">${D.GRADES[g].say}</p>${btn("mm-rankchip", 'id="mm-rank" aria-label="Your detective rank"', badge(rk) + `<b>${RANKS[rk][1]}</b>`)}${levelTabs()}</div>
       <div class="mm-menu">${items.map(([k, ic, t], i) => btn("mm-tile mm-act" + (i === 0 ? " mm-main" : ""), `data-k="${k}" aria-label="${t}"`, `${ic}<b>${t}</b>`)).join("")}</div>
       ${locked ? "" : `<div class="mm-row mm-chips">${btn("mm-chip", 'id="mm-chg" aria-label="Change grade"', `<span class="mm-grade-dots sm">${"<i></i>".repeat(Object.keys(D.GRADES).indexOf(g) + 1)}</span>Change grade`)}${btn("mm-chip", 'id="mm-restart" aria-label="Start over"', ART.icon("replay") + "Start over")}</div>`}`);
+    bindLevelTabs(() => { menu(false); prompt(lvl() === 2 ? "Level 2! Surprising mammals are hiding. Tap the map to find them." : "Level 1. Tap the map to go on an expedition."); });
     if (greet) prompt(`Hi, ${RANKS[rk][1]}! Tap the map to go on an expedition and find hidden animals. Tap the paw for games, the book for your stickers${g === "g2" ? ", the tree for family secrets," : ""} or the crayon to color.`);
     view.querySelectorAll(".mm-act").forEach(b => b.addEventListener("click", () => {
       sfx.tap(); const k = b.dataset.k;
@@ -241,12 +245,20 @@
     const chg = $("mm-chg"); if (chg) chg.addEventListener("click", () => { sfx.tap(); grades(); });
     const rs = $("mm-restart"); if (rs) rs.addEventListener("click", () => { sfx.tap(); startOver(); });
   }
+  // Level 1 / Level 2 switch, shown once Level 2 is unlocked.
+  function levelTabs() {
+    if (!S.unlock2) return "";
+    return `<span class="mm-levels" role="group" aria-label="Level">${[1, 2].map(n => btn("mm-lvtab" + (lvl() === n ? " on" : ""), `data-lv="${n}" aria-label="Level ${n}" aria-pressed="${lvl() === n}"`, `<b class="mm-lvnum">${n}</b>`)).join("")}</span>`;
+  }
+  function bindLevelTabs(after) {
+    view.querySelectorAll(".mm-lvtab").forEach(b => b.addEventListener("click", () => { const n = +b.dataset.lv; if (n === lvl()) return; sfx.whoosh(); S.level = n; save(); renderBar(); after(); }));
+  }
   // Start over: a fresh sticker book and rank for a new player (colorings stay).
   function startOver() {
     show("restart", `<div class="mm-head">${ART.detective()}<p class="mm-q">Start over?</p></div>
       <div class="mm-row">${btn("mm-big mm-yes", 'id="mm-rs-yes" aria-label="Yes, start over"', ART.icon("replay"))}${btn("mm-big mm-tog", 'id="mm-rs-no" aria-label="No, go back"', ART.icon("back"))}</div>`);
     prompt("Start a brand new detective case book? Your stickers will be cleared. Tap the green arrow to start over, or go back.");
-    $("mm-rs-yes").addEventListener("click", () => { sfx.whoosh(); S.found = {}; S.powers = {}; S.solved = 0; S.cousins = 0; S.level = 1; save(); renderBar(); grades(); });
+    $("mm-rs-yes").addEventListener("click", () => { sfx.whoosh(); S.found = {}; S.powers = {}; S.solved = 0; S.cousins = 0; S.level = 1; S.unlock2 = false; save(); renderBar(); grades(); });
     $("mm-rs-no").addEventListener("click", () => { sfx.tap(); menu(false); });
   }
 
@@ -257,7 +269,7 @@
   function startRound() {
     const g = G(), n = (CL && S.opts.cases) || D.GRADES[g].cases;
     // Prefer animals not yet in the field guide, then fill with any.
-    const fresh = shuffle(D.IDS.filter(id => !S.found[id])), old = shuffle(D.IDS.filter(id => S.found[id]));
+    const ids = lvIds(), fresh = shuffle(ids.filter(id => !S.found[id])), old = shuffle(ids.filter(id => S.found[id]));
     R = { list: fresh.concat(old).slice(0, n), i: 0, stars: 0, rank0: rankOf(S.solved || 0), game: false };
     map(true);
   }
@@ -298,7 +310,7 @@
   /* ---------- hide and seek: animals peek out from behind bushes, rocks and snow ---------- */
   function newCase() {
     const g = G(), id = R.list[R.i], hab = sceneOf(id);
-    const others = shuffle(D.IDS.filter(x => x !== id)).slice(0, D.GRADES[g].suspects - 1);
+    const others = shuffle(lvIds().filter(x => x !== id)).slice(0, D.GRADES[g].suspects - 1);
     const spots = shuffle([id].concat(others));
     R.c = { id, suspects: spots, clues: teethFirst(D.ANIMALS[id].clues[g], g), shown: 0, wrong: 0, done: false };
     const n = spots.length, w = n <= 3 ? 27 : 22;
@@ -356,7 +368,9 @@
     b.classList.add("out"); sfx.pop();
     if (id === c.id) {
       c.done = true; dots(); R.stars++;
-      const first = !S.found[id]; S.found[id] = S.found[id] || G(); S.solved = (S.solved || 0) + 1; save(); renderBar();
+      const first = !S.found[id]; S.found[id] = S.found[id] || G(); S.solved = (S.solved || 0) + 1;
+      if (!S.unlock2 && D.IDS.every(x => S.found[x])) { S.unlock2 = true; R.unlocked = true; }
+      save(); renderBar();
       view.querySelectorAll(".mm-spot").forEach(s => { if (s !== b) s.classList.add("gone"); });
       scene.insertAdjacentHTML("beforeend", `<div class="mm-found" style="--x:${parseFloat(b.style.left) + parseFloat(b.style.width) / 2}%">${ART.animal(id, live(id))}</div><div class="mm-stamp" aria-hidden="true">FOUND!</div>`);
       sfx.yes(); confetti(view); call(id);
@@ -395,8 +409,13 @@
       <div class="mm-stars">${R.list.map(id => `<span class="mm-mini mm-sticker">${ART.animal(id, { face: true })}</span>`).join("")}</div>
       <div class="mm-row">${btn("mm-big mm-again", 'id="mm-again" aria-label="Play again"', ART.icon("replay"))}${btn("mm-big mm-tog", 'id="mm-toguide" aria-label="Sticker book"', ART.icon("folder"))}</div></div>`);
     confetti(view); if (up) setTimeout(() => confetti(view), 700);
-    const n = Object.keys(S.found).length;
-    prompt(`${vary("endStart", PH.endStart)} You found ${R.list.length} animals on this expedition.${up ? ` You leveled up! You are now a ${RANKS[rk][1]}!` : nx ? ` Find ${nx[0] - solved} more to become a ${nx[1]}.` : ""} Your sticker book has ${n} of ${D.IDS.length} animals.`);
+    const ids = lvIds(), n = ids.filter(id => S.found[id]).length;
+    if (R.unlocked) {
+      view.querySelector(".mm-row").insertAdjacentHTML("afterbegin", btn("mm-big mm-yes mm-lvl2go", 'id="mm-lvl2" aria-label="Play Level 2"', `<b class="mm-lvnum">2</b>`));
+      setTimeout(() => confetti(view), 1400);
+      prompt(`Amazing! You found all ${D.IDS.length} animals! You unlocked Level 2: ${D.IDS2.length} surprising mammals. Some have scales, some fly, and one even lays eggs! Tap the big 2 to start.`);
+      $("mm-lvl2").addEventListener("click", () => { sfx.whoosh(); S.level = 2; save(); renderBar(); startRound(); });
+    } else prompt(`${vary("endStart", PH.endStart)} You found ${R.list.length} animals on this expedition.${up ? ` You leveled up! You are now a ${RANKS[rk][1]}!` : nx ? ` Find ${nx[0] - solved} more to become a ${nx[1]}.` : ""} Your sticker book has ${n} of ${ids.length} ${lvl() === 2 ? "Level 2 " : ""}animals.`);
     $("mm-again").addEventListener("click", () => { sfx.tap(); startRound(); });
     $("mm-toguide").addEventListener("click", () => { sfx.tap(); guide(); });
   }
@@ -461,10 +480,10 @@
     let k = 0, used = new Set();
     const one = () => {
       if (k >= rounds) { sfx.win(); confetti(view); onward(vary("done", PH.done) + " " + (kind === "shadow" ? "You're a shadow expert!" : "You're a super tracker!"), then); return; }
-      const pool = shuffle(D.IDS.filter(id => !used.has(id)));
+      const ids = lvIds(), pool = shuffle(ids.filter(id => !used.has(id)));
       const id = pool[0]; used.add(id);
       // Distractors with a different footprint shape, so every question has one clear answer.
-      const opts = shuffle([id].concat(shuffle(D.IDS.filter(x => x !== id && (kind !== "tracks" || ART.TRACK_KIND[x] !== ART.TRACK_KIND[id]))).slice(0, 2)));
+      const opts = shuffle([id].concat(shuffle(ids.filter(x => x !== id && (kind !== "tracks" || ART.TRACK_KIND[x] !== ART.TRACK_KIND[id]))).slice(0, 2)));
       const big = kind === "shadow" ? `<div class="mm-bigpic mm-sil" id="mm-sil" data-a="${id}">${ART.animal(id, { label: "Whose shadow is this?" })}</div>`
         : `<div class="mm-bigpic mm-trackpic" id="mm-sil" data-a="${id}">${ART.track(id, { bare: true, label: "Whose footprints are these?" })}</div>`;
       show("game", `<div class="mm-bonus mm-game"><div class="mm-head">${ART.detective()}<p class="mm-q">${ART.icon(kind === "shadow" ? "shadow" : "paw")}<span class="mm-gdots">${Array.from({ length: rounds }, (_, i) => `<i class="${i < k ? "on" : ""}"></i>`).join("")}</span></p></div>
@@ -553,7 +572,8 @@
   /* ---------- bonus: 1st grade picks the habitat ---------- */
   function bonusHome(id) {
     const a = D.ANIMALS[id];
-    const opts = shuffle([a.hab].concat(shuffle(Object.keys(ART.HAB_NAMES).filter(h => h !== a.hab)).slice(0, 2)));
+    const twin = { forest: "rainforest", rainforest: "forest", mountain: "ice", ice: "mountain" };
+    const opts = shuffle([a.hab].concat(shuffle(Object.keys(ART.HAB_NAMES).filter(h => h !== a.hab && h !== twin[a.hab])).slice(0, 2)));
     show("home", `<div class="mm-bonus"><div class="mm-head">${ART.detective()}<span class="mm-mini big">${ART.animal(id, { face: true })}</span></div>
       <div class="mm-choices">${opts.map(h => btn("mm-choice", `data-h="${h}" aria-label="${ART.HAB_NAMES[h]}"`, ART.habitat(h === a.hab ? sceneOf(id) : h))).join("")}</div></div>`);
     prompt(vary("where", [`Where does ${the(id)} live? Tap its home.`, `Which home belongs to ${the(id)}? Tap it!`, `Help ${the(id)} get home! Tap where it lives.`]));
@@ -576,6 +596,9 @@
   // What the teeth tell us, by back-tooth shape.
   function teethTip(id) {
     const t = ART.TEETH[id] || {};
+    if (t.none) return id === "pangolin" ? "No teeth at all! A long sticky tongue licks up ants and termites." : "No teeth at all! Grown-ups mash bugs and worms with hard pads.";
+    if (t.tusk && t.cheek === "peg") return "See the giant tusks? They are teeth for climbing ice. The small flat back teeth crush clam shells.";
+    if (t.cheek === "peg") return id === "sloth" ? "See the small, flat peg teeth and no front teeth? They mash leaves." : "See the tiny peg teeth and no front teeth? They squish soft bugs and worms.";
     if (t.cheek === "blade") return "See the sharp, pointy teeth? Teeth like scissors slice meat.";
     if (t.cheek === "bumpy") return "See the pointy front teeth and the bumpy back teeth? Bumpy teeth can mash lots of different foods.";
     return t.can === "big" ? "See the big, flat back teeth? Flat teeth grind and crush plants." : "See the flat back teeth? Flat teeth grind and crush plants.";
@@ -590,7 +613,7 @@
       const d = b.dataset.d;
       if (d === a.diet) {
         sfx.yes(); b.classList.add("yes"); confetti(view);
-        const extra = id === "panda" ? " Pandas eat like herbivores, even though they belong to the carnivoran group!" : "";
+        const extra = id === "panda" || id === "redpanda" ? ` ${cap1(a.name)}s eat like herbivores, even though they belong to the carnivoran group!` : "";
         onward(`${vary("yes", PH.yes)} ${cap1(a.name)}s eat ${d === "both" ? "plants and animals" : d}, so they are ${D.DIET[d].word}s.${extra}`, nextCaseOrEnd);
       } else {
         sfx.no(); b.classList.add("nope");
@@ -601,13 +624,14 @@
 
   /* ---------- sticker book: animals found, superpowers earned, and your detective rank ---------- */
   function guide() {
-    const n = Object.keys(S.found).length, pw = Object.keys(S.powers || {}).length, rk = rankOf(S.solved || 0);
+    const ids = lvIds(), n = ids.filter(id => S.found[id]).length, pw = ids.filter(id => (S.powers || {})[id]).length, rk = rankOf(S.solved || 0);
     show("guide", `
-      <div class="mm-guide-head">${badge(rk)}<span><b>${RANKS[rk][1]}</b><small>${ART.icon("folder")}${n}/${D.IDS.length} ${ART.icon("star")}${pw}/${D.IDS.length}</small></span></div>
-      <div class="mm-guide">${D.IDS.map(id => S.found[id]
+      <div class="mm-guide-head">${badge(rk)}<span><b>${RANKS[rk][1]}</b><small>${ART.icon("folder")}${n}/${ids.length} ${ART.icon("star")}${pw}/${ids.length}</small></span>${levelTabs()}</div>
+      <div class="mm-guide">${ids.map(id => S.found[id]
         ? btn("mm-card mm-sticker-card", `data-id="${id}" aria-label="${nm(id)}${S.powers && S.powers[id] ? ", with superpower sticker" : ""}"`, ART.animal(id, { face: true, cls: "mm-animal mm-live" }) + `<span>${cap1(nm(id))}</span>` + (S.powers && S.powers[id] ? `<em class="mm-powstar" title="${D.POWERS[id].name}">${ART.icon("star")}</em>` : ""))
         : `<div class="mm-card locked" aria-label="Not found yet">${ART.animal(id, { face: true })}<span>?</span></div>`).join("")}</div>`);
-    prompt(n === 0 ? "This is your sticker book. It's empty! Go on an expedition to find animals and earn stickers." : n === D.IDS.length ? "Wow, you found every animal! Tap one to learn about it." : `You found ${n} of ${D.IDS.length} animals and ${pw} superpowers. Tap a sticker to learn about it. Go on more expeditions to find the rest!`);
+    prompt(n === 0 ? (lvl() === 2 ? "This is your Level 2 sticker book. Go on an expedition to find surprising mammals!" : "This is your sticker book. It's empty! Go on an expedition to find animals and earn stickers.") : n === ids.length ? `Wow, you found every ${lvl() === 2 ? "Level 2 " : ""}animal! Tap one to learn about it.` : `You found ${n} of ${ids.length} animals and ${pw} superpowers. Tap a sticker to learn about it. Go on more expeditions to find the rest!`);
+    bindLevelTabs(guide);
     view.querySelectorAll(".mm-card[data-id]").forEach(b => b.addEventListener("click", () => { sfx.tap(); caseFile(b.dataset.id, () => { renderBar(); }); }));
   }
 
@@ -618,7 +642,7 @@
   function colorPick() {
     show("colorpick", `
       <div class="mm-head">${ART.icon("crayon")}<p class="mm-q">Pick an animal to color!</p></div>
-      <div class="mm-guide">${D.IDS.map(id => btn("mm-card", `data-id="${id}" aria-label="Color the ${nm(id)}"`, (S.art[id] && Object.values(S.art[id]).some(Boolean) ? colored(id) : ART.animal(id, { line: true })) + `<span>${cap1(nm(id))}</span>`)).join("")}</div>`);
+      <div class="mm-guide">${lvIds().map(id => btn("mm-card", `data-id="${id}" aria-label="Color the ${nm(id)}"`, (S.art[id] && Object.values(S.art[id]).some(Boolean) ? colored(id) : ART.animal(id, { line: true })) + `<span>${cap1(nm(id))}</span>`)).join("")}</div>`);
     prompt("Pick an animal to color!");
     view.querySelectorAll(".mm-card").forEach(b => b.addEventListener("click", () => { sfx.tap(); colorPage(b.dataset.id); }));
   }
@@ -799,7 +823,7 @@
       <label class="mm-check"><input type="checkbox" id="mm-t-caps" ${o.caps ? "checked" : ""}> Show captions (words on screen)</label>
       <label class="mm-check"><input type="checkbox" id="mm-t-mute" ${S.mute ? "checked" : ""}> Voice and sound off</label>
       <p class="mm-t-note">Settings are saved on this device. For the warmest voice, Apple devices can download "Ava (Premium)" in Settings, Accessibility, Spoken Content, Voices. On Windows, the Edge browser has natural voices built in.${CL ? ` Starting link for one grade: add <code>?grade=pk</code>, <code>k</code>, <code>g1</code>, or <code>g2</code> to the address.` : ""}</p>
-      <div class="mm-row">${btn("mm-chip", 'id="mm-t-reset"', "Clear this device's sticker book")}${btn("mm-chip mm-chip-go", 'id="mm-t-done"', "Done")}</div></div>`;
+      <div class="mm-row">${btn("mm-chip", 'id="mm-t-lvl2"', S.unlock2 ? "Level 2 is open" : "Open Level 2 now")}${btn("mm-chip", 'id="mm-t-reset"', "Clear this device's sticker book")}${btn("mm-chip mm-chip-go", 'id="mm-t-done"', "Done")}</div></div>`;
     pop.hidden = false; root.classList.add("mm-popped");
     $("mm-t-done").addEventListener("click", () => {
       if (CL) { o.lock = $("mm-t-lock").value; o.cases = +$("mm-t-cases").value; }
@@ -808,7 +832,8 @@
       if (o.lock) S.grade = o.lock;
       save(); closePop(); renderBar();
     });
-    $("mm-t-reset").addEventListener("click", () => { S.found = {}; S.powers = {}; S.solved = 0; S.cousins = 0; save(); renderBar(); $("mm-t-reset").textContent = "Sticker book cleared"; });
+    $("mm-t-reset").addEventListener("click", () => { S.found = {}; S.powers = {}; S.solved = 0; S.cousins = 0; S.level = 1; S.unlock2 = false; save(); renderBar(); $("mm-t-reset").textContent = "Sticker book cleared"; });
+    $("mm-t-lvl2").addEventListener("click", () => { S.unlock2 = true; S.level = 2; save(); renderBar(); $("mm-t-lvl2").textContent = "Level 2 is open"; });
     if ($("mm-t-try")) $("mm-t-try").addEventListener("click", () => {
       const keep = o.voice; o.voice = $("mm-t-voice").value; pickVoice(); o.voice = keep;
       say("Hi, I'm Detective Ollie! Let's solve a mammal mystery together.");
@@ -839,8 +864,8 @@
   // Photo credits under the game, built from the PHOTOS list.
   const credits = $("mm-credits");
   if (credits) {
-    const list = D.IDS.filter(id => D.PHOTOS[id] && D.PHOTOS[id].src).map(id => `<li>${cap1(nm(id))}: ${D.PHOTOS[id].credit}</li>`);
-    const snd = D.IDS.filter(id => D.SOUNDS && D.SOUNDS[id] && D.SOUNDS[id].src).map(id => `<li>${cap1(nm(id))} sound: ${D.SOUNDS[id].credit}</li>`);
+    const list = D.ALL.filter(id => D.PHOTOS[id] && D.PHOTOS[id].src).map(id => `<li>${cap1(nm(id))}: ${D.PHOTOS[id].credit}</li>`);
+    const snd = D.ALL.filter(id => D.SOUNDS && D.SOUNDS[id] && D.SOUNDS[id].src).map(id => `<li>${cap1(nm(id))} sound: ${D.SOUNDS[id].credit}</li>`);
     credits.hidden = !list.length && !snd.length;
     credits.innerHTML = (list.length ? `<b>Photo credits</b><ul>${list.join("")}</ul>` : "") + (snd.length ? `<b>Sound credits</b><ul>${snd.join("")}</ul>` : "");
   }

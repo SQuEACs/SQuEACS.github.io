@@ -224,14 +224,208 @@
       },
       partWhy: { hump: "a hump that stores fat", paws: "wide feet for sand", neck: "a bendy neck", nose: "a nose that closes" },
     },
+    /* ---------- Level 2: surprising mammals (unlocked after all 12 above are found) ---------- */
+    redpanda: {
+      name: "red panda", where: "the mountains of Asia", hab: "mountain", diet: "plants", group: "carnivoran", level: 2,
+      clues: {
+        pk: [["part", "tail", "I have a big, fluffy, striped tail."], ["part", "ears", "My pointy ears have white edges."], ["part", "fur", "My fur is red, like a fox."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "tail", "I wrap my fluffy tail around me like a blanket."], ["part", "ears", "My ears are white around the edges."], ["part", "eyes", "I have red stripes under my eyes, like tears."], ["part", "paws", "My paws have furry bottoms, like snow boots."]],
+        g1: [["hab", "mountain", "I live in cool, misty mountain forests."], ["part", "tail", "My ringed tail keeps me warm when I sleep."], ["part", "paws", "My furry feet grip icy tree branches."], ["part", "fur", "My red fur hides me in red, mossy trees."]],
+        g2: [["food", "plants", "I eat mostly bamboo leaves."], ["teeth", "", "Look at my teeth: bumpy back teeth for crunching bamboo."], ["hab", "mountain", "I live in the mountains of Asia."], ["part", "tail", "I have a ringed tail."]],
+      },
+      facts: {
+        pk: ["Red pandas love to climb trees.", "They sleep curled up in their fluffy tails."],
+        k:  ["Red pandas use their tails like a blanket.", "Their furry feet keep their toes warm in the snow.", "They eat bamboo, just like giant pandas."],
+        g1: ["Red pandas live in cool mountain forests in Asia.", "They spend most of their time up in trees.", "A wrist bone works like an extra thumb to hold bamboo.", "Surprise: the red panda was named panda before the giant panda was!"],
+        g2: ["Red pandas eat mostly bamboo, so they are herbivores, even though they are carnivorans.", "Their bumpy back teeth crush tough bamboo leaves.", "They are not bears and not giant pandas. They are on their own branch, closest to raccoons, skunks, and weasels.", "They have to eat for about 13 hours a day, because bamboo has very little energy."],
+      },
+      partWhy: { tail: "a fluffy tail to stay warm", ears: "ears with white edges", eyes: "red tear stripes under their eyes", paws: "furry feet like snow boots", fur: "red fur" },
+    },
+    sloth: {
+      name: "sloth", where: "Central and South America", hab: "rainforest", diet: "plants", group: "other", level: 2,
+      clues: {
+        pk: [["part", "claws", "I have long, curved claws."], ["part", "eyes", "I have dark patches around my eyes."], ["part", "fur", "My fur is shaggy and brown."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "claws", "My long claws are hooks for hanging upside down."], ["part", "eyes", "Dark stripes go across my eyes."], ["part", "mouth", "My face looks like it is always smiling."], ["part", "paws", "I can hang from a branch with my feet."]],
+        g1: [["hab", "rainforest", "I live high in rainforest trees."], ["part", "claws", "My hooked claws hold on, even when I sleep."], ["part", "fur", "Tiny green plants grow in my fur and hide me."], ["part", "eyes", "I move so slowly that hawks hardly notice me."]],
+        g2: [["food", "plants", "I eat leaves, twigs, and buds."], ["teeth", "", "Look at my teeth: no front teeth, just flat pegs for mashing leaves."], ["hab", "rainforest", "I live in the rainforests of Central and South America."], ["part", "claws", "I have long hooked claws."]],
+      },
+      facts: {
+        pk: ["Sloths hang upside down in trees.", "Sloths move very, very slowly."],
+        k:  ["Sloths use their long claws like hooks.", "They sleep hanging from branches.", "Sloths are great swimmers!"],
+        g1: ["Sloths live in the rainforest trees of Central and South America.", "Little green plants called algae grow in their fur and help them hide.", "They come down from their tree only about once a week, to go potty.", "Sloths can hold their breath underwater for a long time."],
+        g2: ["Sloths eat leaves, so they are herbivores.", "They have no front teeth. Their flat peg teeth keep growing all their life.", "Their closest cousins are armadillos and anteaters.", "Leaves give very little energy, so sloths save energy by moving slowly."],
+      },
+      partWhy: { claws: "long hooked claws for hanging", eyes: "dark stripes across their eyes", mouth: "a smiley mouth", paws: "feet that can hang on to branches", fur: "shaggy fur where little plants grow" },
+    },
+    armadillo: {
+      name: "armadillo", where: "North, Central, and South America", hab: "grassland", diet: "both", group: "other", level: 2,
+      clues: {
+        pk: [["part", "shell", "I wear a hard shell, like armor."], ["part", "ears", "I have tall ears."], ["part", "nose", "My long nose sniffs the ground."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "shell", "My shell is made of bony bands."], ["part", "nose", "My long nose sniffs out bugs underground."], ["part", "claws", "My strong claws dig fast."], ["part", "tail", "Even my tail has armor."]],
+        g1: [["hab", "grassland", "I live in grasslands and scrubby woods."], ["part", "shell", "My armor shell protects me from coyotes."], ["part", "claws", "My claws dig burrows to sleep in."], ["part", "nose", "My nose smells bugs under the dirt."]],
+        g2: [["food", "both", "I eat bugs, worms, and a little fruit."], ["teeth", "", "Look at my teeth: no front teeth, just small pegs."], ["hab", "grassland", "I live in the Americas."], ["part", "shell", "I have a shell of bony bands."]],
+      },
+      facts: {
+        pk: ["Armadillos wear a hard shell.", "They dig holes with their claws."],
+        k:  ["An armadillo's shell is made of bone covered with tough skin.", "They sniff for bugs with their long noses.", "Some armadillos can roll into a ball!"],
+        g1: ["Armadillos live in grasslands and woods in the Americas.", "They dig burrows to sleep in and stay cool.", "The armadillo's name means little armored one in Spanish.", "They can hold their breath and walk across the bottom of a stream."],
+        g2: ["Armadillos eat insects and worms plus some fruit, so they are omnivores.", "They have no front teeth, just small peg teeth.", "Their closest cousins are sloths and anteaters.", "Nine-banded armadillos almost always have four identical babies!"],
+      },
+      partWhy: { shell: "a hard shell of bony bands", nose: "a long nose for sniffing bugs", claws: "strong claws for digging", tail: "an armored tail", ears: "tall ears" },
+    },
+    platypus: {
+      name: "platypus", where: "eastern Australia", hab: "river", diet: "meat", group: "monotreme", level: 2,
+      clues: {
+        pk: [["part", "bill", "I have a bill, like a duck."], ["part", "tail", "I have a flat tail, like a beaver."], ["part", "paws", "I have webbed feet."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "bill", "My soft bill feels for food underwater."], ["part", "paws", "My webbed front feet paddle me along."], ["part", "tail", "My flat tail stores fat for later."], ["part", "eyes", "I close my eyes when I dive."]],
+        g1: [["hab", "river", "I live in rivers and streams in Australia."], ["part", "bill", "My bill feels the tiny zaps from animals moving underwater."], ["part", "paws", "My webbed feet are great for swimming."], ["part", "fur", "My thick fur keeps me warm and dry."]],
+        g2: [["food", "meat", "I eat insect larvae, worms, and shrimp."], ["teeth", "", "Look at my mouth: grown-ups have no teeth! I mash food with hard pads."], ["hab", "river", "I live in rivers in eastern Australia."], ["part", "bill", "I have a bill like a duck."]],
+      },
+      facts: {
+        pk: ["The platypus has a bill like a duck.", "The platypus lays eggs!"],
+        k:  ["The platypus is a mammal that lays eggs.", "It finds food with its bill, even with its eyes closed.", "It has webbed feet for swimming."],
+        g1: ["Platypuses live in rivers and streams in eastern Australia.", "They dive with their eyes, ears, and nose closed.", "Their bill senses tiny electric signals from animals underwater.", "Babies hatch from eggs, then drink their mother's milk."],
+        g2: ["Platypuses eat insect larvae, worms, and shrimp, so they are carnivores.", "Grown-ups have no teeth. They mash food with hard pads in their bill.", "Monotremes, the egg-laying mammals, branched off the mammal family tree before all others.", "Males have a venom spur on their back legs!"],
+      },
+      partWhy: { bill: "a bill that feels for food", paws: "webbed feet for swimming", tail: "a flat tail that stores fat", eyes: "eyes that close underwater", fur: "thick waterproof fur" },
+    },
+    hedgehog: {
+      name: "hedgehog", where: "Europe, Africa, and Asia", hab: "grassland", scene: "meadow", diet: "meat", group: "other", level: 2,
+      clues: {
+        pk: [["part", "spines", "I am covered in spikes."], ["part", "nose", "I have a pointy nose."], ["part", "ears", "I have little round ears."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "spines", "My spikes are called spines."], ["part", "nose", "My nose sniffs out bugs and worms."], ["part", "ears", "I hear bugs crawling in the leaves."], ["part", "paws", "I have tiny feet."]],
+        g1: [["hab", "grassland", "I live in meadows, hedges, and gardens."], ["part", "spines", "When I'm scared, I roll into a spiky ball."], ["part", "nose", "I sniff for food at night."], ["part", "fur", "My tummy is soft and furry."]],
+        g2: [["food", "meat", "I eat beetles, worms, and snails."], ["teeth", "", "Look at my teeth: lots of small, sharp teeth for crunching bugs."], ["hab", "grassland", "I live in Europe, Africa, and Asia."], ["part", "spines", "I am covered in spines."]],
+      },
+      facts: {
+        pk: ["Hedgehogs are covered in spikes.", "Hedgehogs roll into a ball to stay safe."],
+        k:  ["A hedgehog has about 5,000 spines.", "It rolls into a spiky ball when it is scared.", "Hedgehogs look for food at night."],
+        g1: ["Hedgehogs live in meadows, hedges, and gardens.", "They got their name because they snuffle and grunt like a pig in the hedges.", "Some hedgehogs sleep all winter.", "Baby hedgehogs are called hoglets!"],
+        g2: ["Hedgehogs eat beetles, worms, and snails, so they are carnivores. They are insect eaters.", "Their small, sharp teeth crunch hard bug shells.", "Their spines are hairs that became stiff and hollow.", "They are cousins of shrews and moles, on the Laurasian branch."],
+      },
+      partWhy: { spines: "spines to stay safe", nose: "a pointy nose for sniffing", ears: "little ears that hear bugs", paws: "tiny feet", fur: "a soft furry tummy" },
+    },
+    bat: {
+      name: "fruit bat", where: "Africa, Asia, and Australia", hab: "rainforest", diet: "plants", group: "other", level: 2,
+      clues: {
+        pk: [["part", "wings", "I have big wings."], ["part", "ears", "I have pointy ears."], ["part", "eyes", "I have big dark eyes."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "wings", "My wings are made of skin stretched over my fingers."], ["part", "claws", "I have a little claw on each thumb."], ["part", "eyes", "My big eyes help me see at night."], ["part", "paws", "My feet hang on upside down."]],
+        g1: [["hab", "rainforest", "I live in rainforests and fly at night."], ["part", "wings", "I am the only mammal that can really fly."], ["part", "nose", "My nose sniffs out ripe fruit."], ["part", "paws", "I sleep hanging upside down by my feet."]],
+        g2: [["food", "plants", "I eat fruit and flower nectar."], ["teeth", "", "Look at my teeth: pointy front teeth to bite fruit, flat back teeth to mash it."], ["hab", "rainforest", "I live in forests in Africa, Asia, and Australia."], ["part", "wings", "My wings are made of skin."]],
+      },
+      facts: {
+        pk: ["Bats can fly!", "Bats sleep hanging upside down."],
+        k:  ["A bat's wing is its hand, with long fingers and skin in between.", "Fruit bats use their eyes and noses to find fruit.", "They sleep upside down in big groups."],
+        g1: ["Fruit bats live in warm forests in Africa, Asia, and Australia.", "Bats are the only mammals that can really fly.", "Some fruit bats have wings wider than a grown-up's arms.", "Fruit bats are also called flying foxes!"],
+        g2: ["Fruit bats eat fruit and nectar, so they are herbivores.", "They drop seeds as they fly, which plants new trees.", "There are over 1,400 kinds of bats: about one of every five kinds of mammal!", "Bats are on the Laurasian branch, cousins of carnivorans and hoofed animals."],
+      },
+      partWhy: { wings: "wings made of skin and fingers", claws: "a thumb claw for climbing", eyes: "big eyes for seeing at night", paws: "feet that hang upside down", nose: "a nose that sniffs fruit", ears: "pointy ears" },
+    },
+    koala: {
+      name: "koala", where: "eastern Australia", hab: "forest", diet: "plants", group: "marsupial", level: 2,
+      clues: {
+        pk: [["part", "ears", "I have big fluffy ears."], ["part", "nose", "I have a big black nose."], ["part", "fur", "My fur is soft and gray."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "nose", "My big nose sniffs which leaves are safe to eat."], ["part", "ears", "My ears are round and fluffy."], ["part", "claws", "My sharp claws grip tree bark."], ["part", "paws", "I have two thumbs on each front paw."]],
+        g1: [["hab", "forest", "I live in eucalyptus forests in Australia."], ["part", "claws", "My claws help me climb tall trees."], ["part", "nose", "I sniff leaves to pick the best ones."], ["part", "fur", "My thick fur is like a raincoat."]],
+        g2: [["food", "plants", "I eat only eucalyptus leaves."], ["teeth", "", "Look at my teeth: front teeth to snip leaves, flat back teeth to grind them."], ["hab", "forest", "I live in eastern Australia."], ["part", "nose", "I have a big nose."]],
+      },
+      facts: {
+        pk: ["Koalas live in trees.", "Koalas sleep most of the day."],
+        k:  ["Koalas eat eucalyptus leaves.", "They sleep up to 20 hours a day!", "Koalas are not bears."],
+        g1: ["Koalas live in eucalyptus forests in eastern Australia.", "They hardly ever drink, because leaves give them water.", "A baby koala is called a joey and rides in its mother's pouch.", "Koalas have fingerprints, just like people!"],
+        g2: ["Koalas eat only eucalyptus leaves, so they are herbivores.", "They snip leaves with their front teeth and grind them with flat back teeth.", "Koalas are marsupials, cousins of kangaroos and wombats, not bears.", "Eucalyptus is poisonous to most animals, but a koala's gut can handle it."],
+      },
+      partWhy: { nose: "a big nose for sniffing leaves", ears: "big fluffy ears", claws: "sharp claws for climbing", paws: "two thumbs on each front paw", fur: "thick fur like a raincoat" },
+    },
+    okapi: {
+      name: "okapi", where: "central Africa", hab: "rainforest", diet: "plants", group: "hoofed", level: 2,
+      clues: {
+        pk: [["part", "stripes", "I have stripes on my legs."], ["part", "ears", "I have big ears."], ["part", "fur", "My fur is dark brown."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "stripes", "My striped legs help me hide in the forest."], ["part", "ears", "My big ears hear leopards sneaking."], ["part", "hooves", "I have hooves."], ["part", "tail", "I have a tufted tail."]],
+        g1: [["hab", "rainforest", "I live in a thick rainforest."], ["part", "stripes", "My stripes look like sunlight and shadows."], ["part", "ears", "My big ears hear danger far away."], ["part", "neck", "My neck is longer than a horse's."]],
+        g2: [["food", "plants", "I eat leaves, buds, and fruit."], ["teeth", "", "Look at my teeth: wide, flat back teeth for grinding leaves."], ["hab", "rainforest", "I live in a rainforest in central Africa."], ["part", "horns", "I have bumps on my head, like a giraffe."]],
+      },
+      facts: {
+        pk: ["Okapis have stripes on their legs.", "Okapis live in the forest."],
+        k:  ["Okapis look like zebras, but they are not.", "Their stripes help them hide.", "They pull leaves off branches with a long tongue."],
+        g1: ["Okapis live in one rainforest in central Africa.", "Their stripes look like light and shadows in the forest.", "Their tongue is so long they can lick their own ears!", "Scientists outside Africa did not learn about okapis until about 120 years ago."],
+        g2: ["Okapis eat leaves, buds, and fruit, so they are herbivores.", "Surprise: the okapi's closest living cousin is the giraffe!", "Males have small ossicones, like a giraffe.", "Okapis have two toes on each foot, like giraffes and camels."],
+      },
+      partWhy: { stripes: "striped legs for hiding", ears: "big ears", hooves: "hooves", tail: "a tufted tail", neck: "a long neck", horns: "ossicones, like a giraffe" },
+    },
+    pangolin: {
+      name: "pangolin", where: "Africa and Asia", hab: "grassland", diet: "meat", group: "carnivoran-cousin", level: 2,
+      clues: {
+        pk: [["part", "scales", "I am covered in scales."], ["part", "tail", "I have a long tail."], ["part", "nose", "I have a small pointy face."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "scales", "My scales are hard, like fingernails."], ["part", "claws", "My big claws tear open ant hills."], ["part", "tail", "I can hang by my tail."], ["part", "nose", "My nose sniffs out ants."]],
+        g1: [["hab", "grassland", "I live in grasslands and forests."], ["part", "scales", "I roll into a scaly ball when I'm scared."], ["part", "claws", "My claws dig into termite mounds."], ["part", "tail", "My scaly tail curls around me."]],
+        g2: [["food", "meat", "I eat ants and termites."], ["teeth", "", "Look at my mouth: I have no teeth! I lick up ants with a long sticky tongue."], ["hab", "grassland", "I live in Africa and Asia."], ["part", "scales", "I am covered in scales."]],
+      },
+      facts: {
+        pk: ["Pangolins are covered in scales.", "Pangolins roll into a ball."],
+        k:  ["A pangolin's scales are made of keratin, like your fingernails.", "It eats ants and termites.", "It rolls into a tight ball to stay safe."],
+        g1: ["Pangolins live in grasslands and forests in Africa and Asia.", "They are the only mammals covered in scales.", "Their tongue can be longer than their body!", "Babies ride on their mother's tail."],
+        g2: ["Pangolins eat ants and termites, so they are carnivores. They are insect eaters.", "They have no teeth. Small stones in their stomach help mash their food.", "Surprise: the pangolin's closest cousins are the carnivorans, like lions and otters!", "Pangolins are in danger from hunting, so many countries protect them."],
+      },
+      partWhy: { scales: "hard scales like armor", claws: "big claws for digging", tail: "a strong scaly tail", nose: "a nose for sniffing ants" },
+    },
+    walrus: {
+      name: "walrus", where: "the Arctic", hab: "ice", diet: "meat", group: "carnivoran", level: 2,
+      clues: {
+        pk: [["part", "tusks", "I have two long tusks."], ["part", "whiskers", "I have a bushy mustache of whiskers."], ["part", "flippers", "I have flippers."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "tusks", "My long tusks help me climb out of the water."], ["part", "whiskers", "My whiskers feel for clams on the sea floor."], ["part", "flippers", "My flippers make me a strong swimmer."], ["part", "eyes", "I have small eyes."]],
+        g1: [["hab", "ice", "I live in the cold Arctic sea and on the ice."], ["part", "tusks", "I use my tusks like ice picks to pull myself up."], ["part", "whiskers", "My whiskers find food in the dark mud."], ["part", "fur", "A thick layer of blubber keeps me warm."]],
+        g2: [["food", "meat", "I eat clams, snails, and worms from the sea floor."], ["teeth", "", "Look at my teeth: my tusks are giant canine teeth!"], ["hab", "ice", "I live in the Arctic."], ["part", "flippers", "I have flippers."]],
+      },
+      facts: {
+        pk: ["Walruses have long tusks.", "Walruses like to rest on the ice."],
+        k:  ["A walrus has hundreds of whiskers.", "It uses its tusks to climb onto the ice.", "Walruses live together in big groups."],
+        g1: ["Walruses live in the cold Arctic sea.", "Blubber under their skin keeps them warm in icy water.", "A walrus can suck a clam right out of its shell!", "They can sleep floating in the water."],
+        g2: ["Walruses eat clams and other sea floor animals, so they are carnivores.", "Their tusks are long canine teeth that keep growing.", "Walruses are carnivorans on the dog branch, cousins of seals, sea lions, and bears.", "A big walrus can weigh as much as a small car."],
+      },
+      partWhy: { tusks: "long tusks for climbing", whiskers: "whiskers to feel for clams", flippers: "flippers for swimming", eyes: "small eyes", fur: "blubber to stay warm" },
+    },
+    wolf: {
+      name: "gray wolf", where: "North America, Europe, and Asia", hab: "forest", diet: "meat", group: "carnivoran", level: 2,
+      clues: {
+        pk: [["part", "ears", "I have pointy ears."], ["part", "tail", "I have a bushy tail."], ["part", "fur", "My fur is gray."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "nose", "My nose can smell animals far, far away."], ["part", "ears", "My ears hear my family howling."], ["part", "mouth", "I howl to talk to my pack."], ["part", "paws", "My big paws help me run in the snow."]],
+        g1: [["hab", "forest", "I live in forests and on snowy plains."], ["part", "mouth", "I howl so my family knows where I am."], ["part", "nose", "My nose is a super sniffer."], ["part", "paws", "My big paws work like snowshoes."]],
+        g2: [["food", "meat", "I hunt deer and elk with my family."], ["teeth", "", "Look at my teeth: long fangs and sharp, slicing back teeth."], ["hab", "forest", "I live in North America, Europe, and Asia."], ["part", "ears", "I have pointy ears."]],
+      },
+      facts: {
+        pk: ["Wolves live in families called packs.", "Wolves howl!"],
+        k:  ["A wolf's howl can be heard miles away.", "Wolves live and hunt together in packs.", "Pet dogs came from wolves long, long ago."],
+        g1: ["Gray wolves live in forests, mountains, and snowy plains.", "A pack is a family: parents and their pups.", "Wolves can smell other animals more than a mile away.", "All pet dogs, from tiny to huge, came from wolves."],
+        g2: ["Wolves hunt deer, elk, and moose, so they are carnivores.", "Their slicing back teeth, called carnassials, cut meat like scissors.", "Wolves are on the dog branch of carnivorans, with foxes and pet dogs.", "Wolves helped Yellowstone's rivers and forests by keeping elk on the move."],
+      },
+      partWhy: { nose: "a super sniffer nose", ears: "pointy ears", mouth: "a mouth for howling", paws: "big paws like snowshoes", tail: "a bushy tail", fur: "thick gray fur" },
+    },
+    snowleopard: {
+      name: "snow leopard", where: "the mountains of central Asia", hab: "mountain", diet: "meat", group: "carnivoran", level: 2,
+      clues: {
+        pk: [["part", "tail", "I have a long, thick tail."], ["part", "fur", "My fur is pale with dark spots."], ["part", "paws", "I have big paws."], ["shadow", "", "Here is my shadow!"]],
+        k:  [["part", "tail", "My thick tail helps me balance on cliffs."], ["part", "paws", "My big furry paws are like snowshoes."], ["part", "fur", "My spotted fur hides me on rocks."], ["part", "eyes", "My eyes are pale green or gray."]],
+        g1: [["hab", "mountain", "I live high in snowy mountains."], ["part", "tail", "I wrap my tail over my nose to stay warm."], ["part", "paws", "My wide paws don't sink in snow."], ["part", "fur", "My spots blend in with snowy rocks."]],
+        g2: [["food", "meat", "I hunt wild sheep and goats."], ["teeth", "", "Look at my teeth: big fangs and sharp slicing back teeth."], ["hab", "mountain", "I live in the mountains of central Asia."], ["part", "tail", "I have a long thick tail."]],
+      },
+      facts: {
+        pk: ["Snow leopards live in the snowy mountains.", "They have a big fluffy tail."],
+        k:  ["A snow leopard can jump very far.", "It uses its tail like a scarf.", "Its spots help it hide on rocks."],
+        g1: ["Snow leopards live high in the mountains of central Asia.", "Their tail is almost as long as their body.", "They can leap six times their body length!", "Snow leopards can't roar. They chuff, hiss, and mew."],
+        g2: ["Snow leopards hunt wild sheep and goats, so they are carnivores.", "Their sharp carnassial teeth slice meat.", "They are on the cat branch, cousins of lions and tigers.", "Big chests and noses help them breathe the thin mountain air."],
+      },
+      partWhy: { tail: "a long tail for balance", paws: "big paws like snowshoes", fur: "spotted fur for hiding", eyes: "pale eyes", ears: "small round ears" },
+    },
   };
 
   /* Words for each part, said aloud ("Tap the ___"). */
   const PARTS = {
     ears: "ears", eyes: "eyes", nose: "nose", mouth: "mouth", whiskers: "whiskers", fur: "fur", paws: "paws", claws: "claws",
     tail: "tail", mane: "mane", trunk: "trunk", tusks: "tusks", neck: "neck", horns: "ossicones", hump: "hump", pouch: "pouch", hooves: "hooves",
+    bill: "bill", wings: "wings", shell: "shell", spines: "spines", scales: "scales", stripes: "striped legs", flippers: "flippers", branch: "branch",
   };
-  const PART_SAY = { paws: { kangaroo: "feet", elephant: "feet", camel: "feet", otter: "webbed feet" }, horns: { giraffe: "ossicones, the bumps on its head" } };
+  const PART_SAY = { paws: { kangaroo: "feet", elephant: "feet", camel: "feet", otter: "webbed feet", platypus: "webbed feet", sloth: "feet", armadillo: "legs", pangolin: "legs" }, horns: { giraffe: "ossicones, the bumps on its head", okapi: "ossicones, the bumps on its head" } };
 
   const DIET = {
     meat: { word: "carnivore", kid: "meat", say: "Meat. Other animals." },
@@ -371,6 +565,66 @@
       k: "A camel's hump stores fat, not water. It's like a snack pack for long trips.",
       g1: "A camel can go many days without food, because its body uses the fat in its hump. When the fat is used up, the hump gets floppy!",
       g2: "Keeping fat in one hump, instead of all over its body, helps a camel stay cooler in the hot desert. Camels can also drink lots of water very fast." } },
+    redpanda: { part: "tail", name: "Tail Blanket", act: "sway", fx: "sparkle", say: {
+      pk: "Red pandas use their fluffy tail like a blanket! Cozy!",
+      k: "When it gets cold, a red panda curls up and wraps its fluffy tail around its body.",
+      g1: "High in the cold mountains, a red panda wraps its thick, fluffy tail around itself, even over its face, like a warm blanket.",
+      g2: "A thick tail, furry feet, and dense fur all trap warm air. These adaptations let red pandas live in cold, snowy mountain forests." } },
+    sloth: { part: "claws", name: "Hang Tight", act: "sway", fx: "leaves", say: {
+      pk: "Sloths have hook claws! They hang on tight, even when they sleep.",
+      k: "A sloth's long claws work like hooks. It can hang upside down all day without getting tired.",
+      g1: "Sloth claws hook over branches and stay locked, so sloths can hang and even sleep upside down without falling.",
+      g2: "Sloth muscles and tendons lock their claws in place, so hanging takes almost no energy. That helps them live on a diet of low-energy leaves." } },
+    armadillo: { part: "shell", name: "Armor Shell", act: "wiggle", fx: "sparkle", say: {
+      pk: "Armadillos wear armor! Their hard shell keeps them safe.",
+      k: "An armadillo's shell is made of hard bony plates. Bendy bands in the middle let it move and curl up.",
+      g1: "Armadillo armor is bone covered with tough skin. When danger comes, it can dash into thorny bushes where its shell protects it.",
+      g2: "Armadillos are the only living mammals with a bony shell. Some kinds can roll into a ball, and others jump straight up to startle a predator!" } },
+    platypus: { part: "bill", name: "Electric Bill", act: "swim", fx: "waves", say: {
+      pk: "The platypus has a magic bill! It feels for food underwater.",
+      k: "The platypus closes its eyes underwater and finds food with its bill.",
+      g1: "A platypus bill can feel tiny electric zaps made by shrimp and bugs moving underwater. It finds food with its eyes, ears, and nose shut!",
+      g2: "The bill has about 40 thousand electricity sensors. Sensing electricity is called electroreception, and almost no other mammals can do it." } },
+    hedgehog: { part: "spines", name: "Spiky Ball", act: "wiggle", fx: "sparkle", say: {
+      pk: "Hedgehogs roll into a spiky ball! Ouch, stay away!",
+      k: "When a hedgehog is scared, it tucks in its head and feet and rolls into a ball of spines.",
+      g1: "A hedgehog has about 5,000 spines. Special muscles pull its skin tight like a bag, so it becomes a spiky ball no predator wants to bite.",
+      g2: "Hedgehog spines are hairs that became hard and hollow. They are light but strong, and they even cushion the hedgehog if it falls." } },
+    bat: { part: "wings", name: "Night Flyer", act: "stretch", fx: "leaves", say: {
+      pk: "Bats can fly! Their wings flap, flap, flap!",
+      k: "A bat's wing is its hand! Thin skin stretches between very long fingers.",
+      g1: "Bats are the only mammals that can really fly. Fruit bats fly at night to find ripe fruit and flowers, and they spread seeds as they go.",
+      g2: "A bat wing has the same bones as your hand, just much longer. Bending its fingers changes the wing's shape, so bats can turn sharply in the air." } },
+    koala: { part: "nose", name: "Leaf Sniffer", act: "sniff", fx: "scent", say: {
+      pk: "Koalas have a big nose to sniff out the best leaves!",
+      k: "Koalas sniff every leaf before eating, to pick the yummiest and safest ones.",
+      g1: "Eucalyptus leaves can be poisonous. A koala's big nose smells which leaves are safe and tasty before it takes a bite.",
+      g2: "A koala's keen nose picks leaves with fewer poisons and more water, and a very long gut helps break the rest down. That's how koalas live on leaves other animals can't eat." } },
+    okapi: { part: "stripes", name: "Forest Stripes", act: "sway", fx: "leaves", say: {
+      pk: "Okapis have stripes to hide in the forest! Can you see me?",
+      k: "An okapi's striped legs look like sunlight and shadows in the forest, so it is hard to see.",
+      g1: "In the dark rainforest, the stripes break up the okapi's shape. Baby okapis may also follow their mother's striped legs.",
+      g2: "Stripes that break up an animal's outline are called disruptive camouflage. The okapi's look helps it hide from leopards in the rainforest." } },
+    pangolin: { part: "scales", name: "Scaly Armor", act: "wiggle", fx: "sparkle", say: {
+      pk: "Pangolins roll up in their scales like a ball! Safe!",
+      k: "A pangolin's scales are hard, like your fingernails. It rolls into a tight ball to stay safe.",
+      g1: "When a lion comes close, a pangolin rolls into a ball of sharp-edged scales. Even a lion can't open it!",
+      g2: "Pangolins are the only mammals covered in scales. The scales are made of keratin, the same stuff as your hair and fingernails." } },
+    walrus: { part: "tusks", name: "Ice Picks", act: "stretch", fx: "drops", say: {
+      pk: "Walruses use their tusks to climb onto the ice!",
+      k: "A walrus digs its long tusks into the ice and pulls itself out of the water.",
+      g1: "Walrus tusks work like ice picks. They help the walrus climb onto the ice, and they show other walruses who's boss.",
+      g2: "Walrus tusks are long canine teeth that grow all their life. The scientific name for walrus means tooth-walking sea horse!" } },
+    wolf: { part: "mouth", name: "Pack Howl", act: "roar", fx: "waves", say: {
+      pk: "Wolves howl to their family! Ow-ooo!",
+      k: "Wolves howl to call their pack together and to say: this is our home.",
+      g1: "A wolf's howl can be heard miles away. Howling helps a pack find each other and tells other wolves to stay away.",
+      g2: "Each wolf's howl sounds a little different, so pack members can tell who is calling. Working as a team lets wolves hunt animals much bigger than they are." } },
+    snowleopard: { part: "tail", name: "Balance Tail", act: "sway", fx: "sparkle", say: {
+      pk: "Snow leopards have a long tail to help them balance on rocks!",
+      k: "A snow leopard's long tail helps it balance when it jumps across rocky cliffs. At night, it wraps its tail around itself like a scarf.",
+      g1: "Snow leopards leap across steep cliffs. Their long, thick tail helps them steer and balance, and keeps them warm when they sleep.",
+      g2: "A snow leopard's tail is almost as long as its body. It works like a tightrope walker's pole for balance, and its thick fur stores warmth." } },
   };
 
   /* What each animal's footprints look like, said in the footprint game. */
@@ -387,6 +641,18 @@
     elephant: "Elephant tracks are giant circles, as big as a dinner plate!",
     giraffe: "Giraffe tracks are hooves split in two, shaped like a big heart.",
     camel: "Camel tracks are wide and soft, with two toes, for walking on sand.",
+    redpanda: "Red panda tracks have five toes and furry soles, like little snow boots.",
+    sloth: "Sloth tracks are rare, because sloths almost never walk on the ground! You see long claw drags.",
+    armadillo: "Armadillo tracks look like bird tracks: pointy toes with long claws.",
+    platypus: "Platypus tracks have five toes, webbing, and claws, at the edge of a river.",
+    hedgehog: "Hedgehog tracks look like tiny hands with five thin toes.",
+    bat: "Fruit bat tracks are tiny, from feet and thumb claws, when a bat crawls.",
+    koala: "Koala tracks show five toes, with two thumbs on the front feet for gripping trees.",
+    okapi: "Okapi tracks are split hooves, like a giraffe's, but smaller.",
+    pangolin: "Pangolin tracks are small round prints, with long claw marks in front.",
+    walrus: "Walrus tracks are wide flipper marks on the sand or snow.",
+    wolf: "Wolf tracks look like big dog tracks: four toes and claw marks.",
+    snowleopard: "Snow leopard tracks are big and round, with four toes and no claw marks.",
   };
 
   /* Real animal sounds. Put openly licensed recordings in assets/mammal-mystery/sounds/
@@ -395,10 +661,16 @@
     otter: { src: "", credit: "" }, raccoon: { src: "", credit: "" }, fox: { src: "", credit: "" }, lion: { src: "", credit: "" },
     polarbear: { src: "", credit: "" }, panda: { src: "", credit: "" }, meerkat: { src: "", credit: "" }, rabbit: { src: "", credit: "" },
     kangaroo: { src: "", credit: "" }, elephant: { src: "", credit: "" }, giraffe: { src: "", credit: "" }, camel: { src: "", credit: "" },
+    redpanda: { src: "", credit: "" }, sloth: { src: "", credit: "" }, armadillo: { src: "", credit: "" }, platypus: { src: "", credit: "" },
+    hedgehog: { src: "", credit: "" }, bat: { src: "", credit: "" }, koala: { src: "", credit: "" }, okapi: { src: "", credit: "" },
+    pangolin: { src: "", credit: "" }, walrus: { src: "", credit: "" }, wolf: { src: "", credit: "" }, snowleopard: { src: "", credit: "" },
   };
 
   /* Detective ranks: [mysteries solved, rank name, badge color] */
   const RANKS = [[0, "Rookie Detective", "#c9c5cf"], [3, "Junior Detective", "#7ccf68"], [6, "Detective", "#4aa3df"], [12, "Senior Detective", "#a47bff"], [20, "Super Sleuth", "#ff9f40"], [30, "Master Detective", "#ffd23f"]];
 
-  window.MM_DATA = { PHOTOS, SOUNDS, ANIMALS, PARTS, PART_SAY, DIET, COUSINS, TREE, GRADES, POWERS, TRACK_SAY, RANKS, IDS: Object.keys(ANIMALS) };
+  window.MM_DATA = { PHOTOS, SOUNDS, ANIMALS, PARTS, PART_SAY, DIET, COUSINS, TREE, GRADES, POWERS, TRACK_SAY, RANKS,
+    IDS: Object.keys(ANIMALS).filter(id => ANIMALS[id].level !== 2),    // Level 1: the first twelve
+    IDS2: Object.keys(ANIMALS).filter(id => ANIMALS[id].level === 2),   // Level 2: surprising mammals
+    ALL: Object.keys(ANIMALS) };
 })();

@@ -493,6 +493,58 @@
                       also: ["weasels", "badgers", "wolverines", "skunks", "red pandas", "coatis", "kinkajous"], c: ["otter", "raccoon"] }] }] }] }] }] }] }],
   };
 
+  /* Level 2 family tree and cousin questions: the twelve surprising mammals only. */
+  const COUSINS2 = [
+    { pair: ["sloth", "armadillo"], odd: "pangolin", why: "Sloths and armadillos are close cousins, in a group called xenarthrans with anteaters. Pangolins look like armadillos, but they are on a different branch!" },
+    { pair: ["pangolin", "wolf"], odd: "armadillo", why: "Surprise! The pangolin's closest living cousins are the carnivorans, like wolves. Armadillos are on a faraway branch with sloths." },
+    { pair: ["walrus", "redpanda"], odd: "snowleopard", why: "Walruses and red pandas are both on the dog branch of the carnivorans, in the bear and weasel group. Snow leopards are on the cat branch." },
+    { pair: ["wolf", "snowleopard"], odd: "sloth", why: "Wolves and snow leopards are both carnivorans, with special slicing cheek teeth." },
+    { pair: ["koala", "okapi"], odd: "platypus", why: "Koala and okapi babies are born alive. Platypus babies hatch from eggs! Egg-laying mammals branched off the family tree first." },
+    { pair: ["okapi", "bat"], odd: "koala", why: "Okapis and bats are both placental mammals: their babies grow inside their mother. Koala babies grow in a pouch." },
+    { pair: ["hedgehog", "bat"], odd: "sloth", why: "Hedgehogs and bats are both Laurasians, the big group that also has carnivorans and hoofed animals. Sloths are on an older branch." },
+  ];
+  const TREE2 = {
+    k: "mammals2", label: "Mammals", name: "Mammals", say: "Mammals. They all have fur or hair, and their mothers make milk for their babies.",
+    more: ["Even the platypus, which lays eggs, makes milk for its babies.", "Mammals live on every continent and in every ocean."],
+    also: ["people", "mice", "whales", "elephants"],
+    c: [{
+      k: "mono", label: "Egg layers", name: "Monotremes", say: "Monotremes. The only mammals that lay eggs!", teeth: "platypus", teethSay: "Teeth clue: grown-up platypuses have no teeth. They mash food with hard pads.",
+      more: ["Monotremes branched off before all other mammals, more than 150 million years ago.", "There are only five kinds: the platypus and four kinds of echidnas."],
+      also: ["short-beaked echidna", "long-beaked echidnas"], c: ["platypus"] }, {
+      k: "therian", label: "Live birth", name: "Therian mammals", say: "Therian mammals. Their babies are born alive instead of hatching from eggs.",
+      more: ["Almost all mammals are in this group."], also: ["people", "dogs", "kangaroos"],
+      c: [{
+        k: "marsup2", label: "Marsupials", name: "Marsupials", say: "Marsupials. Their babies are born very tiny and keep growing in a pouch.", teeth: "koala", teethSay: "Teeth clue: koalas snip leaves with front teeth and grind them with flat back teeth.",
+        more: ["Koalas are marsupials, not bears!", "Their closest cousins are wombats."], also: ["kangaroos", "wombats", "opossums"], c: ["koala"] }, {
+        k: "placental2", label: "Placentals", name: "Placental mammals", say: "Placental mammals. Their babies grow inside their mother until they are bigger.",
+        more: ["Most mammals are placentals."], also: ["elephants", "rabbits", "people"],
+        c: [{
+          k: "xen", label: "Xenarthrans", name: "Xenarthrans", say: "Xenarthrans: sloths, armadillos, and anteaters. Their great-great-grandparents lived in South America.", teeth: "sloth", teethSay: "Teeth clue: xenarthrans have no front teeth. Some have simple peg teeth, and anteaters have none.",
+          more: ["Their name means strange joints: they have extra joints in their backbones.", "Long ago, giant ground sloths as big as elephants walked the Americas!"],
+          also: ["anteaters", "giant ground sloths (extinct)", "glyptodonts (extinct)"], c: ["sloth", "armadillo"] }, {
+          k: "laura2", label: "Laurasians", name: "Laurasians", say: "Laurasians: hedgehogs, bats, hoofed animals, pangolins, and carnivorans are all cousins!",
+          more: ["Scientists call this big group Laurasiatheria.", "Their great-great-grandparents lived in the northern part of the world."], also: ["moles", "shrews", "horses", "whales"],
+          c: ["hedgehog", {
+            k: "scrot", label: "Bats and more", name: "Bats and their cousins", say: "Bats, and the cousins of bats: hoofed animals, pangolins, and carnivorans.",
+            more: ["Bats are the only mammals that can really fly.", "There are more than 1,400 kinds of bats."], also: ["horses", "rhinos", "cows"],
+            c: ["bat", {
+              k: "fereu", label: "Hoofs and claws", name: "Hoofed animals, pangolins, and carnivorans", say: "Hoofed animals, pangolins, and carnivorans.",
+              more: ["The okapi's closest living cousin is the giraffe.", "Whales and dolphins are hoofed animals' cousins too!"], also: ["giraffes", "cows", "whales", "horses"],
+              c: ["okapi", {
+                k: "ferae", label: "Pangolins + carnivorans", name: "Ferae", say: "Surprise! Pangolins are the carnivorans' closest living cousins.", teeth: "pangolin", teethSay: "Teeth clue: pangolins have no teeth at all. They lick up ants with a long sticky tongue.",
+                more: ["Scientists call this group Ferae, which means wild beasts.", "Scientists found this out by comparing DNA."], also: ["all eight kinds of pangolins"],
+                c: ["pangolin", {
+                  k: "carn2", label: "Carnivorans", name: "Carnivorans", say: "Carnivorans. They share special cheek teeth for slicing food.", teeth: "wolf", teethSay: "Teeth clue: carnivorans have a pair of slicing back teeth called carnassials.",
+                  more: ["Not all carnivorans eat meat. Red pandas eat bamboo!"], also: ["lions", "otters", "seals", "bears"],
+                  c: ["snowleopard", {
+                    k: "dogb2", label: "Dog branch", name: "Dog branch", say: "The dog branch, with wolves, walruses, and red pandas.",
+                    more: ["Scientists call it Caniformia, which means dog-shaped.", "Pet dogs came from wolves."], also: ["foxes", "bears", "otters", "seals"],
+                    c: ["wolf", {
+                      k: "arct2", label: "Bear-weasel", name: "Bears, seals, and weasel kin", say: "The bear, seal, and weasel group, with walruses and red pandas.",
+                      more: ["Walruses are cousins of seals and sea lions.", "Red pandas are on their own small branch, near raccoons, skunks, and weasels."], also: ["bears", "seals", "raccoons", "skunks"],
+                      c: ["walrus", "redpanda"] }] }] }] }] }] }] }] }] }],
+  };
+
   const GRADES = {
     pk: { name: "Pre-K", say: "Pre-K", suspects: 3, cases: 3 },
     k:  { name: "K", say: "Kindergarten", suspects: 4, cases: 3 },
@@ -669,7 +721,7 @@
   /* Detective ranks: [mysteries solved, rank name, badge color] */
   const RANKS = [[0, "Rookie Detective", "#c9c5cf"], [3, "Junior Detective", "#7ccf68"], [6, "Detective", "#4aa3df"], [12, "Senior Detective", "#a47bff"], [20, "Super Sleuth", "#ff9f40"], [30, "Master Detective", "#ffd23f"]];
 
-  window.MM_DATA = { PHOTOS, SOUNDS, ANIMALS, PARTS, PART_SAY, DIET, COUSINS, TREE, GRADES, POWERS, TRACK_SAY, RANKS,
+  window.MM_DATA = { PHOTOS, SOUNDS, ANIMALS, PARTS, PART_SAY, DIET, COUSINS, TREE, COUSINS2, TREE2, GRADES, POWERS, TRACK_SAY, RANKS,
     IDS: Object.keys(ANIMALS).filter(id => ANIMALS[id].level !== 2),    // Level 1: the first twelve
     IDS2: Object.keys(ANIMALS).filter(id => ANIMALS[id].level === 2),   // Level 2: surprising mammals
     ALL: Object.keys(ANIMALS) };

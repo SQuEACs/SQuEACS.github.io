@@ -61,7 +61,7 @@
   @media print { html, body { background: #fff; } .bar { display: none; } .sheet { margin: 0; } }
 </style>
 <script src="mammal-mystery-art.js?v=11"></script>
-<script src="mammal-mystery-data.js?v=5"></script>
+<script src="mammal-mystery-data.js?v=6"></script>
 </head>
 <body>
 <div class="bar"><button type="button" onclick="window.print()">Print all sheets</button><span>Letter paper. Each sheet prints on its own page.</span></div>
@@ -129,6 +129,33 @@
     <div class="cut">${tips.slice().sort().map(id => `<div>${ART.animal(id, { face: true, line: true })}</div>`).join("")}</div>
     <p class="tip">✂ Cut on the dashed lines.</p>
     <div class="key-ans">Answer, left to right: lion and meerkat (cat branch), then fox, then giraffe</div>${foot}</section>`);
+
+  // ---------- Level 2: surprising mammals ----------
+  out.push(`<section class="sheet">${top("LEVEL 2")}
+    <div style="width:2.6in;margin-top:.1in">${ART.detective(true).replace("<svg ", "<svg style=\"width:100%;height:auto\" ")}</div>
+    ${word("Level 2")}
+    <p class="say">Surprising mammals! One lays eggs, one flies, and two wear armor. Color each one in your field guide.</p>
+    <div class="grid" style="margin-top:.15in;grid-template-columns:repeat(6,1fr);gap:.1in">${D.IDS2.map(id => `<div class="gcell">${ART.animal(id, { face: true, line: true })}<span class="box"></span>${cap(D.ANIMALS[id].name)}</div>`).join("")}</div>
+    <p class="tip" style="margin-top:.12in">Check the box when you find that animal in Level 2!</p>${foot}</section>`);
+  D.IDS2.forEach(id => {
+    const a = D.ANIMALS[id];
+    out.push(`<section class="sheet">${top("FIELD GUIDE · LEVEL 2")}
+      ${word(cap(a.name))}
+      <div class="big">${ART.animal(id, { line: true })}</div>
+      <div class="row"><div class="hab">${ART.habitat(a.scene || a.hab, { line: true })}</div><p class="say" style="text-align:left;max-width:3.6in">${a.facts.pk[0]} ${a.facts.k[0]}<br><span style="font-size:14px">Lives in: ${a.where}</span></p></div>${foot}</section>`);
+  });
+  const m2 = ["snowleopard", "sloth", "walrus", "platypus"], h2 = ["river", "mountain", "rainforest", "ice"];
+  out.push(`<section class="sheet">${top("LEVEL 2 · 1ST GRADE")}
+    <h1>Who lives here?</h1><p class="tip">Draw a line from each animal to its home. Then color the pictures.</p>
+    <div class="match">${m2.map((id, i) => `<div class="a">${ART.animal(id, { line: true })}</div><div class="d"><i></i><i></i></div><div class="h">${ART.habitat(h2[i], { line: true })}</div>`).join("")}</div>
+    <p class="say">Pick one animal. What body part helps it live in its home?</p><div class="lines" style="max-width:6.6in"><div></div></div>
+    <div class="key-ans">Answers: snow leopard = mountains, sloth = rainforest, walrus = ice, platypus = river</div>${foot}</section>`);
+  const tt2 = ["koala", "wolf", "armadillo"];
+  out.push(`<section class="sheet">${top("LEVEL 2 · 2ND GRADE")}
+    <h1>Teeth detective</h1><p class="tip">Look at each set of teeth. Circle what the animal eats. Then draw its food in the box.</p>
+    <div class="teeth">${tt2.map((id, i) => `<div class="t">${ART.teeth(id, { line: true })}<div style="text-align:center;font-size:15px">Mystery animal ${i + 1}</div></div><div><div class="opts"><span>Carnivore: meat</span><span>Herbivore: plants</span><span>Omnivore: both</span></div><div style="border:2.5px solid #2a2233;border-radius:10px;height:1.2in;margin-top:.12in"></div></div>`).join("")}</div>
+    <p class="say" style="margin-top:.2in"><b>Bonus:</b> The platypus and the pangolin have no teeth at all! How do you think they eat?</p>
+    <div class="key-ans">Answers: 1 koala, herbivore · 2 wolf, carnivore · 3 armadillo, omnivore (bugs and fruit)</div>${foot}</section>`);
 
   // My own mystery animal
   out.push(`<section class="sheet">${top("ALL GRADES")}

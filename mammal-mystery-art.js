@@ -710,33 +710,72 @@
      rabbits and kangaroos land with their back feet side by side, giraffes and
      camels leave split hooves or soft two-toed pads. */
   const TRACK_KIND = { otter: "webbed", raccoon: "hand", fox: "dog", lion: "cat", polarbear: "bear", panda: "bear", meerkat: "meerkat", rabbit: "rabbit", kangaroo: "roo", elephant: "elephant", giraffe: "hoof", camel: "camel" };
+  /* Field-guide style footprints pressed into mud or sand. Shapes follow real tracks:
+     fox = 4 oval toes, claw dots, small chevron heel pad; lion = 4 teardrop toes, no claws,
+     big heel pad with 3 lobes at the back; bears = 5 toes in an arc, claws, long sole;
+     raccoon = 5 long separate fingers; otter = 5 toes with webbing; meerkat = 4 toes with
+     long digging claws; rabbit = 2 small front prints behind 2 long back prints, furry edges;
+     kangaroo = long narrow back feet side by side; elephant = big round print
+     with cracked skin lines and toenail bumps; giraffe = split hoof, 2 halves; camel = 2 broad
+     toes with nails on one soft pad. */
+  let trackN = 0;
   function print(kind, x, y, s, rot, col) {
-    const E = (cx, cy, rx, ry, r) => `<ellipse cx="${r1(cx)}" cy="${r1(cy)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="${col}"${r ? ` transform="rotate(${r} ${r1(cx)} ${r1(cy)})"` : ""}/>`;
-    const claw = (cx, cy, dx, dy) => `<path d="M ${r1(cx)} ${r1(cy)} l ${r1(dx)} ${r1(dy)}" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`;
+    const F = `fill="${col}"`;
+    const E = (cx, cy, rx, ry, r) => `<ellipse cx="${r1(cx)}" cy="${r1(cy)}" rx="${r1(rx)}" ry="${r1(ry)}" ${F}${r ? ` transform="rotate(${r} ${r1(cx)} ${r1(cy)})"` : ""}/>`;
+    const P = d => `<path d="${d}" ${F}/>`;
+    // a claw mark: a short tapered wedge pointing away from the toe
+    const claw = (cx, cy, ang, len = 6, w = 1.6) => { const a = ang * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a), px = -dy, py = dx;
+      return P(`M ${r1(cx + px * w)} ${r1(cy + py * w)} L ${r1(cx + dx * len)} ${r1(cy + dy * len)} L ${r1(cx - px * w)} ${r1(cy - py * w)} Z`); };
+    // a teardrop toe pointing along ang
+    const toe = (cx, cy, rx, ry, ang) => `<path d="M 0 ${r1(-ry * 1.15)} C ${r1(rx * 0.9)} ${r1(-ry * 0.9)} ${r1(rx)} ${r1(ry * 0.4)} 0 ${r1(ry)} C ${r1(-rx)} ${r1(ry * 0.4)} ${r1(-rx * 0.9)} ${r1(-ry * 0.9)} 0 ${r1(-ry * 1.15)} Z" ${F} transform="translate(${r1(cx)} ${r1(cy)}) rotate(${ang})"/>`;
     let g = "";
-    if (kind === "dog") g = E(0, 9, 11, 9) + [[-11, -6], [-4, -15], [4, -15], [11, -6]].map(([a, b]) => E(a, b, 4.2, 5.4) + claw(a * 1.05, b - 6, a * 0.08, -4)).join("");
-    else if (kind === "cat") g = E(0, 8, 14, 11) + [[-15, -6], [-6, -16], [6, -16], [15, -6]].map(([a, b]) => E(a, b, 5, 5.6)).join("");
-    else if (kind === "bear") g = `<path d="M -24 4 Q -26 22 -8 24 Q 0 26 10 24 Q 26 22 24 4 Q 12 10 0 10 Q -12 10 -24 4 Z" fill="${col}"/>` + [-22, -11, 0, 11, 22].map((a, i) => { const b = -8 - [0, 6, 8, 6, 0][i]; return E(a, b, 5.2, 6) + claw(a, b - 7, a * 0.12, -5); }).join("");
-    else if (kind === "hand") g = E(0, 6, 9, 8) + [-30, -14, 0, 14, 30].map(d => `<path d="M 0 2 L ${r1(Math.sin(d * Math.PI / 180) * 20)} ${r1(-Math.cos(d * Math.PI / 180) * 20)}" stroke="${col}" stroke-width="5.5" stroke-linecap="round"/>`).join("");
-    else if (kind === "webbed") g = `<path d="M -16 -8 Q 0 2 16 -8 L 12 4 Q 0 8 -12 4 Z" fill="${col}" opacity=".45"/>` + E(0, 8, 10, 8) + [[-16, -8], [-8, -15], [0, -17], [8, -15], [16, -8]].map(([a, b]) => E(a, b, 3.6, 4.6) + claw(a, b - 5, 0, -3)).join("");
-    else if (kind === "meerkat") g = E(0, 6, 6, 7) + [[-7, -5], [-2.5, -9], [2.5, -9], [7, -5]].map(([a, b]) => E(a, b, 2.4, 3) + claw(a, b - 3, a * 0.2, -10)).join("");
-    else if (kind === "rabbit") g = E(-9, -14, 6, 17) + E(9, -14, 6, 17) + E(-3, 18, 5, 6) + E(3, 32, 5, 6);
-    else if (kind === "roo") g = [-9, 9].map(a => E(a, 0, 5.5, 26) + E(a, -24, 4, 6)).join("");
-    else if (kind === "elephant") g = `<circle cx="0" cy="0" r="27" fill="${col}"/>` + `<path d="M -16 -6 L 4 4 M -6 12 L 12 -8 M -10 -16 L 0 -4" stroke="#f3e2bf" stroke-width="2" stroke-linecap="round"/>` + [-16, -6, 6, 16].map(a => E(a, -26, 4.5, 3.6)).join("");
-    else if (kind === "hoof") g = `<path d="M -2 -22 Q -18 -18 -18 2 Q -18 20 -3 22 Z" fill="${col}"/><path d="M 2 -22 Q 18 -18 18 2 Q 18 20 3 22 Z" fill="${col}"/>`;
-    else if (kind === "camel") g = E(-10, 0, 11, 18, -6) + E(10, 0, 11, 18, 6) + `<path d="M 0 -16 V 14" stroke="#f3e2bf" stroke-width="2.5"/>`;
-    return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${rot}) scale(${s})">${g}</g>`;
+    if (kind === "dog") g = P("M -8 4 Q -4 -1 0 2 Q 4 -1 8 4 Q 10 11 5 14 Q 0 11 -5 14 Q -10 11 -8 4 Z") +
+      toe(-4, -13, 3.6, 5.2, -4) + toe(4, -13, 3.6, 5.2, 4) + toe(-11, -3, 3.2, 4.6, -18) + toe(11, -3, 3.2, 4.6, 18) +
+      claw(-4.6, -20, -6, 4) + claw(4.6, -20, 6, 4) + claw(-12.8, -9, -22, 3.6) + claw(12.8, -9, 22, 3.6);
+    else if (kind === "cat") g = P("M -14 2 Q -12 -6 -5 -4 Q 0 -7 5 -4 Q 12 -6 14 2 Q 16 12 10 15 Q 6 12 3 16 Q 0 13 -3 16 Q -6 12 -10 15 Q -16 12 -14 2 Z") +
+      toe(-17, -10, 4.4, 5.6, -24) + toe(-6, -19, 4.6, 6, -6) + toe(7, -20, 4.6, 6, 6) + toe(17, -12, 4.4, 5.6, 26);
+    else if (kind === "bear") g = P("M -20 -6 Q -22 10 -14 26 Q -6 36 4 34 Q 16 30 18 12 Q 20 -2 16 -8 Q 0 -2 -20 -6 Z") +
+      [[-23, -19, -22], [-12, -25, -10], [-1, -27, 0], [10, -26, 10], [20, -19, 22]].map(([a, b, r], i) => E(a, b, i ? 5 : 4.4, 5.6, r) + claw(a + Math.sin(r * Math.PI / 180) * 6, b - 6, r, 7)).join("");
+    else if (kind === "hand") g = P("M -9 2 Q -12 16 -6 24 Q 0 28 6 24 Q 12 16 9 2 Q 0 -2 -9 2 Z") +
+      [[-14, -4, -40, 11], [-9, -13, -18, 13], [-1, -16, 0, 14], [7, -14, 16, 13], [13, -6, 36, 11]].map(([a, b, r, l]) =>
+        `<rect x="${r1(-2.6)}" y="${r1(-l)}" width="5.2" height="${l}" rx="2.6" ${F} transform="translate(${a} ${b + 6}) rotate(${r})"/>` +
+        E(a + Math.sin(r * Math.PI / 180) * (l - 5), b + 6 - Math.cos(r * Math.PI / 180) * (l - 5), 3.4, 3.8, r) + claw(a + Math.sin(r * Math.PI / 180) * (l - 0.5), b + 6 - Math.cos(r * Math.PI / 180) * (l - 0.5), r, 3.5, 1.2)).join("");
+    else if (kind === "webbed") g = `<path d="M -17 -8 Q -14 -2 -9 -12 Q -5 -6 0 -15 Q 5 -6 9 -12 Q 14 -2 17 -8 Q 16 4 8 6 L -8 6 Q -16 4 -17 -8 Z" fill="${col}" opacity=".75"/>` +
+      P("M -11 2 Q -12 -4 -5 -3 Q 0 -6 5 -3 Q 12 -4 11 2 Q 12 12 4 15 Q 0 13 -4 15 Q -12 12 -11 2 Z") +
+      [[-17, -9, -42], [-9, -15, -18], [0, -18, 0], [9, -15, 18], [17, -9, 42]].map(([a, b, r]) => toe(a, b, 3.2, 4.4, r) + claw(a + Math.sin(r * Math.PI / 180) * 5, b - Math.cos(r * Math.PI / 180) * 5, r, 3)).join("");
+    else if (kind === "meerkat") g = P("M -6 -2 Q -8 10 -3 15 Q 0 17 3 15 Q 8 10 6 -2 Q 0 -5 -6 -2 Z") +
+      [[-8, -7, -18], [-3, -11, -5], [3, -11, 5], [8, -7, 18]].map(([a, b, r]) => toe(a, b, 2.2, 3.2, r) + claw(a + Math.sin(r * Math.PI / 180) * 3.5, b - 3.5, r, 11, 1.3)).join("");
+    else if (kind === "rabbit") { const fur = (cx, cy, rx, ry) => E(cx, cy, rx, ry) + [0, 60, 120, 180, 240, 300].map(d => E(cx + Math.cos(d * Math.PI / 180) * rx * 0.75, cy + Math.sin(d * Math.PI / 180) * ry * 0.75, rx * 0.4, ry * 0.3)).join("");
+      g = fur(-9, -16, 5.5, 15) + fur(9, -16, 5.5, 15) + fur(-2, 14, 4.2, 5.2) + fur(1, 28, 4.2, 5.2); }
+    else if (kind === "roo") g = [-1, 1].map(sd => P(`M ${sd * 9} -34 Q ${sd * 15} -28 ${sd * 15} -10 Q ${sd * 14} 14 ${sd * 11} 26 Q ${sd * 8} 31 ${sd * 5} 26 Q ${sd * 2.5} 12 ${sd * 3} -10 Q ${sd * 3} -28 ${sd * 9} -34 Z`) +
+      E(sd * 18, -16, 2.6, 6, sd * 8) + claw(sd * 9.5, -34, sd * 4, 3, 2)).join("");
+    else if (kind === "elephant") g = `<ellipse cx="0" cy="0" rx="26" ry="29" ${F}/>` +
+      `<path d="M -18 -8 L -6 -2 L 2 -12 L 14 -6 M -6 -2 L -4 12 L 8 16 M -4 12 L -16 14 M 2 -12 L 0 -22 M 14 -6 L 20 6 L 8 16 M -18 -8 L -20 4" stroke="#e6cfa2" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".35"/>` +
+      [-17, -6, 6, 17].map((a, i) => E(a, -27 + Math.abs(a) * 0.35, 4.6, 3.4, a)).join("");
+    else if (kind === "hoof") g = P("M -1.5 -22 Q -9 -18 -12 -2 Q -13 16 -6 22 Q -2 24 -1.5 20 Z") + P("M 1.5 -22 Q 9 -18 12 -2 Q 13 16 6 22 Q 2 24 1.5 20 Z");
+    else if (kind === "camel") g = P("M -1 -22 Q -16 -24 -20 -6 Q -22 14 -10 24 Q -2 28 0 20 Q 2 28 10 24 Q 22 14 20 -6 Q 16 -24 1 -22 Q 0 -14 -1 -22 Z") +
+      `<path d="M 0 -14 V 16" stroke="#e6cfa2" stroke-width="1.6" opacity=".55"/>` + E(-8, -21.5, 3.4, 2.6, -25) + E(8, -21.5, 3.4, 2.6, 25);
+    // a pale raised rim of pushed-up mud just outside the print, then the print itself
+    return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${rot}) scale(${s})"><g transform="translate(1.6 1.8)" opacity=".55" style="filter:url(#mm-rim)">${g.replace(new RegExp(`fill="${col}"`, "g"), 'fill="#fff6e2"')}</g><g style="filter:url(#mm-dent)">${g}</g></g>`;
   }
   function track(id, o = {}) {
-    const kind = TRACK_KIND[id], col = o.col || "#5a4030";
-    const big = { elephant: 0.95, polarbear: 1.05, camel: 1, panda: 1, giraffe: 0.95, lion: 1.1 }[id] || 1.05;
-    const small = { meerkat: 1.25, rabbit: 1.1 }[id] || 1;
+    const kind = TRACK_KIND[id], col = o.col || "#4a3324", n = ++trackN;
+    const big = { elephant: 0.95, polarbear: 1.05, camel: 1, panda: 0.9, giraffe: 0.95, lion: 1.1 }[id] || 1.05;
+    const small = { meerkat: 1.25, rabbit: 1.1, fox: 1.3, raccoon: 1.1 }[id] || 1;
     const s = big * small;
+    // how each animal moves: rabbits hop in groups of 4, kangaroos land both back feet together,
+    // everyone else walks with left and right feet taking turns
     let prints = "";
-    if (kind === "rabbit" || kind === "roo") prints = print(kind, 100, 160, s, -4, col) + print(kind, 104, 58, s, 4, col);
-    else prints = [[78, 170, -8], [124, 128, 6], [76, 86, -6], [122, 42, 8]].map(([x, y, r]) => print(kind, x, y, s * 0.9, r, col)).join("");
-    const bg = o.bare ? "" : `<rect x="6" y="6" width="188" height="188" rx="26" fill="${o.bg || "#f3e2bf"}" stroke="${INK}" stroke-width="5"/>`;
-    return `<svg class="mm-track" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${o.label || "Footprints"}">${bg}${prints}</svg>`;
+    if (kind === "rabbit") prints = print(kind, 100, 152, s, -4, col) + print(kind, 104, 52, s, 4, col);
+    else if (kind === "roo") prints = print(kind, 100, 152, s, -3, col) + print(kind, 102, 52, s, 3, col);
+    else prints = [[80, 168, -8], [122, 126, 6], [78, 84, -6], [120, 40, 8]].map(([x, y, r], i) => print(kind, x, y, s * 0.9, r, col)).join("");
+    const defs = `<defs><filter id="mm-mud${n}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${n}"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .33  0 0 0 0 .2  0 0 0 .22 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>` +
+      `<filter id="mm-dent" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".18" numOctaves="2" seed="3" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.3" result="d"/><feGaussianBlur in="d" stdDeviation=".5"/></filter>` +
+      `<filter id="mm-rim" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter></defs>`;
+    const box = o.bare ? `x="0" y="0" width="200" height="200"` : `x="6" y="6" width="188" height="188" rx="26"`;
+    const ground = `<rect ${box} fill="${o.bg || "#e9d3a6"}"/><rect ${box} fill="#e9d3a6" style="filter:url(#mm-mud${n})"/>`;
+    const frame = o.bare ? "" : `<rect x="6" y="6" width="188" height="188" rx="26" fill="none" stroke="${INK}" stroke-width="5"/>`;
+    return `<svg class="mm-track" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${o.label || "Footprints"}">${defs}${ground}${prints}${frame}</svg>`;
   }
 
   /* ---------- hiding spots: a bush, rock, grass, reeds or snow pile to hide behind ---------- */

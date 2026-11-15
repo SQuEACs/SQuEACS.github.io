@@ -369,8 +369,8 @@
 .mm-game .mm-q { display: inline-flex; align-items: center; gap: .6rem; } .mm-game .mm-q > svg { width: 52px; height: 52px; }
 .mm-gdots { display: flex; gap: 6px; } .mm-gdots i { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--mm-ink); background: #fff; } .mm-gdots i.on { background: #ffd23f; }
 .mm-game .mm-bigpic { position: relative; width: min(100%, 360px, max(170px, calc(78svh - 410px))); overflow: hidden; }
-.mm-sil svg g[data-part] { filter: brightness(0) opacity(.85); transition: filter .8s; }
-.mm-sil.reveal svg g[data-part] { filter: none; }
+.mm-sil svg { filter: brightness(0); opacity: .82; transition: filter .8s, opacity .8s; }
+.mm-sil.reveal svg { filter: none; opacity: 1; }
 .mm-sil.reveal svg { animation: mm-dance 1s ease-in-out 1; }
 .mm-trackpic { background: #f3e2bf; }
 .mm-walkby { position: absolute; bottom: 0; left: 0; width: 60%; aspect-ratio: 1; animation: mm-walkby 2.6s linear forwards; pointer-events: none; }

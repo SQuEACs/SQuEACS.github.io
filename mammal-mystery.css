@@ -437,3 +437,13 @@
   .mm-savedpic { width: 56px; height: 56px; border-radius: 10px; }
   .mm-colorwrap:has(.mm-saved) .mm-canvas { width: min(100%, 38svh); }
 }
+
+/* locked Level 2 tab in the sticker book */
+.mm-lvlock { margin-left: auto; display: inline-flex; flex-direction: column; align-items: center; gap: .15rem; }
+.mm-lvlock small { font-size: .72rem; font-weight: 700; line-height: 1.1; text-align: center; max-width: 7.5em; opacity: .8; }
+.mm-lvtab.mm-locked { position: relative; background: #e9e4ef; }
+.mm-lvtab.mm-locked .mm-lvnum { opacity: .45; }
+.mm-lvtab.mm-locked svg.mm-lockic { position: absolute; right: -10px; bottom: -8px; width: 24px !important; height: 26px !important; max-width: none; }
+.mm-lvtab.mm-shake { animation: mm-lockshake .45s; }
+@keyframes mm-lockshake { 20%, 60% { transform: rotate(-12deg); } 40%, 80% { transform: rotate(12deg); } }
+@media (prefers-reduced-motion: reduce) { .mm-lvtab.mm-shake { animation: none; } }

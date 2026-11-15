@@ -255,6 +255,20 @@
     if (!S.unlock2) return "";
     return `<span class="mm-levels" role="group" aria-label="Level">${[1, 2].map(n => btn("mm-lvtab" + (lvl() === n ? " on" : ""), `data-lv="${n}" aria-label="Level ${n}" aria-pressed="${lvl() === n}"`, `<b class="mm-lvnum">${n}</b>`)).join("")}</span>`;
   }
+  // Before Level 2 opens, the sticker book shows a locked "2" so kids know more animals are coming.
+  function lockedLevelTab() {
+    if (S.unlock2) return "";
+    const lock = `<svg class="mm-lockic" viewBox="0 0 40 44" aria-hidden="true"><path d="M 11 20 V 13 a 9 9 0 0 1 18 0 V 20" fill="none" stroke="#2a2233" stroke-width="5"/><rect x="5" y="19" width="30" height="22" rx="5" fill="#ffd23f" stroke="#2a2233" stroke-width="4"/><circle cx="20" cy="29" r="3.5" fill="#2a2233"/></svg>`;
+    return `<span class="mm-lvlock">${btn("mm-lvtab mm-locked", 'id="mm-lv2lock" aria-label="Level 2 is locked. Find all 12 animals to unlock it."', `<b class="mm-lvnum">2</b>${lock}`)}<small>Find all 12 to unlock</small></span>`;
+  }
+  function bindLockedTab() {
+    const b = $("mm-lv2lock"); if (!b) return;
+    b.addEventListener("click", () => {
+      sfx.tap(); b.classList.remove("mm-shake"); void b.offsetWidth; b.classList.add("mm-shake");
+      const left = D.IDS.filter(id => !S.found[id]).length;
+      say(`Level 2 is locked. It has 12 surprising new mammals! Find all 12 animals in Level 1 to open it. ${left === 1 ? "Just 1 more to go!" : left + " more to go!"}`);
+    });
+  }
   function bindLevelTabs(after) {
     view.querySelectorAll(".mm-lvtab").forEach(b => b.addEventListener("click", () => { const n = +b.dataset.lv; if (n === lvl()) return; sfx.whoosh(); S.level = n; save(); renderBar(); after(); }));
   }
@@ -631,12 +645,12 @@
   function guide() {
     const ids = lvIds(), n = ids.filter(id => S.found[id]).length, pw = ids.filter(id => (S.powers || {})[id]).length, rk = rankOf(S.solved || 0);
     show("guide", `
-      <div class="mm-guide-head">${badge(rk)}<span><b>${RANKS[rk][1]}</b><small>${ART.icon("folder")}${n}/${ids.length} ${ART.icon("star")}${pw}/${ids.length}</small></span>${levelTabs()}</div>
+      <div class="mm-guide-head">${badge(rk)}<span><b>${RANKS[rk][1]}</b><small>${ART.icon("folder")}${n}/${ids.length} ${ART.icon("star")}${pw}/${ids.length}</small></span>${levelTabs() || lockedLevelTab()}</div>
       <div class="mm-guide">${ids.map(id => S.found[id]
         ? btn("mm-card mm-sticker-card", `data-id="${id}" aria-label="${nm(id)}${S.powers && S.powers[id] ? ", with superpower sticker" : ""}"`, ART.animal(id, { face: true, cls: "mm-animal mm-live" }) + `<span>${cap1(nm(id))}</span>` + (S.powers && S.powers[id] ? `<em class="mm-powstar" title="${D.POWERS[id].name}">${ART.icon("star")}</em>` : ""))
         : `<div class="mm-card locked" aria-label="Not found yet">${ART.animal(id, { face: true })}<span>?</span></div>`).join("")}</div>`);
     prompt(n === 0 ? (lvl() === 2 ? "This is your Level 2 sticker book. Go on an expedition to find surprising mammals!" : "This is your sticker book. It's empty! Go on an expedition to find animals and earn stickers.") : n === ids.length ? `Wow, you found every ${lvl() === 2 ? "Level 2 " : ""}animal! Tap one to learn about it.` : `You found ${n} of ${ids.length} animals and ${pw} superpowers. Tap a sticker to learn about it. Go on more expeditions to find the rest!`);
-    bindLevelTabs(guide);
+    bindLevelTabs(guide); bindLockedTab();
     view.querySelectorAll(".mm-card[data-id]").forEach(b => b.addEventListener("click", () => { sfx.tap(); caseFile(b.dataset.id, () => { renderBar(); }); }));
   }
 

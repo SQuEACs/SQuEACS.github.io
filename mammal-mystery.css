@@ -398,7 +398,7 @@
 /* revamp layout fixes: never cut off the top of a tall screen; menu fits on one row on wide screens */
 .mm-view { justify-content: flex-start; }
 .mm-view > :first-child { margin-top: auto; }
-.mm-view > :nth-last-child(1 of :not(.mm-confetti, .mm-fx)) { margin-bottom: auto; }
+.mm-view > :nth-last-child(1 of :not(.mm-confetti, .mm-fx, .mm-skip)) { margin-bottom: auto; }
 .mm-s-menu .mm-menu { width: min(100%, 60rem); }
 .mm-s-menu .mm-act.mm-main { width: 13rem; }
 .mm-s-map .mm-map { width: min(100%, 58rem, calc((78svh - 260px) * 5 / 3)); min-width: min(100%, 320px); }
@@ -406,3 +406,11 @@
 .mm-head { flex-wrap: wrap; }
 .mm-live .mm-pulse, .mm-live g.mm-pulse:not(.mm-hitlayer) { animation: mm-pulse 1s ease-in-out infinite !important; }
 @media (max-width: 560px) { .mm-hunt .mm-lens { width: clamp(120px, 19svh, 170px); } .mm-scene { aspect-ratio: 5 / 4; } .mm-hunt .mm-ollie-sm { display: none; } }
+
+/* Next arrow that appears the moment an answer is right; tapping anywhere also moves on */
+.mm-skip { position: absolute; right: 14px; bottom: 14px; z-index: 30; margin: 0 !important; animation: mm-skipin .35s .3s cubic-bezier(.3,1.6,.5,1) both, mm-nudge 1.1s 1.6s ease-in-out infinite; }
+@keyframes mm-skipin { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@keyframes mm-nudge { 0%, 100% { translate: 0 0; } 50% { translate: 6px 0; } }
+.mm-chips { gap: .6rem; flex-wrap: wrap; justify-content: center; }
+.mm-chip .mm-ic { width: 22px; height: 22px; }
+.mm-big.mm-yes { background: #4fd36a; }

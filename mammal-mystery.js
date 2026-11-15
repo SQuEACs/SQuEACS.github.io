@@ -156,11 +156,26 @@
 
   /* ---------- screen helpers ---------- */
   let screenName = "";
+  let showN = 0, onwardOff = null;
   function show(name, html) {
-    stopTalk(); screenName = name; closePop(true);
+    stopTalk(); screenName = name; showN++; if (onwardOff) onwardOff(); closePop(true);
     view.className = "mm-view mm-s-" + name; view.innerHTML = html; view.scrollTop = 0;
     $("mm-home").hidden = name === "title";
     renderBar();
+  }
+  // After a success: say the line, then move on by itself. A Next arrow shows right away and a tap
+  // anywhere on the screen skips ahead, so kids never sit waiting for the voice to finish.
+  function onward(text, then, opt = {}) {
+    if (onwardOff) onwardOff();
+    const myShow = showN; let gone = false, armed = false;
+    const nx = document.createElement("button");
+    nx.type = "button"; nx.className = "mm-big mm-go mm-skip"; nx.setAttribute("aria-label", "Next"); nx.innerHTML = ART.icon("next");
+    const tap = e => { e.stopPropagation(); e.preventDefault(); if (armed) { sfx.tap(); go(); } };
+    const off = () => { view.removeEventListener("click", tap, true); nx.remove(); if (onwardOff === off) onwardOff = null; };
+    const go = () => { if (gone) return; gone = true; off(); if (showN === myShow) { stopTalk(); then(); } };
+    setTimeout(() => { armed = true; }, opt.hold || 400);   // ignore the double tap that got the answer
+    view.addEventListener("click", tap, true); view.appendChild(nx); onwardOff = off;
+    say(text).then(ok => { if (ok) setTimeout(go, 400); });
   }
   function renderBar() {
     const n = Object.keys(S.found).length;
@@ -216,7 +231,7 @@
     show("menu", `
       <div class="mm-head">${ART.detective()}<p class="mm-q">${D.GRADES[g].say}</p>${btn("mm-rankchip", 'id="mm-rank" aria-label="Your detective rank"', badge(rk) + `<b>${RANKS[rk][1]}</b>`)}</div>
       <div class="mm-menu">${items.map(([k, ic, t], i) => btn("mm-tile mm-act" + (i === 0 ? " mm-main" : ""), `data-k="${k}" aria-label="${t}"`, `${ic}<b>${t}</b>`)).join("")}</div>
-      ${locked ? "" : btn("mm-chip", 'id="mm-chg" aria-label="Change grade"', `<span class="mm-grade-dots sm">${"<i></i>".repeat(Object.keys(D.GRADES).indexOf(g) + 1)}</span>Change grade`)}`);
+      ${locked ? "" : `<div class="mm-row mm-chips">${btn("mm-chip", 'id="mm-chg" aria-label="Change grade"', `<span class="mm-grade-dots sm">${"<i></i>".repeat(Object.keys(D.GRADES).indexOf(g) + 1)}</span>Change grade`)}${btn("mm-chip", 'id="mm-restart" aria-label="Start over"', ART.icon("replay") + "Start over")}</div>`}`);
     if (greet) prompt(`Hi, ${RANKS[rk][1]}! Tap the map to go on an expedition and find hidden animals. Tap the paw for games, the book for your stickers${g === "g2" ? ", the tree for family secrets," : ""} or the crayon to color.`);
     view.querySelectorAll(".mm-act").forEach(b => b.addEventListener("click", () => {
       sfx.tap(); const k = b.dataset.k;
@@ -224,6 +239,15 @@
     }));
     $("mm-rank").addEventListener("click", () => { sfx.tap(); const nx = RANKS[rk + 1]; say(`You are a ${RANKS[rk][1]}!${nx ? ` Find ${nx[0] - (S.solved || 0)} more animals to become a ${nx[1]}.` : " That's the top rank!"}`); });
     const chg = $("mm-chg"); if (chg) chg.addEventListener("click", () => { sfx.tap(); grades(); });
+    const rs = $("mm-restart"); if (rs) rs.addEventListener("click", () => { sfx.tap(); startOver(); });
+  }
+  // Start over: a fresh sticker book and rank for a new player (colorings stay).
+  function startOver() {
+    show("restart", `<div class="mm-head">${ART.detective()}<p class="mm-q">Start over?</p></div>
+      <div class="mm-row">${btn("mm-big mm-yes", 'id="mm-rs-yes" aria-label="Yes, start over"', ART.icon("replay"))}${btn("mm-big mm-tog", 'id="mm-rs-no" aria-label="No, go back"', ART.icon("back"))}</div>`);
+    prompt("Start a brand new detective case book? Your stickers will be cleared. Tap the green arrow to start over, or go back.");
+    $("mm-rs-yes").addEventListener("click", () => { sfx.whoosh(); S.found = {}; S.powers = {}; S.solved = 0; S.cousins = 0; S.level = 1; save(); renderBar(); grades(); });
+    $("mm-rs-no").addEventListener("click", () => { sfx.tap(); menu(false); });
   }
 
   /* ---------- the expedition: a map of habitats, one hidden animal at each stop ---------- */
@@ -332,13 +356,11 @@
     b.classList.add("out"); sfx.pop();
     if (id === c.id) {
       c.done = true; dots(); R.stars++;
-      await wait(350);
       const first = !S.found[id]; S.found[id] = S.found[id] || G(); S.solved = (S.solved || 0) + 1; save(); renderBar();
       view.querySelectorAll(".mm-spot").forEach(s => { if (s !== b) s.classList.add("gone"); });
       scene.insertAdjacentHTML("beforeend", `<div class="mm-found" style="--x:${parseFloat(b.style.left) + parseFloat(b.style.width) / 2}%">${ART.animal(id, live(id))}</div><div class="mm-stamp" aria-hidden="true">FOUND!</div>`);
       sfx.yes(); confetti(view); call(id);
-      await say(`${vary("yes", PH.yes)} You found ${the(id)}! ${vary("solved", PH.solved)}${first ? " " + vary("toGuide", PH.toGuide) : ""}`);
-      if (screenName === "case" && R.c === c) caseFile(id, afterFile);
+      onward(`${vary("yes", PH.yes)} You found ${the(id)}! ${vary("solved", PH.solved)}${first ? " " + vary("toGuide", PH.toGuide) : ""}`, () => caseFile(id, afterFile), { hold: 900 });
       return;
     }
     c.wrong++; sfx.no(); b.setAttribute("aria-label", nm(id) + ", not this one");
@@ -407,7 +429,7 @@
     if (!pw) return then();
     show("power", `<div class="mm-bonus mm-power"><div class="mm-head">${ART.detective()}<p class="mm-q mm-powername">${ART.icon("star")}<span>${pw.name}</span></p></div>
       <div class="mm-bigpic" id="mm-bigpic">${ART.animal(id, { hab: sceneOf(id), cls: "mm-animal mm-live", label: nm(id) })}</div>
-      ${btn("mm-big mm-go mm-late", 'id="mm-pw-next" aria-label="Next" hidden', ART.icon("next"))}</div>`);
+</div>`);
     const pic = $("mm-bigpic"), svg = pic.querySelector("svg"), word = partWord(id, pw.part);
     const glow = on => svg.querySelectorAll(`[data-part="${pw.part}"]:not(.mm-hitlayer)`).forEach(x => x.classList.toggle("mm-pulse", on));
     glow(true);
@@ -420,11 +442,9 @@
       fx(pic, pw.fx, ((x + w / 2) / 400) * 100, ((y + h / 2) / 400) * 100);
       if (pw.act === "roar" || pw.act === "pounce") call(id);
       const first = !(S.powers || {})[id]; S.powers = S.powers || {}; S.powers[id] = 1; save();
-      const ok = await say(pw.say[g] + (first ? " " + vary("powSticker", ["You earned a superpower sticker!", "A superpower sticker for your book!", "Superpower sticker unlocked!"]) : ""));
-      svg.classList.remove("mm-act-" + pw.act);
-      if (first) { pic.insertAdjacentHTML("beforeend", `<div class="mm-flystar" aria-hidden="true">${ART.icon("star")}</div>`); }
-      const nx = $("mm-pw-next"); if (nx) { nx.hidden = false; nx.focus({ preventScroll: true }); }
-      if (ok && screenName === "power") { await wait(900); if (screenName === "power") then(); }
+      if (first) pic.insertAdjacentHTML("beforeend", `<div class="mm-flystar" aria-hidden="true">${ART.icon("star")}</div>`);
+      setTimeout(() => svg.classList.remove("mm-act-" + pw.act), 2600);
+      onward(pw.say[g] + (first ? " " + vary("powSticker", ["You earned a superpower sticker!", "A superpower sticker for your book!", "Superpower sticker unlocked!"]) : ""), then, { hold: 1200 });
     };
     svg.addEventListener("click", e => {
       if (done) return;
@@ -434,14 +454,13 @@
       say(miss >= 2 ? `Look for the glowing ${word}!` : `Find the ${word}! It's glowing.`);
       if (miss >= 3) fire();
     });
-    $("mm-pw-next").addEventListener("click", () => { sfx.tap(); stopTalk(); then(); });
   }
 
   /* ---------- mini-games: shadow match and footprint match ---------- */
   function miniGame(kind, rounds, then) {
     let k = 0, used = new Set();
     const one = () => {
-      if (k >= rounds) { sfx.win(); confetti(view); say(vary("done", PH.done) + " " + (kind === "shadow" ? "You're a shadow expert!" : "You're a super tracker!")).then(ok => { if (ok && screenName === "game") then(); }); return; }
+      if (k >= rounds) { sfx.win(); confetti(view); onward(vary("done", PH.done) + " " + (kind === "shadow" ? "You're a shadow expert!" : "You're a super tracker!"), then); return; }
       const pool = shuffle(D.IDS.filter(id => !used.has(id)));
       const id = pool[0]; used.add(id);
       // Distractors with a different footprint shape, so every question has one clear answer.
@@ -460,8 +479,7 @@
           const pic = $("mm-sil");
           if (kind === "shadow") pic.classList.add("reveal");
           else pic.insertAdjacentHTML("beforeend", `<div class="mm-walkby">${ART.animal(id, live(id))}</div>`);
-          const ok = await say(`${vary("yes", PH.yes)} ${kind === "shadow" ? `It's ${the(id)}!` : D.TRACK_SAY[id]}`);
-          if (ok && screenName === "game") one();
+          onward(`${vary("yes", PH.yes)} ${kind === "shadow" ? `It's ${the(id)}!` : D.TRACK_SAY[id]}`, one, { hold: 900 });
         } else {
           sfx.no(); b.classList.add("nope");
           say(`${kind === "shadow" ? "That's" : "Those aren't"} ${kind === "shadow" ? the(b.dataset.id) + "." : the(b.dataset.id) + "'s tracks."} ${vary("tryAgain", PH.tryAgain)}`);
@@ -520,10 +538,9 @@
       if (got === want) {
         sfx.yes(); svg.querySelectorAll(`[data-part="${want}"]`).forEach(x => x.classList.add("mm-glow")); miss = 0;
         k++;
-        const ok = await say(`${vary("yes", PH.yes)} ${cap1(partWord(id, want))}. ${cap1(a.name)}s have ${a.partWhy[want] || "these"}.`);
-        if (!ok) return;
-        if (k < parts.length) { svg.querySelectorAll(".mm-glow").forEach(x => x.classList.remove("mm-glow")); ask(); }
-        else { confetti(view); await say(vary("done", PH.done)); if (screenName === "parts") nextCaseOrEnd(); }
+        const line = `${vary("yes", PH.yes)} ${cap1(partWord(id, want))}. ${cap1(a.name)}s have ${a.partWhy[want] || "these"}.`;
+        if (k < parts.length) onward(line, () => { svg.querySelectorAll(".mm-glow").forEach(x => x.classList.remove("mm-glow")); ask(); });
+        else { confetti(view); onward(line + " " + vary("done", PH.done), nextCaseOrEnd); }
       } else {
         sfx.no(); miss++;
         await say(vary("partNo", [`That's the ${partWord(id, got)}. Find the ${partWord(id, want)}!`, `Oops, that's the ${partWord(id, got)}. Look for the ${partWord(id, want)}!`, `That's the ${partWord(id, got)}. Can you spot the ${partWord(id, want)}?`]));
@@ -547,8 +564,7 @@
       if (h === a.hab) {
         busy = true; sfx.yes(); b.classList.add("yes"); confetti(view);
         const habClue = a.clues.g1.find(c => c[0] === "hab");
-        const ok = await say(`${vary("yes", PH.yes)} ${cap1(the(id))} lives in the ${ART.HAB_NAMES[h].toLowerCase()}. ${habClue ? habClue[2].replace(/^I /, "It ").replace(/\bmy\b/g, "its").replace(/\bI\b/g, "it").replace(/\bme\b/g, "it") : ""}`);
-        if (ok && screenName === "home") nextCaseOrEnd();
+        onward(`${vary("yes", PH.yes)} ${cap1(the(id))} lives in the ${ART.HAB_NAMES[h].toLowerCase()}. ${habClue ? habClue[2].replace(/^I /, "It ").replace(/\bmy\b/g, "its").replace(/\bI\b/g, "it").replace(/\bme\b/g, "it") : ""}`, nextCaseOrEnd);
       } else {
         sfx.no(); b.classList.add("nope");
         say(`${vary("habNo", ["Hmm, not the", "It doesn't live in the", "Not the"])} ${ART.HAB_NAMES[h].toLowerCase()}. ${vary("tryAgain", PH.tryAgain)}`);
@@ -575,8 +591,7 @@
       if (d === a.diet) {
         sfx.yes(); b.classList.add("yes"); confetti(view);
         const extra = id === "panda" ? " Pandas eat like herbivores, even though they belong to the carnivoran group!" : "";
-        const ok = await say(`${vary("yes", PH.yes)} ${cap1(a.name)}s eat ${d === "both" ? "plants and animals" : d}, so they are ${D.DIET[d].word}s.${extra}`);
-        if (ok && screenName === "diet") nextCaseOrEnd();
+        onward(`${vary("yes", PH.yes)} ${cap1(a.name)}s eat ${d === "both" ? "plants and animals" : d}, so they are ${D.DIET[d].word}s.${extra}`, nextCaseOrEnd);
       } else {
         sfx.no(); b.classList.add("nope");
         say(vary("dietNo", ["Not quite. Think about the teeth clue. Try again!", "Hmm, what kind of teeth did it have? Try again!", "Almost! Remember the teeth clue and have another go.", "Not that one. Sharp teeth tear meat, flat teeth grind plants. Try again!"]));

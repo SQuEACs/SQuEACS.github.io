@@ -319,14 +319,250 @@
     return "M " + pts.map(([x, y], i) => `${r1(cx + x * r * (i % 2 ? 1.1 : 0.95))} ${r1(cy + y * r * 0.85)}`).join(" L ") + " Z";
   }
 
+  /* ---------- cute style (2026): big heads, big shiny eyes, rosy cheeks ----------
+     Each animal keeps the shape that makes it easy to recognize (the fox's long
+     snout and white-tipped tail, the kangaroo's pouch and big feet...). Every body
+     part keeps its data-part name and an invisible tap area. Hit areas are never
+     placed inside a mirrored group, so each side gets its own. The otter keeps
+     its original drawing. */
+  const MIRROR = 'transform="matrix(-1 0 0 1 400 0)"';
+  const both = s => s + `<g ${MIRROR}>${s}</g>`;
+  const cEye = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r1(r * 1.12)}" fill="${INK}"/><circle cx="${r1(x + r * 0.32)}" cy="${r1(y - r * 0.38)}" r="${r1(r * 0.42)}" fill="#fff"/><circle cx="${r1(x - r * 0.35)}" cy="${r1(y + r * 0.42)}" r="${r1(r * 0.18)}" fill="#fff"/>`;
+  const cBlush = (P, x, y, rx = 13) => P.line ? "" : `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${r1(rx * 0.6)}" fill="#ff8fa3" opacity="0.5"/>`;
+  const cLine = (d, w = 3.5) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const cSmile = (x, y, w = 9) => cLine(`M ${x - w} ${y} Q ${r1(x - w / 2)} ${y + 6} ${x} ${y} Q ${r1(x + w / 2)} ${y + 6} ${x + w} ${y}`);
+  const cTube = (d, w, fill) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 10}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${fill}" stroke-width="${w}" stroke-linecap="round"/>`;
+  const ROUND_HEAD = "M 200 98 C 148 98 116 126 114 166 C 112 206 150 242 200 246 C 250 242 288 206 286 166 C 284 126 252 98 200 98 Z";
+  const SIT_BODY = "M 200 222 C 160 222 144 250 142 292 C 140 330 146 352 162 364 L 238 364 C 254 352 260 330 258 292 C 256 250 240 222 200 222 Z";
+  const H2 = (x1, y1, rx, ry) => hitEll(x1, y1, rx, ry) + hitEll(400 - x1, y1, rx, ry);   // a tap area on each side
+
+  function cuteFox(a, P) {
+    const F = P("#f07a32"), W = P("#fff7ec"), D = P("#3a2a2a");
+    return [
+      { p: "tail", s: path("M 236 336 C 320 352 376 300 360 236 C 350 196 306 196 302 234 C 298 272 284 300 244 312 Z", F) +
+        path("M 302 234 C 300 200 344 188 360 236 C 342 226 320 226 302 234 Z", W) + hit(hitEll(330, 274, 46, 66)) },
+      { p: "fur", s: path(SIT_BODY, F) + path("M 178 250 Q 200 326 222 250 Z", W, { "stroke-width": 3 }) + cLine("M 186 300 L 186 350 M 214 300 L 214 350") },
+      { p: "paws", s: ell(180, 358, 20, 12, D) + ell(220, 358, 20, 12, D) + hit(H2(180, 358, 24, 16)) },
+      { p: "ears", head: 1, s: both(path("M 136 146 L 128 50 L 190 106 Z", F) + path("M 142 134 L 137 76 L 176 110 Z", D, { "stroke-width": 3 })) + hit(H2(152, 96, 30, 44)) },
+      // a fox face: wide at the ears, narrowing to a long pointed snout
+      { p: "fur", head: 1, s: path("M 200 100 C 150 100 120 128 118 160 C 116 184 128 198 144 210 C 164 228 184 252 200 278 C 216 252 236 228 256 210 C 272 198 284 184 282 160 C 280 128 250 100 200 100 Z", F) +
+        path("M 118 168 C 126 196 142 210 164 222 C 150 214 140 206 134 196 Z", W, { "stroke-width": 3 }) + `<g ${MIRROR}>` + path("M 118 168 C 126 196 142 210 164 222 C 150 214 140 206 134 196 Z", W, { "stroke-width": 3 }) + `</g>` +
+        path("M 200 196 C 184 196 170 204 160 216 C 176 232 190 252 200 278 C 210 252 224 232 240 216 C 230 204 216 196 200 196 Z", W, { "stroke-width": 3.5 }) +
+        cBlush(P, 150, 196) + cBlush(P, 250, 196) },
+      { p: "eyes", head: 1, s: cEye(168, 160, 11) + cEye(232, 160, 11) + hit(H2(168, 160, 18, 18)) },
+      { p: "nose", head: 1, s: ell(200, 266, 10, 8, P(INK, true), { "stroke-width": 2 }) + hit(hitEll(200, 266, 16, 12)) },
+      { p: "mouth", head: 1, s: cLine("M 200 274 L 200 280") + hit(hitEll(200, 280, 12, 8)) },
+      { p: "whiskers", head: 1, s: cLine("M 186 246 L 150 240 M 188 254 L 156 262 M 214 246 L 250 240 M 212 254 L 244 262", 3) + hit(H2(166, 250, 18, 14)) },
+    ];
+  }
+
+  function cuteRaccoon(a, P) {
+    const G = P("#948f9c"), Lt = P("#f3f1f5"), D = P("#3a3442");
+    const td = "M 236 346 C 300 356 352 336 354 290 C 356 262 340 246 324 242";
+    const rings = P.line ? `<path d="${td}" fill="none" stroke="${INK}" stroke-width="40" stroke-dasharray="3 12 3 14" stroke-dashoffset="-20.5"/>` : `<path d="${td}" fill="none" stroke="#3a3442" stroke-width="40" stroke-dasharray="15 17" stroke-dashoffset="-22"/>`;
+    return [
+      { p: "tail", s: cTube(td, 40, G) + rings + hit(hitEll(320, 300, 50, 60)) },
+      { p: "fur", s: path(SIT_BODY, G) + ell(200, 314, 32, 40, P("#c9c5cf"), { "stroke-width": 3 }) },
+      { p: "paws", s: ell(178, 282, 14, 11, D) + ell(222, 282, 14, 11, D) + ell(176, 358, 22, 12, D) + ell(224, 358, 22, 12, D) + hit(H2(178, 282, 18, 15) + H2(176, 358, 26, 16)) },
+      { p: "ears", head: 1, s: both(path("M 134 130 Q 126 82 144 64 Q 172 80 184 112 Z", G) + path("M 142 120 Q 138 92 148 78 Q 166 90 174 112 Z", Lt, { "stroke-width": 3 })) + hit(H2(152, 92, 26, 32)) },
+      { p: "fur", head: 1, s: path(ROUND_HEAD, G) +
+        path("M 120 160 Q 158 136 194 154 Q 200 157 206 154 Q 242 136 280 160 Q 276 188 246 188 Q 222 186 206 174 L 194 174 Q 178 186 154 188 Q 124 188 120 160 Z", P(INK)) +
+        both(cLine("M 142 138 Q 162 126 184 136", 3.5)) + ell(200, 210, 32, 25, Lt, { "stroke-width": 3.5 }) + cBlush(P, 146, 204) + cBlush(P, 254, 204) },
+      { p: "eyes", head: 1, s: (P.line ? "" : both(`<circle cx="166" cy="163" r="13" fill="#6f6879"/>`)) + cEye(166, 163, 10) + cEye(234, 163, 10) + hit(H2(166, 163, 18, 16)) },
+      { p: "nose", head: 1, s: path("M 190 196 Q 200 192 210 196 Q 208 206 200 208 Q 192 206 190 196 Z", P(INK, true), { "stroke-width": 2.5 }) + hit(hitEll(200, 200, 14, 10)) },
+      { p: "mouth", head: 1, s: cLine("M 200 208 L 200 213") + cSmile(200, 213, 9) + hit(hitEll(200, 216, 14, 8)) },
+      { p: "whiskers", head: 1, s: cLine("M 176 206 L 134 198 M 176 214 L 136 220 M 178 221 L 142 238 M 224 206 L 266 198 M 224 214 L 264 220 M 222 221 L 258 238", 3) + hit(H2(152, 216, 22, 18)) },
+    ];
+  }
+
+  function cuteLion(a, P) {
+    const G = P("#e8b04c"), C = P("#fbe6bb"), Mn = P("#b5612a");
+    let d = ""; const n = 16;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n * 2 * Math.PI, tm = (i - 0.5) / n * 2 * Math.PI;
+      const x = 200 + Math.cos(t) * 88, y = 168 + Math.sin(t) * 86, qx = 200 + Math.cos(tm) * 108, qy = 168 + Math.sin(tm) * 106;
+      d += i ? `Q ${r1(qx)} ${r1(qy)} ${r1(x)} ${r1(y)} ` : `M ${r1(x)} ${r1(y)} `;
+    }
+    return [
+      { p: "tail", s: cTube("M 250 350 C 310 358 340 330 336 290", 9, G) + path("M 324 286 Q 334 262 348 280 Q 350 300 336 300 Q 322 300 324 286 Z", Mn) + hit(hitEll(320, 320, 34, 40)) },
+      { p: "fur", s: path(SIT_BODY, G) + ell(200, 312, 34, 42, C, { "stroke-width": 3 }) },
+      { p: "paws", s: ell(176, 358, 22, 13, G) + ell(224, 358, 22, 13, G) + cLine("M 168 352 v 8 M 176 351 v 9 M 184 352 v 8 M 216 352 v 8 M 224 351 v 9 M 232 352 v 8", 3) + hit(H2(176, 358, 26, 16)) },
+      { p: "mane", head: 1, s: path(d + "Z", Mn) + hit(hitEll(200, 82, 60, 18) + H2(106, 168, 20, 60)) },
+      { p: "ears", head: 1, s: both(circ(146, 112, 18, G) + circ(146, 113, 8, P("#c7843a"), { "stroke-width": 0 })) + hit(H2(146, 112, 20, 20)) },
+      { p: "fur", head: 1, s: ell(200, 172, 64, 58, G) + ell(183, 202, 21, 16, C, { "stroke-width": 3 }) + ell(217, 202, 21, 16, C, { "stroke-width": 3 }) + cBlush(P, 152, 192) + cBlush(P, 248, 192) },
+      { p: "eyes", head: 1, s: cEye(174, 160, 11) + cEye(226, 160, 11) + hit(H2(174, 160, 17, 17)) },
+      { p: "nose", head: 1, s: path("M 188 184 Q 200 180 212 184 Q 210 196 200 198 Q 190 196 188 184 Z", P("#7a3e1e"), { "stroke-width": 2.5 }) + hit(hitEll(200, 189, 15, 10)) },
+      { p: "mouth", head: 1, s: cLine("M 200 198 L 200 210") + cSmile(200, 210, 9) + hit(hitEll(200, 212, 16, 9)) },
+      { p: "whiskers", head: 1, s: cLine("M 166 200 L 138 194 M 166 208 L 140 214 M 234 200 L 262 194 M 234 208 L 260 214", 3) + hit(H2(150, 204, 16, 14)) },
+    ];
+  }
+
+  function cutePolar(a, P) {
+    const W = P("#f6f3ea"), S = P("#e3dccb"), C = P("#fffdf7");
+    const leg = (x, c) => path(`M ${x - 24} 262 C ${x - 27} 300 ${x - 27} 330 ${x - 24} 352 Q ${x} 362 ${x + 24} 352 C ${x + 27} 330 ${x + 27} 300 ${x + 24} 262 Z`, c);
+    const paw = (x, c) => ell(x, 358, 30, 12, c) + cLine(`M ${x - 22} 362 l -3 6 M ${x - 13} 364 l -2 6 M ${x - 4} 365 l -1 6`, 2.5);
+    return [
+      { p: "tail", s: circ(340, 232, 11, W) + hit(hitEll(340, 232, 16, 16)) },
+      { p: "fur", s: leg(206, S) + leg(316, S) },
+      { p: "paws", s: paw(206, S) + paw(316, S) },
+      { p: "fur", s: leg(232, W) + leg(298, W) },
+      { p: "paws", s: paw(232, W) + paw(298, W) + hit(hitEll(220, 358, 40, 18) + hitEll(306, 358, 40, 18)) },
+      { p: "fur", s: path("M 168 222 C 206 192 306 190 342 222 C 362 246 356 290 330 304 L 180 304 C 154 292 150 248 168 222 Z", W) },
+      { p: "ears", head: 1, s: circ(112, 130, 17, W) + circ(112, 131, 7, P("#d8cfbb"), { "stroke-width": 0 }) + circ(186, 124, 17, W) + circ(186, 125, 7, P("#d8cfbb"), { "stroke-width": 0 }) + hit(hitEll(112, 130, 20, 20) + hitEll(186, 124, 20, 20)) },
+      { p: "fur", head: 1, s: ell(150, 186, 72, 64, W) + ell(100, 212, 36, 27, C, { "stroke-width": 3.5 }) + cBlush(P, 168, 212) },
+      { p: "eyes", head: 1, s: cEye(126, 176, 10) + cEye(174, 174, 10) + hit(hitEll(126, 176, 16, 16) + hitEll(174, 174, 16, 16)) },
+      { p: "nose", head: 1, s: ell(82, 204, 12, 9, P(INK, true), { "stroke-width": 2 }) + hit(hitEll(82, 204, 18, 14)) },
+      { p: "mouth", head: 1, s: cLine("M 84 213 Q 88 224 98 224") + hit(hitEll(92, 222, 14, 8)) },
+    ];
+  }
+
+  function cutePanda(a, P) {
+    const W = P("#f7f7f2"), K = P(INK), Pad = P("#5a5262");
+    const foot = ell(156, 348, 32, 24, K) + ell(150, 352, 14, 11, Pad, { "stroke-width": 3 }) + [[134, 340], [142, 332], [154, 330]].map(([x, y]) => circ(x, y, 4.5, Pad, { "stroke-width": 2 })).join("");
+    return [
+      { p: "fur", s: path("M 200 222 C 150 222 130 256 130 300 C 130 340 138 356 150 364 L 250 364 C 262 356 270 340 270 300 C 270 256 250 222 200 222 Z", W) + path("M 150 236 Q 200 222 250 236 Q 262 252 258 266 Q 230 250 200 252 Q 170 250 142 266 Q 138 252 150 236 Z", K) },
+      { p: "fur", s: both(path("M 150 244 C 130 262 132 302 158 310 C 176 312 180 290 174 264 Z", K)) },
+      { p: "paws", s: both(ell(166, 304, 13, 11, K)) + both(foot) + hit(H2(166, 304, 18, 16) + H2(154, 346, 36, 28)) },
+      { p: "ears", head: 1, s: both(circ(144, 108, 24, P(INK))) + hit(H2(144, 108, 28, 28)) },
+      { p: "fur", head: 1, s: path(ROUND_HEAD, W) + both(ell(168, 166, 17, 23, P(INK), { transform: "rotate(30 168 166)" })) + ell(200, 210, 32, 24, P("#ffffff"), { "stroke-width": 3.5 }) + cBlush(P, 146, 206) + cBlush(P, 254, 206) },
+      { p: "eyes", head: 1, s: both(`<circle cx="170" cy="164" r="11" fill="#fff"/>`) + cEye(170, 165, 8) + cEye(230, 165, 8) + hit(H2(168, 166, 20, 24)) },
+      { p: "nose", head: 1, s: path("M 190 196 Q 200 192 210 196 Q 208 206 200 208 Q 192 206 190 196 Z", P(INK, true), { "stroke-width": 2.5 }) + hit(hitEll(200, 200, 14, 10)) },
+      { p: "mouth", head: 1, s: cLine("M 200 208 L 200 213") + cSmile(200, 213, 9) + hit(hitEll(200, 216, 14, 8)) },
+    ];
+  }
+
+  function cuteMeerkat(a, P) {
+    const F = P("#cfa77c"), B = P("#efdcbf"), Dk = P("#5a4636"), Ear = P("#4a3a30");
+    return [
+      { p: "tail", s: path("M 220 352 C 270 360 320 356 350 334 Q 360 326 352 324 C 328 340 280 346 224 340 Z", F) + path("M 340 330 Q 352 322 354 326 Q 358 332 348 338 Z", Dk, { "stroke-width": 3 }) + hit(hitEll(296, 344, 60, 18)) },
+      { p: "fur", s: path("M 170 190 C 152 240 152 320 164 356 Q 200 372 236 356 C 248 320 248 240 230 190 Z", F) + ell(200, 292, 24, 56, B, { "stroke-width": 3 }) },
+      { p: "paws", s: ell(178, 362, 20, 9, Dk) + ell(222, 362, 20, 9, Dk) + hit(H2(178, 360, 24, 13)) },
+      { p: "fur", s: both(path("M 176 206 C 164 226 166 248 180 258 L 192 250 C 184 238 184 222 188 210 Z", F)) },
+      { p: "paws", s: both(ell(188, 256, 11, 8, Dk)) + hit(H2(188, 256, 15, 12)) },
+      { p: "claws", s: both(cLine("M 182 262 q -1 6 -3 9 M 188 263 q 0 6 0 10 M 194 262 q 1 6 3 9", 2.5)) + hit(H2(188, 268, 14, 10)) },
+      { p: "ears", head: 1, s: both(ell(156, 132, 9, 12, Ear)) + hit(H2(156, 132, 14, 16)) },
+      { p: "fur", head: 1, s: ell(200, 148, 50, 46, F) + path("M 176 170 Q 200 160 224 170 Q 222 192 200 200 Q 178 192 176 170 Z", B, { "stroke-width": 3 }) +
+        both(ell(180, 146, 14, 18, P("#6b5442"), { transform: "rotate(20 180 146)", "stroke-width": 0 })) + cBlush(P, 160, 172, 10) + cBlush(P, 240, 172, 10) },
+      { p: "eyes", head: 1, s: cEye(180, 146, 8) + cEye(220, 146, 8) + hit(H2(180, 146, 14, 15)) },
+      { p: "nose", head: 1, s: ell(200, 180, 8, 6, P(INK, true), { "stroke-width": 2 }) + hit(hitEll(200, 180, 13, 10)) },
+      { p: "mouth", head: 1, s: cLine("M 200 186 L 200 189") + cSmile(200, 189, 6) + hit(hitEll(200, 191, 11, 7)) },
+    ];
+  }
+
+  function cuteRabbit(a, P) {
+    const F = P("#bb8f6c"), B = P("#f2e3d2"), Pk = P("#f6b6c0");
+    return [
+      { p: "tail", s: path("M 250 344 Q 248 324 266 322 Q 276 308 290 322 Q 302 332 294 348 Q 290 362 272 360 Q 252 362 250 344 Z", P("#ffffff")) + hit(hitEll(274, 340, 26, 24)) },
+      { p: "fur", s: path("M 200 226 C 154 226 134 262 134 304 C 134 340 142 356 156 364 L 244 364 C 258 356 266 340 266 304 C 266 262 246 226 200 226 Z", F) + ell(200, 312, 36, 44, B, { "stroke-width": 3 }) },
+      { p: "paws", s: ell(166, 360, 28, 11, B) + ell(234, 360, 28, 11, B) + ell(168, 318, 12, 10, F) + ell(232, 318, 12, 10, F) + hit(H2(168, 360, 30, 15) + H2(168, 318, 16, 14)) },
+      { p: "ears", head: 1, s: both(ell(168, 70, 19, 58, F, { transform: "rotate(-8 168 70)" }) + ell(168, 76, 9, 42, Pk, { transform: "rotate(-8 168 76)", "stroke-width": 0 })) + hit(H2(166, 72, 26, 62)) },
+      { p: "fur", head: 1, s: ell(200, 180, 74, 64, F) + ell(200, 210, 28, 20, B, { "stroke-width": 3.5 }) + cBlush(P, 148, 202) + cBlush(P, 252, 202) },
+      { p: "eyes", head: 1, s: cEye(170, 172, 11) + cEye(230, 172, 11) + hit(H2(170, 172, 18, 18)) },
+      { p: "nose", head: 1, s: path("M 192 196 L 208 196 L 200 205 Z", P("#e58fa3")) + hit(hitEll(200, 199, 13, 9)) },
+      { p: "mouth", head: 1, s: cLine("M 200 205 L 200 209") + cSmile(200, 209, 8) + path("M 194 212 L 206 212 L 206 222 Q 200 224 194 222 Z", P("#ffffff", true), { "stroke-width": 2.5 }) + cLine("M 200 212 L 200 222", 2) + hit(hitEll(200, 214, 14, 10)) },
+      { p: "whiskers", head: 1, s: cLine("M 176 206 L 140 200 M 176 214 L 142 220 M 224 206 L 260 200 M 224 214 L 258 220", 3) + hit(H2(156, 210, 20, 14)) },
+    ];
+  }
+
+  function cuteKangaroo(a, P) {
+    const F = P("#c8814f"), B = P("#f0d0ad"), D = P("#8f5632");
+    return [
+      { p: "tail", s: path("M 248 318 C 300 340 344 356 382 362 Q 392 370 378 374 C 330 376 280 368 236 352 Z", F) + hit(hitEll(320, 356, 60, 16)) },
+      { p: "fur", s: path("M 192 168 C 158 190 148 262 158 320 C 164 352 200 364 238 358 C 274 350 282 300 268 250 C 256 200 228 166 192 168 Z", F) +
+        path("M 178 218 C 166 258 168 312 186 342 C 202 346 216 342 222 330 C 228 290 218 240 198 212 Z", B, { "stroke-width": 3 }) },
+      { p: "pouch", s: ell(190, 268, 7, 14, F, { "stroke-width": 3, transform: "rotate(-15 190 268)" }) + circ(200, 286, 15, F, { "stroke-width": 3 }) + `<circle cx="194" cy="283" r="3" fill="${INK}"/>` +
+        path("M 172 294 Q 200 314 226 298", "none", { "stroke-width": 4 }) + hit(hitEll(198, 296, 28, 26)) },
+      { p: "fur", s: ell(238, 318, 40, 44, F) },
+      { p: "paws", s: path("M 238 352 C 200 352 150 356 124 362 Q 112 368 124 375 L 254 375 Q 270 364 252 350 Z", D) +
+        cTube("M 178 226 Q 160 246 156 264", 13, F) + ell(154, 268, 9, 7, D, { "stroke-width": 3 }) + hit(hitEll(186, 364, 66, 14) + hitEll(156, 266, 14, 12)) },
+      { p: "ears", head: 1, s: ell(186, 56, 14, 42, F, { transform: "rotate(8 186 56)" }) + ell(186, 60, 6, 28, B, { transform: "rotate(8 186 60)", "stroke-width": 0 }) +
+        ell(212, 64, 13, 38, F, { transform: "rotate(26 212 64)" }) + hit(hitEll(198, 58, 30, 42)) },
+      { p: "fur", head: 1, s: path("M 176 76 C 212 72 236 100 232 132 C 228 162 204 178 176 176 C 150 174 136 166 120 162 C 100 160 88 150 90 138 C 92 124 108 118 126 112 C 140 92 156 78 176 76 Z", F) +
+        path("M 92 142 C 100 156 118 164 136 162 C 126 152 118 144 112 134 Z", B, { "stroke-width": 3 }) + cBlush(P, 162, 146) },
+      { p: "eyes", head: 1, s: cEye(166, 116, 12) + hit(hitEll(166, 116, 18, 18)) },
+      { p: "nose", head: 1, s: ell(93, 132, 8, 7, P(INK, true), { "stroke-width": 2 }) + hit(hitEll(94, 132, 13, 11)) },
+      { p: "mouth", head: 1, s: cLine("M 100 152 Q 108 158 116 154") + hit(hitEll(108, 154, 12, 8)) },
+    ];
+  }
+
+  function cuteElephant(a, P) {
+    const Gy = P("#a3aab8"), Pk = P("#e6aebd"), Ivory = P("#fffaf0");
+    const nails = x => [-8, 6].map(dx => `<path d="M ${x + dx - 6} 364 Q ${x + dx} 354 ${x + dx + 6} 364" fill="${Ivory}" stroke="${INK}" stroke-width="2.5"/>`).join("");
+    return [
+      { p: "tail", s: cTube("M 258 316 Q 286 320 294 344", 5, Gy) + path("M 288 342 Q 296 362 302 342 Z", P(INK)) + hit(hitEll(284, 334, 18, 22)) },
+      { p: "ears", head: 1, s: both(ell(110, 176, 66, 76, Gy, { transform: "rotate(-12 110 176)" }) + ell(118, 178, 46, 56, Pk, { transform: "rotate(-12 118 178)", "stroke-width": 0 })) + hit(H2(100, 180, 52, 70)) },
+      { p: "fur", s: path("M 138 246 C 126 300 132 350 146 364 L 254 364 C 268 350 274 300 262 246 Z", Gy) + cLine("M 174 300 L 174 362 M 226 300 L 226 362") },
+      { p: "paws", s: nails(160) + nails(240) + hit(H2(160, 354, 24, 14)) },
+      { p: "fur", head: 1, s: ell(200, 156, 74, 68, Gy) + cBlush(P, 150, 182) + cBlush(P, 250, 182) },
+      { p: "eyes", head: 1, s: cEye(170, 146, 11) + cEye(230, 146, 11) + hit(H2(170, 146, 17, 17)) },
+      { p: "tusks", head: 1, s: both(path("M 174 206 Q 160 230 172 246 Q 176 230 186 214 Z", Ivory, { "stroke-width": 3.5 })) + hit(H2(174, 226, 14, 22)) },
+      { p: "trunk", head: 1, s: cTube("M 200 196 C 200 240 196 270 216 282 C 236 290 250 270 240 254", 26, Gy) + cLine("M 188 228 h 24 M 188 246 h 24 M 192 264 h 22", 3) + hit(hitEll(212, 244, 32, 46)) },
+    ];
+  }
+
+  function cuteGiraffe(a, P) {
+    const Y = P("#f4c45e"), S = P("#c0742e"), Mz = P("#f8dc9c"), H = P("#4a3020"), Y2 = P("#e8b44c");
+    const sp = (x, y, r) => path(blob(x, y, r), S, { "stroke-width": P.line ? 3 : 0 });
+    const leg = (x, c) => path(`M ${x - 11} 322 L ${x - 9} 360 L ${x + 9} 360 L ${x + 11} 322 Z`, c);
+    const hoof = (x, c) => path(`M ${x - 10} 358 L ${x + 10} 358 L ${x + 11} 372 L ${x - 11} 372 Z`, c);
+    return [
+      { p: "tail", s: cTube("M 268 300 Q 290 306 294 330", 4, Y) + path("M 288 328 Q 294 350 300 328 Z", H) + hit(hitEll(288, 320, 14, 22)) },
+      { p: "fur", s: leg(160, Y2) + leg(240, Y2) },
+      { p: "hooves", s: hoof(160, H) + hoof(240, H) },
+      { p: "fur", s: ell(200, 302, 72, 40, Y) + sp(166, 298, 12) + sp(204, 288, 13) + sp(238, 308, 11) + sp(184, 322, 9) },
+      { p: "fur", s: leg(182, Y) + leg(218, Y) },
+      { p: "hooves", s: hoof(182, H) + hoof(218, H) + hit(hitEll(182, 365, 14, 12) + hitEll(218, 365, 14, 12) + hitEll(160, 365, 12, 10) + hitEll(240, 365, 12, 10)) },
+      { p: "neck", s: path("M 180 284 L 184 150 L 216 150 L 220 284 Z", Y) + sp(196, 250, 9) + sp(206, 214, 8) + sp(194, 180, 7) + hit(hitEll(200, 222, 24, 54)) },
+      { p: "horns", head: 1, s: both(cTube("M 182 96 L 176 58", 8, Y) + circ(176, 52, 9, H)) + hit(H2(178, 66, 13, 24)) },
+      { p: "ears", head: 1, s: both(ell(144, 116, 24, 10, Y, { transform: "rotate(-22 144 116)" }) + ell(146, 116, 14, 5, Mz, { transform: "rotate(-22 146 116)", "stroke-width": 0 })) + hit(H2(144, 114, 24, 14)) },
+      { p: "fur", head: 1, s: ell(200, 130, 50, 46, Y) + ell(200, 164, 36, 24, Mz) + cBlush(P, 164, 146, 10) + cBlush(P, 236, 146, 10) },
+      { p: "eyes", head: 1, s: cEye(180, 124, 11) + cEye(220, 124, 11) + cLine("M 168 110 l -3 -6 M 176 108 l -1 -7 M 224 108 l 1 -7 M 232 110 l 3 -6", 2.5) + hit(H2(180, 124, 16, 16)) },
+      { p: "nose", head: 1, s: `<ellipse cx="190" cy="160" rx="3.5" ry="5" fill="${INK}"/><ellipse cx="210" cy="160" rx="3.5" ry="5" fill="${INK}"/>` + hit(hitEll(200, 160, 18, 9)) },
+      { p: "mouth", head: 1, s: cSmile(200, 174, 8) + hit(hitEll(200, 176, 14, 7)) },
+    ];
+  }
+
+  function cuteCamel(a, P) {
+    const F = P("#d6a86c"), B = P("#ecc992"), F2 = P("#c4955a"), T = P("#7a5530");
+    const leg = (x, c) => path(`M ${x - 13} 262 L ${x - 11} 352 L ${x + 11} 352 L ${x + 13} 262 Z`, c);
+    const pad = (x, c) => ell(x, 358, 20, 9, c);
+    return [
+      { p: "tail", s: cTube("M 334 236 Q 346 260 342 290", 5, F) + path("M 336 288 Q 342 308 350 288 Z", T) + hit(hitEll(342, 264, 14, 32)) },
+      { p: "fur", s: leg(200, F2) + leg(306, F2) },
+      { p: "paws", s: pad(200, F2) + pad(306, F2) },
+      { p: "hump", s: path("M 212 214 C 216 146 290 146 298 214 Z", F) + hit(hitEll(256, 182, 42, 32)) },
+      { p: "fur", s: path("M 176 220 C 190 200 300 196 330 216 C 346 234 340 266 318 276 L 196 276 C 174 268 166 240 176 220 Z", F) },
+      { p: "fur", s: leg(222, F) + leg(290, F) + ell(222, 306, 9, 7, B, { "stroke-width": 3 }) + ell(290, 306, 9, 7, B, { "stroke-width": 3 }) },
+      { p: "paws", s: pad(222, B) + pad(290, B) + hit(hitEll(212, 358, 30, 14) + hitEll(298, 358, 30, 14)) },
+      { p: "neck", s: path("M 192 250 C 150 252 128 232 124 198 L 120 158 L 156 154 L 158 188 C 162 212 178 222 198 222 Z", F) + hit(hitEll(150, 206, 26, 40)) },
+      { p: "ears", head: 1, s: ell(156, 92, 8, 13, F, { transform: "rotate(20 156 92)" }) + hit(hitEll(156, 92, 13, 16)) },
+      { p: "fur", head: 1, s: ell(122, 126, 50, 44, F) + ell(86, 148, 32, 24, B, { "stroke-width": 3.5 }) + cBlush(P, 132, 148, 11) },
+      { p: "eyes", head: 1, s: cEye(118, 116, 11) + cLine("M 106 102 l -3 -6 M 114 99 l -1 -7 M 123 100 l 1 -7", 2.5) + hit(hitEll(118, 116, 16, 16)) },
+      { p: "nose", head: 1, s: cLine("M 66 138 Q 72 134 76 140", 3.5) + hit(hitEll(72, 139, 13, 10)) },
+      { p: "mouth", head: 1, s: cLine("M 66 158 Q 78 166 92 160") + hit(hitEll(80, 161, 14, 8)) },
+    ];
+  }
+
+  const CUTE = { fox: cuteFox, raccoon: cuteRaccoon, lion: cuteLion, polarbear: cutePolar, panda: cutePanda, meerkat: cuteMeerkat, rabbit: cuteRabbit,
+    kangaroo: cuteKangaroo, elephant: cuteElephant, giraffe: cuteGiraffe, camel: cuteCamel };
+  // Square boxes [x, y, size, size] around each head, for the suspect lineup and field guide faces.
+  const FACEBOX = { fox: [78, 38, 244, 244], raccoon: [106, 50, 188, 188], lion: [92, 60, 216, 216], polarbear: [52, 96, 184, 184], panda: [104, 74, 192, 192],
+    meerkat: [128, 84, 144, 144], rabbit: [76, 4, 248, 248], kangaroo: [80, 10, 176, 176], elephant: [44, 70, 312, 312], giraffe: [110, 34, 180, 180], camel: [26, 66, 150, 150] };
+  // Where each cute body sits (the "fur" clue zooms in around bx, by).
+  const CUTE_L = { fox: [200, 172, 80, 200, 300, 60, 64], raccoon: [200, 172, 86, 200, 300, 60, 64], lion: [200, 172, 100, 200, 300, 60, 64], polarbear: [150, 186, 72, 256, 260, 90, 44],
+    panda: [200, 172, 86, 200, 300, 64, 64], meerkat: [200, 148, 50, 200, 280, 40, 80], rabbit: [200, 180, 74, 200, 312, 60, 52], kangaroo: [160, 126, 60, 220, 300, 50, 60],
+    elephant: [200, 156, 74, 200, 310, 66, 54], giraffe: [200, 130, 50, 200, 302, 72, 40], camel: [122, 126, 50, 256, 246, 76, 30] };
+  for (const id in CUTE_L) { const [hx, hy, hr, bx, by, brx, bry] = CUTE_L[id]; Object.assign(A[id].L, { hx, hy, hr, bx, by, brx, bry }); }
+
   /* ---------- public: draw an animal ---------- */
   const cache = {};
   function layers(id, line) {
     const key = id + (line ? ":l" : "");
-    if (!cache[key]) { const a = A[id]; const P = painter(line); cache[key] = a.plan === "stand" ? stand(a, P) : sit(a, P); }
+    if (!cache[key]) { const a = A[id]; const P = painter(line); cache[key] = CUTE[id] ? CUTE[id](a, P) : a.plan === "stand" ? stand(a, P) : sit(a, P); }
     return cache[key];
   }
   function headBox(id) {
+    if (FACEBOX[id]) return FACEBOX[id];
     const a = A[id], { hx, hy, hr } = a.L;
     if (id === "elephant") return [hx - hr * 2.05, hy - hr * 1.3, hr * 4.1, hr * 4.1];
     if (id === "giraffe") return [hx - hr * 2, hy - hr * 1.85, hr * 4, hr * 4];

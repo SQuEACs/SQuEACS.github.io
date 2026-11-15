@@ -20,7 +20,7 @@
      L = layout (head center hx,hy radius hr; body center bx,by radii brx,bry). */
   const A = {
     otter:    { plan: "sit", fur: "#8a5a3b", belly: "#d9b48f", muzzle: "#ecd3b2", paw: "#6e4529", ears: "small", tail: "thick", whisk: true, claws: true, webbed: true,
-                L: { hx: 88, hy: 205, hr: 45, bx: 200, by: 266, brx: 90, bry: 50 } },
+                L: { hx: 200, hy: 150, hr: 66, bx: 200, by: 278, brx: 80, bry: 86 } },
     raccoon:  { plan: "sit", fur: "#8f8a96", belly: "#c9c5cf", muzzle: "#f2f0f4", paw: "#4a4452", ears: "point", earIn: "#f2f0f4", earSize: 0.85, tail: "ringed", tailDark: INK, mask: true, whisk: true, claws: true, head: "fox",
                 L: { hx: 200, hy: 150, hr: 60, bx: 200, by: 300, brx: 70, bry: 66 } },
     fox:      { plan: "fox", fur: "#e8742f", belly: "#fff6ea", muzzle: "#fff6ea", paw: "#3a2a2a", earIn: "#fff6ea", tailTip: "#fff6ea",
@@ -636,9 +636,9 @@
     return lay;
   }
 
-  const HAND = { fox: foxArt, kangaroo: rooArt, otter: otterArt, raccoon: raccoonArt, lion: lionArt, polarbear: polarArt, panda: pandaArt, meerkat: meerkatArt, rabbit: rabbitArt, elephant: elephantArt, giraffe: giraffeArt, camel: camelArt };
+  const HAND = { fox: foxArt, kangaroo: rooArt, raccoon: raccoonArt, lion: lionArt, polarbear: polarArt, panda: pandaArt, meerkat: meerkatArt, rabbit: rabbitArt, elephant: elephantArt, giraffe: giraffeArt, camel: camelArt };
   // Square boxes [x, y, size, size] around each head, for the suspect lineup and field guide faces.
-  const FACEBOX = { fox: [100, 26, 200, 200], kangaroo: [100, 24, 116, 116], otter: [16, 142, 136, 136], raccoon: [112, 60, 176, 176], lion: [30, 92, 176, 176], polarbear: [6, 168, 116, 116],
+  const FACEBOX = { fox: [100, 26, 200, 200], kangaroo: [100, 24, 116, 116], raccoon: [112, 60, 176, 176], lion: [30, 92, 176, 176], polarbear: [6, 168, 116, 116],
     panda: [118, 76, 164, 164], meerkat: [146, 64, 108, 108], rabbit: [56, 56, 180, 180], elephant: [14, 92, 210, 210], giraffe: [36, 14, 132, 132], camel: [20, 64, 112, 112] };
 
 

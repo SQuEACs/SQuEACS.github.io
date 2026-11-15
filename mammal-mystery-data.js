@@ -300,11 +300,105 @@
   };
 
   const GRADES = {
-    pk: { name: "Pre-K", say: "Pre-K", suspects: 3, cases: 4 },
-    k:  { name: "K", say: "Kindergarten", suspects: 4, cases: 5 },
-    g1: { name: "1st", say: "First grade", suspects: 4, cases: 5 },
-    g2: { name: "2nd", say: "Second grade", suspects: 5, cases: 5 },
+    pk: { name: "Pre-K", say: "Pre-K", suspects: 3, cases: 3 },
+    k:  { name: "K", say: "Kindergarten", suspects: 4, cases: 3 },
+    g1: { name: "1st", say: "First grade", suspects: 4, cases: 3 },
+    g2: { name: "2nd", say: "Second grade", suspects: 4, cases: 3 },
   };
 
-  window.MM_DATA = { PHOTOS, ANIMALS, PARTS, PART_SAY, DIET, COUSINS, TREE, GRADES, IDS: Object.keys(ANIMALS) };
+
+  /* Animal superpowers: one body part per animal that does something amazing.
+     Children tap the glowing part and watch it work, then hear how it helps.
+     act = how the animal moves, fx = the little effect that plays. */
+  const POWERS = {
+    otter: { part: "paws", name: "Super Swimmer", act: "swim", fx: "bubbles", say: {
+      pk: "Otters are super swimmers! Their webbed feet push the water like flippers.",
+      k: "Webbed feet work like flippers. Otters zoom through the water to catch fish.",
+      g1: "Webbed feet push lots of water with every kick, so otters swim fast and turn quickly to catch fish.",
+      g2: "Webbed feet are an adaptation: a body part that helps an animal survive where it lives. Wide, webbed feet push more water, so otters are fast swimmers." } },
+    raccoon: { part: "paws", name: "Clever Hands", act: "wiggle", fx: "sparkle", say: {
+      pk: "Raccoons have clever hands! They can grab and open things.",
+      k: "A raccoon's front paws work like hands. They can feel food in the water without looking.",
+      g1: "Raccoon paws can feel tiny things. Raccoons pat around in streams to find crayfish and snails.",
+      g2: "Raccoon paws are packed with nerves, and wet paws feel even better. That's why raccoons seem to wash their food: they are really feeling it." } },
+    fox: { part: "ears", name: "Super Hearing", act: "pounce", fx: "waves", say: {
+      pk: "Foxes have super ears! They can hear a tiny mouse hiding.",
+      k: "A fox can hear a mouse squeak under the snow. Then it jumps up and pounces!",
+      g1: "Big, pointy ears turn toward sounds. A red fox can hear a mouse under the snow, then leap high and dive in nose first.",
+      g2: "Red foxes hear quiet, low sounds very well. Scientists noticed that foxes often pounce facing the same direction, and think they might use Earth's magnetism to aim!" } },
+    lion: { part: "mouth", name: "Mighty Roar", act: "roar", fx: "waves", say: {
+      pk: "Lions have a big, loud roar! Roar!",
+      k: "A lion's roar is so loud you can hear it far, far away. It tells other lions: this is my home.",
+      g1: "A lion's roar can be heard about 5 miles away. Lions roar to tell other lions where they are and to keep strangers away.",
+      g2: "Lions have a special voice box that lets them roar very loudly. The roar travels about 5 miles and helps a pride guard its land." } },
+    polarbear: { part: "nose", name: "Super Sniffer", act: "sniff", fx: "scent", say: {
+      pk: "Polar bears have super noses! They can smell food far away.",
+      k: "A polar bear can smell a seal far away, even under the snow.",
+      g1: "A polar bear's nose is one of the best in the world. It can smell a seal's breathing hole under the snow from far away.",
+      g2: "Polar bears have a huge space inside the nose for smelling. On the sea ice, that super sniffer leads them to seals, their main food." } },
+    panda: { part: "paws", name: "Bamboo Grabber", act: "wiggle", fx: "leaves", say: {
+      pk: "Pandas have a special thumb for holding bamboo!",
+      k: "A panda has an extra bump on its wrist, like a thumb. It helps hold bamboo.",
+      g1: "Pandas have a wrist bone that sticks out like a thumb. It helps them grip bamboo while they munch for many hours every day.",
+      g2: "The panda's thumb is really a wrist bone that grew bigger. Over a very long time, evolution reused a bone in a new way to help pandas eat bamboo." } },
+    meerkat: { part: "claws", name: "Digging Claws", act: "dig", fx: "dust", say: {
+      pk: "Meerkats have strong claws for digging!",
+      k: "Meerkats dig with long, strong claws. They dig burrows and find bugs to eat.",
+      g1: "Long front claws make meerkats super diggers. They dig burrows to hide in, and dig up beetles and scorpions to eat.",
+      g2: "Meerkats can move a lot of sand very fast. They can even close their ears while digging, so sand stays out." } },
+    rabbit: { part: "ears", name: "Radar Ears", act: "hop", fx: "waves", say: {
+      pk: "Rabbits have long ears to hear danger!",
+      k: "A rabbit can turn its long ears to listen in different directions.",
+      g1: "Rabbits can move each ear on its own to find sounds. If they hear danger, they hop away fast!",
+      g2: "Long ears catch faint sounds, and they also help a rabbit cool off, because warm blood flows through them and lets heat out." } },
+    kangaroo: { part: "paws", name: "Super Hop", act: "hop", fx: "dust", say: {
+      pk: "Kangaroos have big feet for hopping! Hop, hop, hop!",
+      k: "Kangaroos hop on their big back feet. Their tail helps them balance.",
+      g1: "Big back legs and long feet make kangaroos super hoppers. A red kangaroo can jump about 25 feet in one hop!",
+      g2: "Kangaroo leg tendons stretch like springs and bounce back, so hopping saves energy. That's how kangaroos travel far without getting tired." } },
+    elephant: { part: "trunk", name: "Super Trunk", act: "sway", fx: "drops", say: {
+      pk: "Elephants have a super trunk! They can spray water.",
+      k: "An elephant's trunk is a nose and a hand. It can grab food and spray water.",
+      g1: "An elephant's trunk has thousands of muscles. It can pick up a peanut, pull down a branch, or suck up about 2 gallons of water.",
+      g2: "The trunk is the elephant's nose and upper lip joined together. With about 40 thousand muscles, it can smell, grab, drink, and even say hello." } },
+    giraffe: { part: "neck", name: "Super Reach", act: "stretch", fx: "leaves", say: {
+      pk: "Giraffes have long necks to reach leaves up high!",
+      k: "A giraffe's long neck reaches the leaves at the top of the trees.",
+      g1: "A giraffe's neck is about 6 feet long, so it can eat leaves that other animals can't reach.",
+      g2: "A giraffe's neck has 7 bones, the same number as yours! Each bone is just very, very long." } },
+    camel: { part: "hump", name: "Hump Power", act: "sway", fx: "sparkle", say: {
+      pk: "Camels have a hump full of fat. It helps them in the desert.",
+      k: "A camel's hump stores fat, not water. It's like a snack pack for long trips.",
+      g1: "A camel can go many days without food, because its body uses the fat in its hump. When the fat is used up, the hump gets floppy!",
+      g2: "Keeping fat in one hump, instead of all over its body, helps a camel stay cooler in the hot desert. Camels can also drink lots of water very fast." } },
+  };
+
+  /* What each animal's footprints look like, said in the footprint game. */
+  const TRACK_SAY = {
+    otter: "Otter tracks have five toes with webbing between them, for swimming.",
+    raccoon: "Raccoon tracks look like tiny hands with five long fingers.",
+    fox: "Fox tracks are small ovals with four toes and little claw marks.",
+    lion: "Lion tracks have four round toes and a big pad, but no claw marks. Cats tuck their claws in.",
+    polarbear: "Polar bear tracks are huge, with five toes and claws for gripping the ice.",
+    panda: "Panda tracks are bear tracks: five toes and a wide pad.",
+    meerkat: "Meerkat tracks are tiny, with long claw marks from digging claws.",
+    rabbit: "Rabbit tracks: two long back feet land in front of two small front feet.",
+    kangaroo: "Kangaroo tracks are two long, skinny feet side by side, from hopping.",
+    elephant: "Elephant tracks are giant circles, as big as a dinner plate!",
+    giraffe: "Giraffe tracks are hooves split in two, shaped like a big heart.",
+    camel: "Camel tracks are wide and soft, with two toes, for walking on sand.",
+  };
+
+  /* Real animal sounds. Put openly licensed recordings in assets/mammal-mystery/sounds/
+     (mp3 or m4a) and fill in src and credit, the same way as PHOTOS. Until then, no call plays. */
+  const SOUNDS = {
+    otter: { src: "", credit: "" }, raccoon: { src: "", credit: "" }, fox: { src: "", credit: "" }, lion: { src: "", credit: "" },
+    polarbear: { src: "", credit: "" }, panda: { src: "", credit: "" }, meerkat: { src: "", credit: "" }, rabbit: { src: "", credit: "" },
+    kangaroo: { src: "", credit: "" }, elephant: { src: "", credit: "" }, giraffe: { src: "", credit: "" }, camel: { src: "", credit: "" },
+  };
+
+  /* Detective ranks: [mysteries solved, rank name, badge color] */
+  const RANKS = [[0, "Rookie Detective", "#c9c5cf"], [3, "Junior Detective", "#7ccf68"], [6, "Detective", "#4aa3df"], [12, "Senior Detective", "#a47bff"], [20, "Super Sleuth", "#ff9f40"], [30, "Master Detective", "#ffd23f"]];
+
+  window.MM_DATA = { PHOTOS, SOUNDS, ANIMALS, PARTS, PART_SAY, DIET, COUSINS, TREE, GRADES, POWERS, TRACK_SAY, RANKS, IDS: Object.keys(ANIMALS) };
 })();

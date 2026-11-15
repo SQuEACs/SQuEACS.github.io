@@ -703,6 +703,60 @@
   }
   const HAB_NAMES = { river: "River", forest: "Forest", grassland: "Grassland", desert: "Desert", ice: "Ice and snow" };
 
+
+  /* ---------- footprints (tracks), for the footprint game ----------
+     Each kind is drawn the way the real track looks: dogs and foxes show claws,
+     cats tuck their claws in, bears have five toes, raccoons leave little hands,
+     rabbits and kangaroos land with their back feet side by side, giraffes and
+     camels leave split hooves or soft two-toed pads. */
+  const TRACK_KIND = { otter: "webbed", raccoon: "hand", fox: "dog", lion: "cat", polarbear: "bear", panda: "bear", meerkat: "meerkat", rabbit: "rabbit", kangaroo: "roo", elephant: "elephant", giraffe: "hoof", camel: "camel" };
+  function print(kind, x, y, s, rot, col) {
+    const E = (cx, cy, rx, ry, r) => `<ellipse cx="${r1(cx)}" cy="${r1(cy)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="${col}"${r ? ` transform="rotate(${r} ${r1(cx)} ${r1(cy)})"` : ""}/>`;
+    const claw = (cx, cy, dx, dy) => `<path d="M ${r1(cx)} ${r1(cy)} l ${r1(dx)} ${r1(dy)}" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/>`;
+    let g = "";
+    if (kind === "dog") g = E(0, 9, 11, 9) + [[-11, -6], [-4, -15], [4, -15], [11, -6]].map(([a, b]) => E(a, b, 4.2, 5.4) + claw(a * 1.05, b - 6, a * 0.08, -4)).join("");
+    else if (kind === "cat") g = E(0, 8, 14, 11) + [[-15, -6], [-6, -16], [6, -16], [15, -6]].map(([a, b]) => E(a, b, 5, 5.6)).join("");
+    else if (kind === "bear") g = `<path d="M -24 4 Q -26 22 -8 24 Q 0 26 10 24 Q 26 22 24 4 Q 12 10 0 10 Q -12 10 -24 4 Z" fill="${col}"/>` + [-22, -11, 0, 11, 22].map((a, i) => { const b = -8 - [0, 6, 8, 6, 0][i]; return E(a, b, 5.2, 6) + claw(a, b - 7, a * 0.12, -5); }).join("");
+    else if (kind === "hand") g = E(0, 6, 9, 8) + [-30, -14, 0, 14, 30].map(d => `<path d="M 0 2 L ${r1(Math.sin(d * Math.PI / 180) * 20)} ${r1(-Math.cos(d * Math.PI / 180) * 20)}" stroke="${col}" stroke-width="5.5" stroke-linecap="round"/>`).join("");
+    else if (kind === "webbed") g = `<path d="M -16 -8 Q 0 2 16 -8 L 12 4 Q 0 8 -12 4 Z" fill="${col}" opacity=".45"/>` + E(0, 8, 10, 8) + [[-16, -8], [-8, -15], [0, -17], [8, -15], [16, -8]].map(([a, b]) => E(a, b, 3.6, 4.6) + claw(a, b - 5, 0, -3)).join("");
+    else if (kind === "meerkat") g = E(0, 6, 6, 7) + [[-7, -5], [-2.5, -9], [2.5, -9], [7, -5]].map(([a, b]) => E(a, b, 2.4, 3) + claw(a, b - 3, a * 0.2, -10)).join("");
+    else if (kind === "rabbit") g = E(-9, -14, 6, 17) + E(9, -14, 6, 17) + E(-3, 18, 5, 6) + E(3, 32, 5, 6);
+    else if (kind === "roo") g = [-9, 9].map(a => E(a, 0, 5.5, 26) + E(a, -24, 4, 6)).join("");
+    else if (kind === "elephant") g = `<circle cx="0" cy="0" r="27" fill="${col}"/>` + `<path d="M -16 -6 L 4 4 M -6 12 L 12 -8 M -10 -16 L 0 -4" stroke="#f3e2bf" stroke-width="2" stroke-linecap="round"/>` + [-16, -6, 6, 16].map(a => E(a, -26, 4.5, 3.6)).join("");
+    else if (kind === "hoof") g = `<path d="M -2 -22 Q -18 -18 -18 2 Q -18 20 -3 22 Z" fill="${col}"/><path d="M 2 -22 Q 18 -18 18 2 Q 18 20 3 22 Z" fill="${col}"/>`;
+    else if (kind === "camel") g = E(-10, 0, 11, 18, -6) + E(10, 0, 11, 18, 6) + `<path d="M 0 -16 V 14" stroke="#f3e2bf" stroke-width="2.5"/>`;
+    return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${rot}) scale(${s})">${g}</g>`;
+  }
+  function track(id, o = {}) {
+    const kind = TRACK_KIND[id], col = o.col || "#5a4030";
+    const big = { elephant: 0.95, polarbear: 1.05, camel: 1, panda: 1, giraffe: 0.95, lion: 1.1 }[id] || 1.05;
+    const small = { meerkat: 1.25, rabbit: 1.1 }[id] || 1;
+    const s = big * small;
+    let prints = "";
+    if (kind === "rabbit" || kind === "roo") prints = print(kind, 100, 160, s, -4, col) + print(kind, 104, 58, s, 4, col);
+    else prints = [[78, 170, -8], [124, 128, 6], [76, 86, -6], [122, 42, 8]].map(([x, y, r]) => print(kind, x, y, s * 0.9, r, col)).join("");
+    const bg = o.bare ? "" : `<rect x="6" y="6" width="188" height="188" rx="26" fill="${o.bg || "#f3e2bf"}" stroke="${INK}" stroke-width="5"/>`;
+    return `<svg class="mm-track" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${o.label || "Footprints"}">${bg}${prints}</svg>`;
+  }
+
+  /* ---------- hiding spots: a bush, rock, grass, reeds or snow pile to hide behind ---------- */
+  const PROP_OF = { forest: "bush", meadow: "flowers", grassland: "grass", outback: "redrock", desert: "dune", river: "reeds", ice: "snow" };
+  function prop(hab, seed = 0) {
+    const k = PROP_OF[hab] || "bush"; let s = "";
+    const bumps = (c, c2) => path("M 4 136 L 4 74 Q 8 34 46 40 Q 58 6 100 12 Q 144 4 156 40 Q 194 34 196 74 L 196 136 Z", c, { "stroke-width": 6 }) +
+      `<path d="M 40 70 q 10 -8 20 0 M 120 52 q 10 -8 20 0 M 80 90 q 10 -8 20 0 M 150 92 q 8 -6 16 0" stroke="${c2}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    if (k === "bush") s = bumps("#4fae62", "#2f8f4e");
+    else if (k === "flowers") s = bumps("#6fc35a", "#4a9a3e") + [[44, 46, "#ff8fb1"], [104, 22, "#ffffff"], [160, 50, "#ffd84f"], [76, 82, "#c79bff"]].map(([x, y, c]) => circ(x, y, 8, c, { "stroke-width": 3 }) + circ(x, y, 3, "#ffb02e", { "stroke-width": 0 })).join("");
+    else if (k === "grass") { let d = "M 0 136 "; for (let i = 0; i <= 12; i++) { const x = i * 200 / 12; d += `L ${r1(x - 6)} ${r1(48 + ((i + seed) % 3) * 18)} L ${r1(x + 2)} 112 `; } s = path(d + "L 200 136 Z", "#e3bd52", { "stroke-width": 5 }); }
+    else if (k === "redrock") s = path("M 4 136 L 10 70 Q 22 28 74 24 Q 134 14 172 42 Q 198 64 196 136 Z", "#b8502a", { "stroke-width": 6 }) + `<path d="M 70 50 q 20 30 0 60 M 140 50 q -10 20 6 40" stroke="#8a3a1e" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    else if (k === "dune") s = path("M 0 136 L 0 90 Q 40 40 100 46 Q 160 38 200 86 L 200 136 Z", "#e8ad4f", { "stroke-width": 6 }) + `<path d="M 30 92 q 30 -20 60 -6 M 110 84 q 30 -16 60 0" stroke="#c98a32" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    else if (k === "reeds") { s = [20, 46, 72, 98, 124, 150, 176].map((x, i) => `<path d="M ${x} 136 Q ${x + (i % 2 ? 6 : -6)} 80 ${x + (i % 2 ? 10 : -4)} ${30 + (i % 3) * 12}" stroke="${INK}" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M ${x} 136 Q ${x + (i % 2 ? 6 : -6)} 80 ${x + (i % 2 ? 10 : -4)} ${30 + (i % 3) * 12}" stroke="#5aa04a" stroke-width="6" fill="none" stroke-linecap="round"/>`).join("") +
+      [[46, 44], [124, 40], [176, 50]].map(([x, y]) => ell(x + 4, y, 7, 16, "#8a5a3b", { "stroke-width": 3 })).join("") + path("M 0 136 L 0 112 Q 100 96 200 112 L 200 136 Z", "#4aa3df", { "stroke-width": 5 }); }
+    else if (k === "snow") s = path("M 0 136 L 0 84 Q 30 40 80 52 Q 120 22 162 46 Q 198 56 200 92 L 200 136 Z", "#ffffff", { "stroke-width": 6 }) + `<path d="M 40 90 q 20 -14 40 -4 M 120 76 q 20 -12 40 0" stroke="#9fd0ef" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    return `<svg class="mm-prop-art" viewBox="0 0 200 140" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${s}</svg>`;
+  }
+  const PLACE_NAMES = { river: "river", forest: "forest", grassland: "grassland", meadow: "meadow", outback: "outback", desert: "desert", ice: "snow and ice" };
+
   /* ---------- foods and small icons ---------- */
   const fish = (x, y, k = 1) => path(`M ${x - 40 * k} ${y} Q ${x - 10 * k} ${y - 26 * k} ${x + 22 * k} ${y} Q ${x - 10 * k} ${y + 26 * k} ${x - 40 * k} ${y} Z`, "#7fb6e8", { "stroke-width": 4 }) + path(`M ${x + 20 * k} ${y} L ${x + 42 * k} ${y - 16 * k} L ${x + 42 * k} ${y + 16 * k} Z`, "#7fb6e8", { "stroke-width": 4 }) + `<circle cx="${x - 26 * k}" cy="${y - 4 * k}" r="${4 * k}" fill="${INK}"/>`;
   const leaf = (x, y, k = 1) => path(`M ${x - 34 * k} ${y + 22 * k} Q ${x - 30 * k} ${y - 30 * k} ${x + 34 * k} ${y - 26 * k} Q ${x + 24 * k} ${y + 30 * k} ${x - 34 * k} ${y + 22 * k} Z`, "#6fc35a", { "stroke-width": 4 }) + `<path d="M ${x - 34 * k} ${y + 22 * k} Q ${x} ${y} ${x + 26 * k} ${y - 18 * k}" stroke="${INK}" stroke-width="3" fill="none"/>`;
@@ -729,6 +783,10 @@
       case "print": return S(`<rect x="24" y="12" width="52" height="28" fill="#fff" stroke="${INK}" stroke-width="6"/><rect x="10" y="38" width="80" height="34" rx="8" fill="#a47bff" stroke="${INK}" stroke-width="6"/><rect x="24" y="60" width="52" height="28" fill="#fff" stroke="${INK}" stroke-width="6"/>`);
       case "hat": return S(path("M 10 64 Q 50 74 90 64 Q 84 56 72 56 Q 70 26 50 24 Q 30 26 28 56 Q 16 56 10 64 Z", "#8a6440", { "stroke-width": 6 }) + `<path d="M 30 50 Q 50 56 70 50" stroke="${INK}" stroke-width="5" fill="none"/>`);
       case "crayon": return S(`<g transform="rotate(35 50 50)">` + path("M 38 22 L 50 2 L 62 22 Z", "#ff5fa2", { "stroke-width": 5 }) + `<rect x="38" y="22" width="24" height="70" rx="5" fill="#ff5fa2" stroke="${INK}" stroke-width="5"/><rect x="38" y="40" width="24" height="14" fill="#fff" stroke="${INK}" stroke-width="4"/></g>`);
+      case "map": return S(path("M 8 22 L 34 12 L 66 22 L 92 12 V 80 L 66 90 L 34 80 L 8 90 Z", "#fff4dc", { "stroke-width": 6 }) + `<path d="M 34 12 V 80 M 66 22 V 90" stroke="${INK}" stroke-width="3"/><path d="M 18 70 Q 36 40 52 56 Q 66 70 78 36" stroke="#d8304f" stroke-width="4" fill="none" stroke-dasharray="6 6" stroke-linecap="round"/><path d="M 72 30 l 12 12 M 84 30 l -12 12" stroke="#d8304f" stroke-width="5" stroke-linecap="round"/>`);
+      case "paw": return S(ell(50, 64, 20, 17, "#8a5a3b", { "stroke-width": 5 }) + [[24, 40], [40, 24], [60, 24], [76, 40]].map(([x, y]) => ell(x, y, 9, 11, "#8a5a3b", { "stroke-width": 5 })).join(""));
+      case "shadow": return S(circ(32, 30, 12, INK, { "stroke-width": 0 }) + circ(68, 30, 12, INK, { "stroke-width": 0 }) + ell(50, 58, 34, 30, INK, { "stroke-width": 0 }) + path("M 12 90 Q 50 80 88 90", "none", { "stroke-width": 5 }));
+      case "badge": return S(path("M 30 60 L 18 94 L 34 86 L 42 98 L 50 66 Z M 70 60 L 82 94 L 66 86 L 58 98 L 50 66 Z", "#4aa3df", { "stroke-width": 5 }) + circ(50, 40, 32, "#ffd23f", { "stroke-width": 6 }) + path("M 50 20 L 56 34 L 71 35 L 59 45 L 63 60 L 50 52 L 37 60 L 41 45 L 29 35 L 44 34 Z", "#fff", { "stroke-width": 4 }));
       case "gear": return S(circ(50, 50, 26, "#c9c5cf", { "stroke-width": 6 }) + circ(50, 50, 9, "#fff", { "stroke-width": 5 }) + [0, 45, 90, 135, 180, 225, 270, 315].map(d => `<rect x="44" y="10" width="12" height="14" rx="3" fill="${INK}" transform="rotate(${d} 50 50)"/>`).join(""));
     }
     return "";
@@ -745,5 +803,5 @@
     return `<svg class="mm-ollie" viewBox="${r1(hx - hr * 1.5)} ${r1(hy - hr * 1.7)} ${r1(hr * 3.4)} ${r1(hr * 3.2)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Detective Ollie, an otter in a detective hat">${otter}${hat}${glass}</svg>`;
   }
 
-  window.MM_ART = { SPEC: A, NAMES, TEETH, HAB_NAMES, animal, partOnly, box, teeth, habitat, food, icon, detective, headBox };
+  window.MM_ART = { SPEC: A, NAMES, TEETH, HAB_NAMES, PLACE_NAMES, TRACK_KIND, animal, partOnly, box, teeth, habitat, food, icon, detective, headBox, track, prop };
 })();

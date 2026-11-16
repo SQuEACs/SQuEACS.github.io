@@ -96,6 +96,15 @@ window.SD_DATA = (function () {
     }
   };
   const IDS = ["otter", "mink", "marten", "fisher", "badger"];
+  // Photos for the "meet the animals" cards (the drawings are used everywhere else).
+  const BY = '<a href="https://creativecommons.org/licenses/by/3.0" target="_blank" rel="noopener">CC BY 3.0</a>', BYSA = '<a href="https://creativecommons.org/licenses/by-sa/3.0" target="_blank" rel="noopener">CC BY-SA 3.0</a>', WC = 'via <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>';
+  const PHOTOS = {
+    otter: { src: "assets/mammal-mystery/photos/otter.jpg", credit: `Photo: Dmitry Azovtsev (<a href="http://www.daphoto.info" target="_blank" rel="noopener">daphoto.info</a>), ${BYSA}, ${WC}` },
+    mink: { src: "assets/skull-detective/photos/mink.jpg", credit: `Photo: Jonn Leffmann, ${BY}, ${WC}` },
+    marten: { src: "assets/skull-detective/photos/marten.jpg", credit: `Photo: USFWS Midwest Region, public domain, ${WC}` },
+    fisher: { src: "assets/skull-detective/photos/fisher.jpg", credit: `Photo: Jeff Lewis, Olympic National Park, public domain, ${WC}` }
+  };
+  for (const id in PHOTOS) SKULLS[id].photo = PHOTOS[id];
   // Drawing sizes that follow the measurements: orbit radius and canine height as fractions of skull length.
   for (const id of IDS) { const s = SKULLS[id]; s.shape.or = s.orbit / (2 * 1.15 * s.len); s.shape.ca = s.canine / s.len; }
 

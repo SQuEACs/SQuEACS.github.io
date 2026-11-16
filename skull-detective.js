@@ -212,7 +212,7 @@
       }
       const id = D.IDS[i], sp = SK[id], last = i === D.IDS.length - 1;
       screen(`<div class="sd-meet"><p class="sd-meet-n">Animal ${i + 1} of ${D.IDS.length}</p>
-        <div class="sd-meet-pic">${ART.animal(sp, 360)}</div>
+        <div class="sd-meet-pic">${sp.photo ? `<figure class="sd-photo"><img src="${esc(sp.photo.src)}" alt="Photo of ${esc(the(id))}"><figcaption>${sp.photo.credit}</figcaption></figure>` : ART.animal(sp, 360)}</div>
         <div class="sd-meet-txt"><h3>${esc(cap1(nm(id)))} <i>${esc(sp.sci)}</i></h3><p>${rich(sp.intro)}</p>
           <dl><dt>Lives</dt><dd>${esc(sp.lives)}</dd>${young() ? "" : `<dt>Size</dt><dd>${esc(sp.size)}</dd>`}<dt>Eats</dt><dd>${esc(sp.eats)}</dd></dl></div></div>
         <div class="sd-row">${btn("next", `${ART.UI.go}<span>${last ? "Start the case" : "Next animal"}</span>`, "sd-go", " data-focus")}${last ? "" : btn("skip", "Skip", "sd-chip")}</div>`, { next: () => { i++; card(); }, skip: then });

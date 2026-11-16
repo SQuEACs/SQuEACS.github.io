@@ -1220,3 +1220,12 @@ body.tg-big .og-meta { font-size: 1.22em; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) { .home-game { transition: none; } }
 .og-metaart { width: 100%; max-width: 34rem; height: auto; justify-self: center; background: rgba(255, 255, 255, .04); border-radius: 12px; }
 .og-metacap { font-size: .8rem !important; color: #a79fbb !important; text-align: center; }
+
+/* Games header under Open Science (menu + page) */
+.menu-panel li.sub-head { padding: 0.75rem 1rem 0.3rem 2rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); }
+.menu-panel li.sub.game a { padding-left: 3rem; }
+.menu-panel li.sub.game a::before { left: 2.05rem; }
+.os-games-head { margin: 3rem 0 1.25rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+.os-games-head h2 { font-size: var(--step-3, 2rem); }
+.os-games-head p { color: var(--muted); margin-top: 0.4rem; }
+.os-games-head + .os-game { margin-top: 0; }

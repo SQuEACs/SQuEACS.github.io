@@ -161,11 +161,21 @@
       <div class="sd-title-art">${skullPic("otter")}</div>
       <h2 class="sd-logo"><span>Skull</span> <span>Detective</span></h2>
       <p class="sd-sub">Real CT-scanned skulls. Five members of the weasel family. One detective: you.</p>
-      <div class="sd-row">${btn("play", `${ART.UI.go}<span>Play</span>`, "sd-go", " data-focus")}${btn("file", `${ART.UI.star}<span>Case file ${n}/5</span>`, "sd-chip")}</div>
+      <div class="sd-row">${btn("play", `${ART.UI.go}<span>Play</span>`, "sd-go", " data-focus")}${btn("file", `${ART.UI.star}<span>Case file ${n}/5</span>`, "sd-chip")}${btn("restart", "Start over", "sd-chip")}</div>
       ${CL ? `<button type="button" class="sd-gear" id="sd-gear" aria-label="Teacher settings (press and hold)">${ART.UI.gear}</button>` : ""}
-    </div>`, { play: () => (S.grade ? menu() : grades()), file: caseFile });
+    </div>`, { play: () => (S.grade ? menu() : grades()), file: caseFile, restart: startOver });
     if (CL) holdGear();
     say("Skull Detective! Every skull tells a story. Tap play to start.");
+  }
+  // Start over: clear saved progress on this device (teacher settings and sound stay).
+  function startOver() {
+    $("sd-home").hidden = false;
+    screen(`${head("Start over?", "This clears your grade, solved cases, skull cards, and science words on this device.")}
+      <div class="sd-row">${btn("yes", "Yes, start over", "sd-go")}${btn("no", "No, go back", "sd-chip", " data-focus")}</div>`, {
+      yes: () => { S.grade = CL && S.opts.lock ? S.opts.lock : null; S.done = {}; S.cards = {}; S.words = {}; save(); title(); },
+      no: () => (S.grade ? menu() : title())
+    });
+    say("Start over? This clears your grade, solved cases, skull cards, and science words. Tap yes to start over, or no to go back.");
   }
   function grades() {
     $("sd-home").hidden = false;
@@ -178,9 +188,9 @@
     $("sd-home").hidden = false;
     const G = D.GRADES[S.grade];
     screen(`<div class="sd-intro">${head(`Grade ${G.label}: ${G.title}`, G.say.replace(/^[^.]*\.\s*/, ""))}
-      <div class="sd-row">${btn("start", `${ART.UI.lens}<span>Open the case</span>`, "sd-go", " data-focus")}${CL && S.opts.lock ? "" : btn("grades", "Change grade", "sd-chip")}</div>
+      <div class="sd-row">${btn("start", `${ART.UI.lens}<span>Open the case</span>`, "sd-go", " data-focus")}${CL && S.opts.lock ? "" : btn("grades", "Change grade", "sd-chip")}${btn("restart", "Start over", "sd-chip")}</div>
       <p class="sd-std">Standards: ${esc(G.std)}</p></div>`,
-      { start: () => meet(() => PLAY[S.grade]()), grades });
+      { start: () => meet(() => PLAY[S.grade]()), grades, restart: startOver });
     say(G.say + " Tap open the case.");
   }
   function solved(g, msg) {

@@ -214,11 +214,21 @@
     screen(`<div class="tp-title"><div class="tp-title-art">${ART.tadpole(1, { label: "A see-through tadpole" })}</div>
       <h2 class="tp-logo"><span>Inside the</span> <span>Tadpole</span></h2>
       <p class="tp-sub">Real CT scans let us see inside without cutting. Slice in and explore!</p>
-      <div class="tp-row">${btn("play", `${UI.go}<span>Play</span>`, "tp-go", " data-focus")}</div>
+      <div class="tp-row">${btn("play", `${UI.go}<span>Play</span>`, "tp-go", " data-focus")}${btn("restart", "Start over", "tp-chip")}</div>
       ${CL ? `<button type="button" class="tp-gear" id="tp-gear" aria-label="Teacher settings (press and hold)">${UI.gear}</button>` : ""}</div>`,
-      { play: () => (S.grade ? menu() : grades()) });
+      { play: () => (S.grade ? menu() : grades()), restart: startOver });
     if (CL) holdGear();
     say("Inside the Tadpole! Tap play to start.");
+  }
+  // Start over: clear saved progress on this device (teacher settings and sound stay).
+  function startOver() {
+    $("tp-home").hidden = false;
+    screen(`${head("Start over?", "This clears your grade and finished missions on this device.")}
+      <div class="tp-row">${btn("yes", "Yes, start over", "tp-go")}${btn("no", "No, go back", "tp-chip", " data-focus")}</div>`, {
+      yes: () => { S.grade = CL && S.opts.lock ? S.opts.lock : null; S.done = {}; save(); title(); },
+      no: () => (S.grade ? menu() : title())
+    });
+    say("Start over? This clears your grade and finished missions. Tap yes to start over, or no to go back.");
   }
   function grades() {
     $("tp-home").hidden = false;
@@ -230,8 +240,8 @@
     $("tp-home").hidden = false;
     const G = D.GRADES[S.grade];
     screen(`<div class="tp-intro">${head(`Grade ${G.label}: ${G.title}`, G.say.replace(/^[^.]*\.\s*/, ""))}
-      <div class="tp-row">${btn("start", `${UI.lens}<span>Start the mission</span>`, "tp-go", " data-focus")}${CL && S.opts.lock ? "" : btn("grades", "Change grade", "tp-chip")}</div>
-      <p class="tp-std">Standards: ${esc(G.std)}</p></div>`, { start: () => meet().then(() => PLAY[S.grade]()), grades });
+      <div class="tp-row">${btn("start", `${UI.lens}<span>Start the mission</span>`, "tp-go", " data-focus")}${CL && S.opts.lock ? "" : btn("grades", "Change grade", "tp-chip")}${btn("restart", "Start over", "tp-chip")}</div>
+      <p class="tp-std">Standards: ${esc(G.std)}</p></div>`, { start: () => meet().then(() => PLAY[S.grade]()), grades, restart: startOver });
     say(G.say + " Tap start the mission.");
   }
   function solved(g, msg) {

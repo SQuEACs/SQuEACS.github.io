@@ -115,7 +115,7 @@ window.TP_ART = (function () {
   /* Lifelike pictures for "meet the animals": a tadpole and a small fish seen from the side. viewBox 0 0 420 200. */
   function realTadpole(w = 340) {
     const spots = [[92, 82, 4], [118, 74, 3], [140, 96, 3.5], [104, 108, 3], [150, 80, 2.5], [128, 118, 2.5], [76, 96, 2.5]];
-    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A tadpole"><defs>
+    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A river frog tadpole"><defs>
       <radialGradient id="tpb" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#6f6a3c"/><stop offset=".6" stop-color="#4a4526"/><stop offset="1" stop-color="#2d2a18"/></radialGradient>
       <linearGradient id="tpt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d7650" stop-opacity=".85"/><stop offset="1" stop-color="#b9b48e" stop-opacity=".35"/></linearGradient></defs>
       <path d="M 170 82 C 230 40 330 50 405 98 C 330 140 230 150 170 118 Z" fill="url(#tpt)" stroke="#5b5636" stroke-width="1.2"/>
@@ -129,7 +129,7 @@ window.TP_ART = (function () {
       <path d="M 150 128 q 6 6 14 4" fill="none" stroke="#262313" stroke-width="1.5"/></svg>`;
   }
   function realFish(w = 340) {
-    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A small freshwater fish"><defs>
+    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A western mosquitofish"><defs>
       <linearGradient id="tpf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f6247"/><stop offset=".45" stop-color="#9aa88d"/><stop offset=".7" stop-color="#d9dccd"/><stop offset="1" stop-color="#f2efe2"/></linearGradient></defs>
       <path d="M 318 98 L 398 52 Q 384 100 398 148 Z" fill="#7d8a6c" stroke="#3b4734" stroke-width="1.5"/>
       <path d="M 170 56 Q 200 22 238 50 Z" fill="#6f7d60" stroke="#3b4734" stroke-width="1.3"/>

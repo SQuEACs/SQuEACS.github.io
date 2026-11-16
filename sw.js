@@ -1,7 +1,6 @@
 /* ============================================================
    OFFLINE SUPPORT for the games (Tadpole Trek, Otter Evolution,
-   Mammal Mystery, Skull Detective, Inside the Tadpole, and the
-   classroom editions) when installed on
+   Mammal Mystery, and the classroom editions) when installed on
    a tablet's home screen.
 
    - Game pages: always try the internet first, so tablets get
@@ -18,7 +17,7 @@
    one that only calls self.registration.unregister(); tablets pick
    it up the next time they open a game online.
    ============================================================ */
-const VERSION = "games-v14";
+const VERSION = "games-v15";
 
 const CORE = [
   "tadpole-game.html",
@@ -48,11 +47,22 @@ const CORE = [
   "mammal-mystery.html",
   "mammal-mystery-classroom.html",
   "mammal-mystery-teachers.html",
-  "mammal-mystery.css?v=8",
+  "mammal-mystery.css?v=9",
   "mammal-mystery-art.js?v=11",
-  "mammal-mystery-data.js?v=6",
-  "mammal-mystery.js?v=8",
+  "mammal-mystery-data.js?v=7",
+  "mammal-mystery.js?v=9",
   "assets/mammal-mystery/photos/otter.jpg",
+  "assets/mammal-mystery/photos/raccoon.jpg",
+  "assets/mammal-mystery/photos/fox.jpg",
+  "assets/mammal-mystery/photos/lion.jpg",
+  "assets/mammal-mystery/photos/polarbear.jpg",
+  "assets/mammal-mystery/photos/panda.jpg",
+  "assets/mammal-mystery/photos/meerkat.jpg",
+  "assets/mammal-mystery/photos/rabbit.jpg",
+  "assets/mammal-mystery/photos/kangaroo.jpg",
+  "assets/mammal-mystery/photos/elephant.jpg",
+  "assets/mammal-mystery/photos/giraffe.jpg",
+  "assets/mammal-mystery/photos/camel.jpg",
   "mammal-mystery.webmanifest",
   "mammal-mystery-classroom.webmanifest",
   "assets/app/mammal-mystery-180.png",
@@ -60,21 +70,7 @@ const CORE = [
   "assets/app/mammal-mystery-512.png",
   "assets/app/mammal-mystery-classroom-180.png",
   "assets/app/mammal-mystery-classroom-192.png",
-  "assets/app/mammal-mystery-classroom-512.png",
-  "skull-detective.html",
-  "skull-detective-classroom.html",
-  "skull-detective-teachers.html",
-  "skull-detective.css?v=1",
-  "skull-detective-data.js?v=1",
-  "skull-detective-art.js?v=1",
-  "skull-detective.js?v=1",
-  "inside-the-tadpole.html",
-  "inside-the-tadpole-classroom.html",
-  "inside-the-tadpole-teachers.html",
-  "inside-the-tadpole.css?v=1",
-  "inside-the-tadpole-data.js?v=1",
-  "inside-the-tadpole-art.js?v=1",
-  "inside-the-tadpole.js?v=1"
+  "assets/app/mammal-mystery-classroom-512.png"
 ];
 
 // From other sites. Saved if reachable; the games still run without them.
@@ -122,7 +118,7 @@ const OFFLINE_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0a10;color:#efeaf6;font:18px/1.5 system-ui,sans-serif;text-align:center;padding:24px}
 a{display:inline-block;margin:8px;padding:12px 20px;border-radius:999px;background:#a47bff;color:#0b0a10;font-weight:700;text-decoration:none}</style></head>
 <body><div><h1>This page needs the internet</h1><p>The games work offline:</p>
-<a href="tadpole-game.html">Tadpole Trek</a><a href="otter-game.html">Otter Evolution</a><a href="mammal-mystery.html">Mammal Mystery</a><a href="skull-detective.html">Skull Detective</a><a href="inside-the-tadpole.html">Inside the Tadpole</a></div></body></html>`;
+<a href="tadpole-game.html">Tadpole Trek</a><a href="otter-game.html">Otter Evolution</a><a href="mammal-mystery.html">Mammal Mystery</a></div></body></html>`;
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;

@@ -37,7 +37,7 @@
 
   /* ---------- voice ---------- */
   const SY = "speechSynthesis" in window ? window.speechSynthesis : null;
-  let voice = null, sayToken = 0, lastLine = "";
+  let voice = null, sayToken = 0, lastLine = "", scr = 0;
   const WARM = [/\bava\b/i, /\bzoe\b/i, /\bjenny\b/i, /\bemma\b/i, /\baria\b/i, /\bsamantha\b/i, /\ballison\b/i, /\bsusan\b/i, /\bkaren\b/i, /\bmoira\b/i, /\bsonia\b/i, /\blibby\b/i, /\bmichelle\b/i, /google us english/i, /google uk english female/i];
   const SILLY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|ralph|junior|kathy|grandpa|grandma|rocko|shelley|flo|eddy|reed|sandy|espeak|compact/i;
   function voiceScore(v) {
@@ -52,7 +52,7 @@
   if (SY) { pickVoice(); SY.addEventListener && SY.addEventListener("voiceschanged", pickVoice); }
   function stopTalk() { sayToken++; if (SY) SY.cancel(); }
   function say(text) {
-    const tok = ++sayToken; lastLine = text;
+    const tok = ++sayToken, sid = scr; lastLine = text;
     if (SY) SY.cancel();
     showCap(text);
     return new Promise(res => {
@@ -67,14 +67,14 @@
       setTimeout(fin, 3000 + text.length * 120);
       const go = () => { try { SY.speak(u); } catch (e) { fin(); } };
       if (SY.speaking || SY.pending) { SY.cancel(); setTimeout(go, 80); } else go();
-    }).then(() => tok === sayToken);
+    }).then(() => sid === scr);   // true while the same screen is still showing
   }
   let capT = 0;
   function showCap(t) { if (!S.opts.caps) { cap.hidden = true; return; } cap.textContent = t; cap.hidden = false; clearTimeout(capT); capT = setTimeout(() => { cap.hidden = true; }, 2500 + t.length * 80); }
 
   /* ---------- screens ---------- */
   let acts = {};
-  function screen(html, a) { stopTalk(); acts = a || {}; view.innerHTML = html; view.scrollTop = 0; const f = view.querySelector("[data-focus]"); if (f) f.focus({ preventScroll: true }); }
+  function screen(html, a) { stopTalk(); scr++; acts = a || {}; view.innerHTML = html; view.scrollTop = 0; const f = view.querySelector("[data-focus]"); if (f) f.focus({ preventScroll: true }); }
   view.addEventListener("click", e => {
     const el = e.target.closest("[data-act]"); if (!el || !view.contains(el) || el.disabled) return;
     const fn = acts[el.dataset.act]; if (fn) fn(el, e);
@@ -256,7 +256,7 @@
               unlock(id);
               screen(`<div class="sd-reveal"><div class="sd-hab-big">${ART.habitat(SK[id].hab)}<div class="sd-in">${ART.animal(SK[id], 220)}</div></div>${head(`It's ${the(id)}!`, SK[id].fact)}</div>${nextBtn()}`, { next: one });
               say(`${pick(PH.yes)} It's ${the(id)}, at home in ${D.HABITATS[SK[id].hab].say}. ${SK[id].fact}`);
-            } else { flash(el, false); if (c < 2) { c++; say("Not there. Here's another clue. " + SK[id].clues[c]).then(() => {}); setTimeout(draw, 50); } else say(pick(PH.no)); }
+            } else { flash(el, false); if (c < 2) { c++; draw(); say("Not there. Here's another clue. " + SK[id].clues[c]); } else say(pick(PH.no)); }
           },
           more: () => { c++; draw(); say(SK[id].clues[c]); }
         });

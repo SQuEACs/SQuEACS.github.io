@@ -23,66 +23,103 @@ window.SD_ART = (function () {
     return d + (closed ? " Z" : "");
   }
 
-  /* Side view, snout to the left. Returns an SVG group in a box of width W.
-     opt.scale: pixels per skull length (default W). opt.brain: cut-away brain.
-     opt.parts: make parts tappable. opt.zoomTeeth: emphasise the tooth row. */
+  /* Side view, snout to the left. L = skull length in px, (x, y) = front of the tooth row.
+     opt.parts: tappable parts (data-part). opt.brain: cut-away endocast. opt.teeth: tappable tooth types.
+     opt.fade: draw the bone faded (for pathway diagrams). */
+  function geo(sp, opt = {}) {
+    const s = sp.shape, L = opt.L || 300, X = opt.x || 0, B = opt.y || 0, H = s.h * L;
+    const P = (x, y) => [X + x * L, B - y * H];
+    return { s, L, X, B, H, P, ox: X + (s.r + .1) * L, oy: B - s.oy * H, orx: s.or * L * 1.15, ory: s.or * L,
+      canX: X + .0625 * L, canTip: B + L * s.ca, iof: P(s.r - .015, .38), nose: P(.012, .4), ear: P(.88, .26) };
+  }
+  function brainParts(G, T, sw) {
+    const { s, L, H, P, X, B } = G;
+    const bRx = L * (.02 + .018 * s.bulb), bRy = H * (.09 + .07 * s.bulb), bx = X + .5 * L - bRx * .55, by = B - .6 * H;
+    let g = `<path d="${smooth([P(.72, .42), P(.86, .36), P(.99, .31), P(.99, .21), P(.86, .24), P(.72, .32)], true)}" fill="#d48fae" stroke-width="${sw}"${T("brainstem")}/>`;
+    g += `<path d="${smooth([P(.8, .76), P(.89, .8), P(.94, .64), P(.93, .42), P(.86, .34), P(.79, .46)], true)}" fill="#e7a6c8" stroke-width="${sw}"${T("cerebellum")}/>`;
+    for (let i = 0; i < 4; i++) g += `<path d="M ${f(X + (.82 + i * .025) * L)} ${f(B - .72 * H + i * 2)} q ${f(L * .012)} ${f(H * .18)} 0 ${f(H * .32)}" fill="none" stroke-width="${sw * .6}" opacity=".6"/>`;
+    g += `<path d="${smooth([P(.505, .5), P(.54, .78), P(.64, .9), P(.76, .9), P(.835, .8), P(.845, .55), P(.78, .38), P(.66, .32), P(.55, .37)], true)}" fill="#f4b6c2" stroke-width="${sw}"${T("cerebrum")}/>`;
+    g += `<path d="M ${f(X + .58 * L)} ${f(B - .8 * H)} q ${f(L * .06)} ${f(H * .1)} ${f(L * .1)} ${f(H * .02)} M ${f(X + .56 * L)} ${f(B - .6 * H)} q ${f(L * .1)} ${f(-H * .06)} ${f(L * .2)} ${f(H * .04)} M ${f(X + .62 * L)} ${f(B - .45 * H)} q ${f(L * .08)} ${f(-H * .1)} ${f(L * .16)} 0" fill="none" stroke-width="${sw * .6}" opacity=".6"/>`;
+    g += `<ellipse cx="${f(bx)}" cy="${f(by)}" rx="${f(bRx)}" ry="${f(bRy)}" transform="rotate(-18 ${f(bx)} ${f(by)})" fill="#ffd27a" stroke-width="${sw}"${T("olfbulb")}/>`;
+    return g;
+  }
   function side(sp, opt = {}) {
-    const s = sp.shape, L = opt.L || 300, X = opt.x || 0, B = opt.y || 0;   // B = tooth row line (y)
-    const H = s.h * L;
-    const P = (x, y) => [X + x * L, B - y * H];             // y in braincase heights, up is positive
-    // top profile then underside, closed
+    const G = geo(sp, opt), { s, L, X, B, H, P } = G, LW = opt.lw || L;
     const top = [P(0, .4), P(.03, .54), P(s.r * .7, .6), P(s.r + .06, .68), P(.42, .78), P(.6, .92), P(.8, .97 + s.crest * 2.5), P(.93, .9 + s.crest * 2), P(.995, .62), P(1, .36)];
     const under = [P(.96, .2), P(.86, .12), P(.8, -.04), P(.72, .1), P(.56, .12), P(.46, .04), P(.3, 0), P(.12, 0), P(.03, .06)];
     const skull = smooth(top.concat(under), true);
-    const ox = X + (s.r + .1) * L, oy = B - s.oy * H, orx = s.or * L * 1.15, ory = s.or * L;
-    // cheekbone (zygomatic arch) drawn over the skull
     const zyg = smooth([P(s.r + .03, .34), P(s.r + .12, .24), P(.5, .25), P(.64, .3)], false);
-    // teeth along the upper row
-    let teeth = "";
-    const tooth = (x0, x1, depth, kind) => {
-      const a = P(x0, 0), b = P(x1, 0), m = X + (x0 + x1) / 2 * L;
-      if (kind === "blade") teeth += `<path d="M ${f(a[0])} ${f(B)} L ${f(m - (x1 - x0) * L * .15)} ${f(B + depth)} L ${f(m + (x1 - x0) * L * .1)} ${f(B + depth * .55)} L ${f(b[0])} ${f(B)} Z"/>`;
-      else if (kind === "flat") teeth += `<path d="M ${f(a[0])} ${f(B)} Q ${f(a[0])} ${f(B + depth)} ${f(m)} ${f(B + depth)} Q ${f(b[0])} ${f(B + depth)} ${f(b[0])} ${f(B)} Z"/>`;
-      else teeth += `<path d="M ${f(a[0])} ${f(B)} L ${f(m)} ${f(B + depth)} L ${f(b[0])} ${f(B)} Z"/>`;
+    const T = opt.parts || opt.teeth || opt.brainParts ? (id, extra = "") => ` data-part="${id}" class="sd-part" tabindex="0" role="button" aria-label="${id}"${extra}` : () => "";
+    const TT = opt.teeth ? T : () => "", TP = opt.parts ? T : () => "";
+    const teeth = { incisor: "", canine: "", premolar: "", carnassial: "", molar: "" };
+    const tooth = (type, x0, x1, depth, kind) => {
+      const a = X + x0 * L, b = X + x1 * L, m = (a + b) / 2;
+      let d;
+      if (kind === "blade") d = `M ${f(a)} ${f(B)} L ${f(m - (b - a) * .15)} ${f(B + depth)} L ${f(m + (b - a) * .1)} ${f(B + depth * .55)} L ${f(b)} ${f(B)} Z`;
+      else if (kind === "flat") d = `M ${f(a)} ${f(B)} Q ${f(a)} ${f(B + depth)} ${f(m)} ${f(B + depth)} Q ${f(b)} ${f(B + depth)} ${f(b)} ${f(B)} Z`;
+      else d = `M ${f(a)} ${f(B)} L ${f(m)} ${f(B + depth)} L ${f(b)} ${f(B)} Z`;
+      teeth[type] += `<path d="${d}"/>`;
     };
-    tooth(.005, .03, L * .025);                              // incisors
-    tooth(.04, .085, L * .1);                                // canine
-    tooth(.1, .14, L * .035); tooth(.15, .2, L * .045); tooth(.21, .27, L * .055);
+    const lt = (type, x0, x1, depth) => { const m = X + (x0 + x1) / 2 * L, y = B - L * .012; teeth[type] += `<path d="M ${f(X + x0 * L)} ${f(y)} L ${f(m)} ${f(y - depth)} L ${f(X + x1 * L)} ${f(y)} Z"/>`; };
+    tooth("incisor", .005, .03, L * .025);
+    tooth("canine", .04, .085, L * s.ca);
+    tooth("premolar", .1, .14, L * .035); tooth("premolar", .15, .2, L * .045); tooth("premolar", .21, .27, L * .055);
     const molarW = s.molar === "crush" ? .1 : s.molar === "mixed" ? .11 : .05;
-    tooth(.28, .37, L * .075, "blade");                      // carnassial
-    tooth(.375, .375 + molarW, L * (s.molar === "slice" ? .025 : .04), s.molar === "slice" ? "" : "flat");
-    // lower jaw
+    tooth("carnassial", .28, .37, L * .075, "blade");
+    tooth("molar", .375, .375 + molarW, L * (s.molar === "slice" ? .025 : .04), s.molar === "slice" ? "" : "flat");
+    lt("incisor", .02, .045, L * .02); lt("canine", .055, .095, L * s.ca * .85); lt("premolar", .12, .17, L * .035); lt("premolar", .18, .24, L * .045); lt("carnassial", .25, .36, L * .065); lt("molar", .37, .41, L * .02);
     const jaw = smooth([P(.03, -.05), P(.2, -.06), P(.45, -.08), P(.56, -.06), P(.6, .3), P(.65, .44), P(.68, .22), P(.71, .06), P(.74, -.12), P(.68, -.3), P(.45, -.36), P(.2, -.32), P(.05, -.22)], true);
-    let lowTeeth = "";
-    const lt = (x0, x1, depth) => { const m = X + (x0 + x1) / 2 * L; lowTeeth += `<path d="M ${f(X + x0 * L)} ${f(B - L * .012)} L ${f(m)} ${f(B - L * .012 - depth)} L ${f(X + x1 * L)} ${f(B - L * .012)} Z"/>`; };
-    lt(.02, .045, L * .02); lt(.055, .095, L * .085); lt(.12, .17, L * .035); lt(.18, .24, L * .045); lt(.25, .36, L * .065); lt(.37, .41, L * .02);
-    const T = opt.parts ? (id, extra = "") => ` data-part="${id}" class="sd-part" tabindex="0" role="button" aria-label="${id}"${extra}` : () => "";
-    const nose = P(.012, .4), ear = P(.88, .26), iof = P(s.r - .015, .38);
+    const op = opt.fade ? ` opacity="${opt.fade}"` : "";
     let g = `<g stroke="${INK}" stroke-linejoin="round" stroke-linecap="round">`;
-    g += `<path d="${jaw}" fill="${BONE2}" stroke-width="${L * .012}"/>`;
-    g += `<g fill="#fffaf0" stroke-width="${L * .006}"${T("teeth")}>${lowTeeth}${teeth}</g>`;
-    g += `<path d="${skull}" fill="${BONE}" stroke-width="${L * .013}"${T("skull", ' aria-hidden="true" tabindex="-1"')}/>`;
-    if (opt.parts && !opt.brain) g += `<path d="${smooth([P(.52, .5), P(.62, .88), P(.8, .92), P(.94, .7), P(.92, .34), P(.76, .24), P(.6, .32)], true)}" fill="transparent" stroke="none"${T("brain")}/>`;
-    if (opt.brain) {
-      const bulbR = L * .035 * (.6 + s.bulb * .6);
-      const bx = X + (.495 + (1 - s.bulb) * .015) * L, by = B - .6 * H;
-      g += `<g data-brain="1"><path d="${smooth([P(.51, .5), P(.6, .82), P(.78, .88), P(.92, .7), P(.9, .34), P(.75, .22), P(.58, .3)], true)}" fill="#f6a5b5" stroke-width="${L * .007}"${T("brainmass")}/>`;
-      g += `<path d="M ${f(X + .62 * L)} ${f(B - .75 * H)} q ${f(L * .06)} ${f(-L * .03)} ${f(L * .12)} 0 M ${f(X + .6 * L)} ${f(B - .5 * H)} q ${f(L * .08)} ${f(L * .03)} ${f(L * .2)} ${f(-L * .02)}" fill="none" stroke-width="${L * .005}"/>`;
-      g += `<ellipse cx="${f(bx)}" cy="${f(by)}" rx="${f(bulbR * 1.3)}" ry="${f(bulbR)}" fill="#ffd23f" stroke-width="${L * .007}"${T("bulb")}/></g>`;
-    }
-    g += `<path d="${zyg}" fill="none" stroke="${INK}" stroke-width="${L * .036}"/><path d="${zyg}" fill="none" stroke="${BONE}" stroke-width="${L * .018}"/>`;
-    g += `<ellipse cx="${f(ox)}" cy="${f(oy)}" rx="${f(orx)}" ry="${f(ory)}" fill="${HOLE}" stroke-width="${L * .01}"${T("eye")}/>`;
-    g += `<ellipse cx="${f(nose[0])}" cy="${f(nose[1])}" rx="${f(L * .016)}" ry="${f(L * .03)}" fill="${HOLE}" stroke-width="${L * .008}"${T("nose")}/>`;
-    g += `<ellipse cx="${f(iof[0])}" cy="${f(iof[1])}" rx="${f(L * s.iof * .7)}" ry="${f(L * s.iof)}" fill="${HOLE}" stroke-width="${L * .006}"${T("whisker")}/>`;
-    g += `<circle cx="${f(ear[0])}" cy="${f(ear[1])}" r="${f(L * .025)}" fill="${HOLE}" stroke-width="${L * .008}"${T("ear")}/>`;
+    g += `<g${op}><path d="${jaw}" fill="${BONE2}" stroke-width="${f(LW * .012)}"/>`;
+    g += `<g fill="#fffaf0" stroke-width="${f(LW * .006)}"${opt.teeth ? "" : TP("teeth")}>${Object.keys(teeth).map(k => `<g${TT("t-" + k)} data-tooth="${k}">${teeth[k]}</g>`).join("")}</g>`;
+    g += `<path d="${skull}" fill="${BONE}" stroke-width="${f(LW * .013)}"${TP("skull", ' aria-hidden="true" tabindex="-1"')}/>`;
+    if (opt.crest && s.crest > .015) g += `<path d="${smooth([P(.6, .92), P(.8, .97 + s.crest * 2.5), P(.93, .9 + s.crest * 2)], false)}" fill="none" stroke="#c2552a" stroke-width="${f(LW * .02)}"/>`;
+    g += `</g>`;
+    if (opt.parts && !opt.brain) g += `<path d="${smooth([P(.52, .5), P(.62, .88), P(.8, .92), P(.94, .7), P(.92, .34), P(.76, .24), P(.6, .32)], true)}" fill="transparent" stroke="none"${TP("brain")}/>`;
+    if (opt.brain) g += brainParts(G, opt.brainParts ? T : () => "", LW * .006);
+    g += `<g${op}><path d="${zyg}" fill="none" stroke="${INK}" stroke-width="${L * .036}"/><path d="${zyg}" fill="none" stroke="${BONE}" stroke-width="${L * .018}"/>`;
+    g += `<ellipse cx="${f(G.ox)}" cy="${f(G.oy)}" rx="${f(G.orx)}" ry="${f(G.ory)}" fill="${HOLE}" stroke-width="${f(LW * .01)}"${TP("eye")}/>`;
+    g += `<ellipse cx="${f(G.nose[0])}" cy="${f(G.nose[1])}" rx="${f(L * .016)}" ry="${f(L * .03)}" fill="${HOLE}" stroke-width="${f(LW * .008)}"${TP("nose")}/>`;
+    g += `<ellipse cx="${f(G.iof[0])}" cy="${f(G.iof[1])}" rx="${f(L * s.iof * .7)}" ry="${f(L * s.iof)}" fill="${HOLE}" stroke-width="${f(LW * .006)}"${opt.iofHi ? ` stroke="#c2552a" stroke-width="${f(LW * .012)}"` : ""}/>`;
+    g += `<circle cx="${f(G.ear[0])}" cy="${f(G.ear[1])}" r="${f(L * .025)}" fill="${HOLE}" stroke-width="${f(LW * .008)}"${TP("ear")}/></g>`;
     if (opt.parts) {
-      // generous invisible tap areas for small fingers
-      g += `<rect x="${f(X)}" y="${f(B - L * .01)}" width="${f(L * .45)}" height="${f(L * .12)}" fill="transparent" stroke="none"${T("teeth", ' aria-hidden="true" tabindex="-1"')}/>`;
-      g += `<circle cx="${f(ox)}" cy="${f(oy)}" r="${f(Math.max(orx, L * .07))}" fill="transparent" stroke="none"${T("eye", ' aria-hidden="true" tabindex="-1"')}/>`;
-      g += `<circle cx="${f(nose[0])}" cy="${f(nose[1])}" r="${f(L * .06)}" fill="transparent" stroke="none"${T("nose", ' aria-hidden="true" tabindex="-1"')}/>`;
-      g += `<circle cx="${f(ear[0])}" cy="${f(ear[1])}" r="${f(L * .06)}" fill="transparent" stroke="none"${T("ear", ' aria-hidden="true" tabindex="-1"')}/>`;
+      g += `<rect x="${f(X)}" y="${f(B - L * .01)}" width="${f(L * .45)}" height="${f(L * .12)}" fill="transparent" stroke="none"${TP("teeth", ' aria-hidden="true" tabindex="-1"')}/>`;
+      g += `<circle cx="${f(G.ox)}" cy="${f(G.oy)}" r="${f(Math.max(G.orx, L * .07))}" fill="transparent" stroke="none"${TP("eye", ' aria-hidden="true" tabindex="-1"')}/>`;
+      g += `<circle cx="${f(G.nose[0])}" cy="${f(G.nose[1])}" r="${f(L * .06)}" fill="transparent" stroke="none"${TP("nose", ' aria-hidden="true" tabindex="-1"')}/>`;
+      g += `<circle cx="${f(G.ear[0])}" cy="${f(G.ear[1])}" r="${f(L * .06)}" fill="transparent" stroke="none"${TP("ear", ' aria-hidden="true" tabindex="-1"')}/>`;
     }
     return g + "</g>";
+  }
+
+  /* Sense pathways (4th grade): a faded skull with the brain, and the route a message takes
+     from a sense organ to the brain. Each stop is a tappable label (data-step). Returns
+     { svg, steps } with steps in order. */
+  const ROUTES = {
+    sight: { color: "#3a8dde", stops: G => [["Eye, in the {orbit}", [G.ox, G.oy]], ["{opticn}", G.P(.45, .4)], ["Vision area of the {cerebrum}", G.P(.77, .78)]], via: G => [G.P(.6, .34), G.P(.72, .55)] },
+    smell: { color: "#d98a1e", stops: G => [["{turbinals} in the nose", G.P(.1, .5)], ["{olfn}", G.P(.43, .6)], ["{olfbulb}", G.P(.495, .6)], ["Smell area of the {cerebrum}", G.P(.6, .42)]], via: () => [] },
+    touch: { color: "#2e9e6a", stops: G => [["{vibrissae}", [G.X - G.L * .07, G.B - G.H * .32]], ["{iof}", G.iof], ["{trigeminal}", G.P(.62, .2)], ["{brainstem}", G.P(.88, .27)], ["Touch area of the {cerebrum}", G.P(.68, .86)]], via: () => [] },
+    hearing: { color: "#8a4fd8", stops: G => [["Ear opening ({meatus})", G.ear], ["Middle ear in the {bulla}", G.P(.8, -.04)], ["{cochlea}", G.P(.76, .14)], ["{auditoryn}", G.P(.82, .25)], ["Hearing area of the {cerebrum}", G.P(.7, .55)]], via: () => [] }
+  };
+  function pathway(sp, sense, opt = {}) {
+    const L = 300, G = geo(sp, { L, x: 30, y: 0 }), R = ROUTES[sense], stops = R.stops(G);
+    let g = side(sp, { L, x: 30, y: 0, brain: true, fade: .55 });
+    if (sense === "touch") g += `<g stroke="#6b5f55" stroke-width="1.4">${[-.06, 0, .06].map(d => `<path d="M ${f(G.X + L * .02)} ${f(G.B - G.H * (.35 + d))} l ${f(-L * .11)} ${f(L * (d * .6 - .01))}"/>`).join("")}</g>`;
+    if (sense === "smell") g += `<g fill="none" stroke="#d98a1e" stroke-width="1.6" opacity=".9">${[.06, .12, .18, .24].map(x => `<path d="M ${f(G.X + x * L)} ${f(G.B - G.H * .62)} q ${f(L * .02)} ${f(G.H * .12)} 0 ${f(G.H * .22)}"/>`).join("")}</g>`;
+    const pts = stops.map(s => s[1]), path = [pts[0]];
+    const via = R.via(G); for (let i = 1; i < pts.length; i++) { if (i === pts.length - 1) path.push(...via); path.push(pts[i]); }
+    const shown = opt.upto == null ? pts.length : opt.upto;
+    // route drawn up to the last stop found so far
+    if (shown > 1) { const k = path.indexOf(pts[shown - 1]); g += `<path d="${smooth(path.slice(0, k + 1), false)}" fill="none" stroke="${R.color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 12" class="sd-flow"/><path d="${smooth(path.slice(0, k + 1), false)}" fill="none" stroke="${R.color}" stroke-width="3.5" opacity=".75"/>`; }
+    // numbered markers at each stop; the labels are buttons in the page
+    const steps = stops.map(st => st[0]);
+    stops.forEach((st, i) => {
+      const done = i < shown;
+      g += `<circle cx="${f(st[1][0])}" cy="${f(st[1][1])}" r="${done ? 11 : 6}" fill="${done ? R.color : "#fff"}" stroke="${INK}" stroke-width="2"/>`;
+      if (done) g += `<text x="${f(st[1][0])}" y="${f(st[1][1] + 4.5)}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" stroke="none">${i + 1}</text>`;
+    });
+    const topY = -G.H * 1.1 - 6, botY = L * .2;
+    return { svg: `<svg viewBox="-20 ${f(topY)} 380 ${f(botY - topY)}" role="img" aria-label="${sense} pathway from sense organ to brain">${g}</svg>`, steps };
   }
 
   /* Top view, snout up, centred on cx. len px = skull length. */
@@ -108,31 +145,46 @@ window.SD_ART = (function () {
     return `<svg viewBox="-10 -${f(200 * sp.shape.h + 20)} 220 ${f(200 * sp.shape.h + 135)}" aria-hidden="true">${side(sp, { L: 200, x: 0, y: 0 })}</svg>`;
   }
 
-  /* A cartoon of the living animal (side view, facing left). */
+  /* The living animal, side view facing left, drawn from body proportions (look in the data). */
+  let gradN = 0;
+  function shade(hex, k) { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, n >> 8 & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * k)))); return "#" + c.map(v => v.toString(16).padStart(2, "0")).join(""); }
   function animal(sp, w = 200) {
-    const s = sp.shape, k = w / 200, body = 110 * s.body, leg = 40 * s.leg;
-    const bx = 100 - body / 2 + 10, by = 70, bh = 30 + (s.stripe ? 8 : 0);
-    let tail = "";
-    if (s.tail === "otter") tail = `<path d="M ${bx + body - 6} ${by + 4} Q ${bx + body + 40} ${by + 10} ${bx + body + 62} ${by + 34} Q ${bx + body + 30} ${by + 26} ${bx + body - 6} ${by + 22} Z" fill="${s.fur}"/>`;
-    else if (s.tail === "bushy" || s.tail === "long") { const tl = s.tail === "long" ? 66 : 48; tail = `<path d="M ${bx + body - 8} ${by + 2} Q ${bx + body + tl * .6} ${by - 14} ${bx + body + tl} ${by + 10} Q ${bx + body + tl * .55} ${by + 22} ${bx + body - 8} ${by + 18} Z" fill="${s.fur}"/>`; }
-    else tail = `<path d="M ${bx + body - 6} ${by + 6} L ${bx + body + 16} ${by + 2} L ${bx + body - 2} ${by + 20} Z" fill="${s.fur}"/>`;
-    const legs = [bx + 18, bx + 34, bx + body - 34, bx + body - 18].map(x => `<rect x="${x - 7}" y="${by + bh - 8}" width="14" height="${leg}" rx="7" fill="${s.fur}"/>`).join("") +
-      (s.stripe ? [bx + 18, bx + 34].map(x => `<path d="M ${x - 8} ${by + bh + leg - 6} l -6 6 M ${x - 3} ${by + bh + leg - 4} l -5 7 M ${x + 2} ${by + bh + leg - 4} l -4 7" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`).join("") : "");
-    const hx = bx - 6, hy = by + 6, hr = 22 * (s.stripe ? 1.15 : 1);
-    let head = `<ellipse cx="${hx}" cy="${hy}" rx="${hr * 1.15}" ry="${hr * .9}" fill="${s.fur}"/>`;
-    head += `<path d="M ${hx - hr * .7} ${hy - 4} Q ${hx - hr * 1.9} ${hy + 2} ${hx - hr * 1.7} ${hy + 10} Q ${hx - hr} ${hy + 14} ${hx - hr * .4} ${hy + 12} Z" fill="${s.fur}"/>`;
-    if (s.chin) head += `<path d="M ${hx - hr * 1.4} ${hy + 10} Q ${hx - hr * .6} ${hy + 22} ${hx + 2} ${hy + 14}" fill="none" stroke="${s.chin}" stroke-width="7" stroke-linecap="round"/>`;
-    if (s.stripe) head += `<path d="M ${hx - hr * 1.6} ${hy + 3} Q ${hx - hr * .4} ${hy - hr * 1.1} ${hx + hr} ${hy - 6}" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>`;
-    head += `<circle cx="${hx + 6}" cy="${hy - hr * .65}" r="${8 * s.ear}" fill="${s.fur}"/>`;
-    head += `<circle cx="${hx - hr * .55}" cy="${hy - 3}" r="3.6" fill="${INK}" stroke="none"/><circle cx="${hx - hr * 1.72}" cy="${hy + 5}" r="3.6" fill="${INK}" stroke="none"/>`;
-    if (sp.job === "swimmer" && s.tail === "otter") head += `<path d="M ${hx - hr * 1.3} ${hy + 9} l -14 -4 M ${hx - hr * 1.3} ${hy + 11} l -15 3" stroke="#fff" stroke-width="1.6"/>`;
-    let bodyP = `<rect x="${bx}" y="${by - (s.stripe ? 4 : 0)}" width="${body}" height="${bh}" rx="${bh / 2}" fill="${s.fur}"/>`;
-    if (s.belly !== s.fur) bodyP += `<rect x="${bx + 10}" y="${by + bh * .55}" width="${body - 20}" height="${bh * .4}" rx="${bh * .2}" fill="${s.belly}" stroke="none"/>`;
-    if (s.frost) bodyP += `<path d="M ${bx + 6} ${by + 6} Q ${hx} ${hy - hr} ${hx - hr} ${hy - 8}" fill="none" stroke="#8a7d72" stroke-width="5" stroke-linecap="round"/>`;
-    return `<svg viewBox="-10 0 ${200 + 80} 140" width="${w}" aria-hidden="true"><g stroke="${INK}" stroke-width="3" stroke-linejoin="round">${tail}${legs}${bodyP}${head}</g></svg>`;
+    const a = sp.look, gid = "sdfur" + (++gradN), line = shade(a.fur, .55), GY = 160;
+    const xs = 92, xe = xs + a.L, yb = GY - a.leg, yt = yb - a.H;
+    const hl = a.head, hh = a.H * (a.stripe ? .62 : .7), hx = xs - hl * .42, hy = yt + a.H * (a.flat ? .42 : .3);
+    const body = smooth([
+      [hx - hl * .62, hy + hh * .1], [hx - hl * .52, hy - hh * .2], [hx - hl * .15, hy - hh * .5], [hx + hl * .25, hy - hh * .45],
+      [xs + 6, yt + 1], [xs + a.L * .5, yt - a.arch], [xe - a.L * .08, yt + 1], [xe + 2, yt + a.H * .3], [xe + 4, yt + a.H * .62],
+      [xe - 6, yb + 1], [xs + a.L * .5, yb + 4], [xs + 8, yb + 1], [xs - 4, yb - a.H * .3],
+      [hx + hl * .1, hy + hh * .5], [hx - hl * .38, hy + hh * .4], [hx - hl * .58, hy + hh * .26]], true);
+    const leg = (cx, wd, far, hind) => {
+      const t = yb - a.H * (hind ? .45 : .3), sx = far ? 10 : 0;
+      return `<path d="${smooth([[cx - wd / 2 + sx, t], [cx + wd / 2 + sx, t], [cx + wd * .32 + sx, GY - 7], [cx + wd * .2 + sx, GY], [cx - wd * .95 + sx, GY], [cx - wd * .5 + sx, GY - 6]], true)}" fill="${far ? shade(a.legs || a.fur, .7) : (a.legs || a.fur)}" stroke="${line}" stroke-width="1.4"/>`;
+    };
+    const lw = a.stripe ? 19 : 14, tl = a.tail[0], th = a.tail[1], bu = a.tail[2];
+    const tail = smooth([[xe - 6, yt + a.H * .12], [xe + tl * .45, yt + a.H * .2 - bu * 5], [xe + tl * .88, yt + a.H * .38 + (bu ? 0 : 6)], [xe + tl, yt + a.H * .5 + (bu ? 2 : 12)],
+      [xe + tl * .85, yt + a.H * .5 + th * .35 + (bu ? 4 : 10)], [xe + tl * .45, yt + a.H * .3 + th + bu * 4], [xe - 4, yt + a.H * .62]], true);
+    let g = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(a.fur, .85)}"/><stop offset=".55" stop-color="${a.fur}"/><stop offset="1" stop-color="${a.belly}"/></linearGradient></defs>`;
+    g += leg(xs + 18, lw, true) + leg(xe - 22, lw + 6, true, true);
+    g += `<path d="${tail}" fill="url(#${gid})" stroke="${line}" stroke-width="1.4"/>`;
+    g += `<path d="${body}" fill="url(#${gid})" stroke="${line}" stroke-width="1.5"/>`;
+    if (a.frost) g += `<path d="${smooth([[hx - hl * .5, hy - hh * .25], [hx, hy - hh * .52], [xs + a.L * .3, yt + 2], [xs + a.L * .25, yt + a.H * .45], [hx + hl * .2, hy + hh * .2]], true)}" fill="${a.frost}" opacity=".45" stroke="none"/>`;
+    if (a.bib) g += `<path d="${smooth([[hx - hl * .1, hy + hh * .35], [hx + hl * .25, hy + hh * .2], [xs + 10, yb - a.H * .45], [xs + 4, yb - 2], [xs - 6, yb - a.H * .25]], true)}" fill="${a.bib}" stroke="none"/>`;
+    if (a.chin) g += `<ellipse cx="${hx - hl * .42}" cy="${hy + hh * .36}" rx="${hl * .12}" ry="${hh * .1}" fill="${a.chin}" stroke="none"/>`;
+    if (a.stripe) {
+      g += `<path d="${smooth([[hx - hl * .3, hy + hh * .05], [hx - hl * .05, hy + hh * .35], [hx + hl * .25, hy + hh * .3], [hx + hl * .05, hy - hh * .05]], true)}" fill="#1f1b18" stroke="none"/>`;
+      g += `<path d="M ${hx - hl * .55} ${hy - hh * .08} Q ${hx - hl * .1} ${hy - hh * .62} ${xs + a.L * .2} ${yt + 3}" fill="none" stroke="#f4f1ea" stroke-width="${hh * .16}" stroke-linecap="round"/>`;
+    }
+    g += leg(xs + 18, lw, false) + leg(xe - 22, lw + 6, false, true);
+    if (a.claws) g += [xs + 18, xs + 28].map(x => `<path d="M ${x - lw * .9} ${GY - 1} q -9 1 -12 -4 M ${x - lw * .7} ${GY - 3} q -9 1 -12 -5" fill="none" stroke="#e9e2d2" stroke-width="2" stroke-linecap="round"/>`).join("");
+    // ear, eye, nose, whiskers
+    g += `<path d="${smooth([[hx + hl * .05, hy - hh * .46], [hx + hl * .14, hy - hh * .46 - a.ear], [hx + hl * .27, hy - hh * .4]], true)}" fill="${shade(a.fur, .8)}" stroke="${line}" stroke-width="1.3"/>`;
+    g += `<ellipse cx="${hx - hl * .27}" cy="${hy - hh * .14}" rx="3.4" ry="2.7" fill="#140f0c"/><circle cx="${hx - hl * .29}" cy="${hy - hh * .17}" r=".9" fill="#fff"/>`;
+    g += `<ellipse cx="${hx - hl * .6}" cy="${hy + hh * .04}" rx="3" ry="2.4" fill="#140f0c"/>`;
+    g += `<g stroke="${a.whisk ? "#e9e2d2" : "#b9afa3"}" stroke-width=".9" opacity=".9">${[-3, 0, 3].map(d => `<path d="M ${hx - hl * .5} ${hy + hh * .12 + d * .7} l ${-hl * (a.whisk ? .5 : .32)} ${d * 2 - 1}"/>`).join("")}</g>`;
+    return `<svg viewBox="${f(hx - hl * .9)} 20 ${f(xe + tl + 14 - (hx - hl * .9))} 150" width="${w}" role="img" aria-label="${sp.name}">${g}</svg>`;
   }
 
-  /* Habitat tiles. */
   const HAB = {
     river: `<rect width="200" height="140" fill="#bfe8ff"/><path d="M0 80 Q50 64 100 80 T200 80 V140 H0Z" fill="#3aa0e0"/><path d="M10 100 q15 -8 30 0 M80 112 q15 -8 30 0 M140 96 q15 -8 30 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M0 80 Q30 70 46 82 L0 96Z" fill="#6bbf59"/>`,
     trees: `<rect width="200" height="140" fill="#cdeec0"/><rect x="40" y="70" width="14" height="70" fill="#7a5233"/><rect x="130" y="60" width="14" height="80" fill="#7a5233"/><circle cx="47" cy="50" r="36" fill="#2f8f4e"/><circle cx="137" cy="40" r="40" fill="#2f8f4e"/><circle cx="90" cy="30" r="26" fill="#3aa65b"/><path d="M54 70 L130 62" stroke="#7a5233" stroke-width="6"/>`,
@@ -170,5 +222,5 @@ window.SD_ART = (function () {
     gear: `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="16" fill="none" stroke="${INK}" stroke-width="8"/><g stroke="${INK}" stroke-width="12" stroke-linecap="round">${[0, 45, 90, 135].map(a => `<path d="M50 14 V24 M50 76 V86" transform="rotate(${a} 50 50)"/>`).join("")}</g></svg>`
   };
 
-  return { side, top, card, animal, habitat, icon, UI, INK };
+  return { side, top, card, animal, habitat, icon, UI, INK, geo, pathway, smooth, f };
 })();

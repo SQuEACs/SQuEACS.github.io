@@ -19,6 +19,7 @@
 .sd-ib:active, .sd-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--sd-ink); }
 
 .sd-view { position: relative; overflow-y: auto; overscroll-behavior: contain; padding: .25rem 1rem 1rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: .9rem; }
+.sd-view > * { flex-shrink: 0; }
 .sd-view > :first-child { margin-top: auto; } .sd-view > :last-child { margin-bottom: auto; }
 .sd-cap[hidden] { display: block !important; visibility: hidden; }
 .sd-cap { justify-self: center; max-width: min(92%, 46rem); margin: 0 0 .5rem; padding: .4rem .9rem; border-radius: 12px; background: rgba(42,34,51,.9); color: #fff; font: 500 1rem/1.35 var(--sd-font); text-align: center; pointer-events: none; z-index: 6; }
@@ -128,6 +129,80 @@ ellipse.sd-lit, circle.sd-lit { stroke: #c2552a; }
 .sd-slot.full { border-style: solid; } .sd-slot .sd-mini-skull { width: 80px; }
 .sd-tree-slots > div:first-child .sd-slot { height: 100%; }
 
+/* science words and the word pop-up */
+.sd-term { display: inline; padding: 0 .25em; margin: 0 .05em; border: 0; border-bottom: 3px dotted #1b8f86; border-radius: 6px; background: #d7f5f2; font: inherit; color: inherit; cursor: pointer; box-shadow: none; }
+.sd-term:hover { background: #b8ece7; }
+.sd-popwrap { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1rem; background: rgba(20,16,28,.55); }
+.sd-popwrap[hidden] { display: none; }
+.sd-pop { width: min(100%, 30rem); max-height: 100%; overflow-y: auto; background: #fff; border: 4px solid var(--sd-ink); border-radius: 20px; box-shadow: 0 8px 0 var(--sd-ink); padding: 1rem 1.2rem 1.2rem; text-align: center; animation: sd-pop .35s; }
+.sd-pop h3 { margin: 0; font: 700 clamp(1.5rem, 4vw, 2rem)/1.1 var(--sd-font); color: #1b6f68; }
+.sd-pop-k { margin: 0 0 .2rem; font: 600 .85rem/1 var(--sd-font); text-transform: uppercase; letter-spacing: .08em; opacity: .65; }
+.sd-pop-say { margin: .3rem 0 0; font: 500 1rem/1.3 var(--sd-font); }
+.sd-pop-def { margin: .6rem 0 1rem; font: 500 1.15rem/1.45 var(--sd-font); text-align: left; }
+.sd-words { width: min(100%, 56rem); background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: .6rem 1rem; }
+.sd-words h4 { margin: 0 0 .3rem; font: 700 1.05rem var(--sd-font); }
+.sd-words p { margin: 0; line-height: 2.1; }
+
+/* meet the animals */
+.sd-herd { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem 1rem; width: min(100%, 52rem); }
+.sd-herd figure { margin: 0; display: flex; flex-direction: column; align-items: center; font: 600 1rem var(--sd-font); }
+.sd-herd svg, .sd-meet-pic svg, .sd-pair > svg, .sd-tile svg, .sd-card svg { max-width: 100%; height: auto; }
+.sd-meet { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 1rem; width: min(100%, 52rem); }
+.sd-meet-n { grid-column: 1 / -1; margin: 0; text-align: center; font: 600 1rem var(--sd-font); opacity: .7; }
+.sd-meet-pic { display: grid; place-items: center; background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: .5rem; }
+.sd-meet-txt h3 { margin: 0 0 .3rem; font: 700 1.6rem/1.15 var(--sd-font); }
+.sd-meet-txt h3 i { display: block; font: italic 500 1.05rem var(--sd-font); opacity: .75; }
+.sd-meet-txt p { margin: 0 0 .5rem; font: 500 1.15rem/1.4 var(--sd-font); }
+.sd-meet-txt dl { display: grid; grid-template-columns: auto 1fr; gap: .25rem .6rem; margin: 0; font: 500 1rem/1.35 var(--sd-font); }
+.sd-meet-txt dt { font-weight: 700; }
+.sd-meet-txt dd { margin: 0; }
+
+/* CT lesson, measuring, and graphs */
+.sd-ctdiag { width: min(100%, 34rem); background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: .4rem; display: grid; gap: .5rem; }
+.sd-ctdiag svg { width: 100%; height: auto; }
+.sd-dlab { font: 600 13px var(--sd-font); text-anchor: middle; fill: var(--sd-ink); }
+.sd-rays path { stroke-dasharray: 6 6; animation: sd-flow 1s linear infinite; }
+.sd-measure.sd-tall { width: min(100%, 24rem); }
+.sd-data caption { font: 700 1rem var(--sd-font); padding-bottom: .3rem; }
+.sd-data td.mine { color: #b4410f; font-weight: 700; background: #fff1e4; }
+.sd-data .hi { outline: 3px solid #2ed3c6; outline-offset: -3px; }
+.sd-gb { width: min(100%, 36rem); display: grid; gap: .4rem; }
+.sd-gb .sd-gbar { grid-template-columns: 6.5rem 1fr 4.2rem; font: 600 1rem var(--sd-font); border-radius: 10px; padding: .1rem .3rem; }
+.sd-gb input { --v: 0%; width: 100%; height: 34px; margin: 0; -webkit-appearance: none; appearance: none; background: linear-gradient(90deg, #2ed3c6 var(--v), #efe9de var(--v)); border: 2px solid var(--sd-ink); border-radius: 8px; }
+.sd-gb input::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 40px; border-radius: 6px; background: #fff; border: 3px solid var(--sd-ink); cursor: pointer; }
+.sd-gb input::-moz-range-thumb { width: 18px; height: 36px; border-radius: 6px; background: #fff; border: 3px solid var(--sd-ink); cursor: pointer; }
+.sd-chart { width: min(100%, 32rem); background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: .3rem; }
+.sd-chart svg { width: 100%; height: auto; }
+.sd-ax { font: 600 12px var(--sd-font); fill: var(--sd-ink); }
+.sd-ctitle { font: 700 15px var(--sd-font); fill: var(--sd-ink); text-anchor: middle; }
+
+/* brain, pathways, teeth */
+.sd-found { margin: 0; font: 600 1.05rem/1.8 var(--sd-font); text-align: center; }
+.sd-pw { width: min(100%, 40rem); background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: .3rem; }
+.sd-pw svg { width: 100%; height: auto; }
+.sd-step { cursor: pointer; }
+.sd-step:hover rect { fill: #ffe7a0; } .sd-step.done:hover rect { fill: inherit; }
+.sd-step:focus-visible { outline: none; } .sd-step:focus-visible rect { stroke: #6b4fd8; stroke-width: 4px; }
+.sd-flow { animation: sd-flow 1s linear infinite; }
+@keyframes sd-flow { to { stroke-dashoffset: -26; } }
+.sd-stops { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; width: min(100%, 40rem); }
+.sd-stop { min-height: 48px; font-size: 1rem; }
+.sd-stop i { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--sd-ink); font: 700 .9rem var(--sd-font); font-style: normal; background: #fff; }
+.sd-stop:disabled { opacity: 1; }
+.sd-path { margin: 0; padding-left: 1.6rem; width: min(100%, 36rem); font: 500 1.05rem/1.9 var(--sd-font); }
+.sd-mid-skull { width: 210px; } .sd-mid-skull svg, .sd-mid-skull img { width: 100%; height: auto; }
+.sd-teethpick { width: min(100%, 34rem); background: #fff; border: 3px solid var(--sd-ink); border-radius: 18px; overflow: hidden; }
+.sd-teethpick [data-part] path { stroke-width: 2.5px; }
+.sd-teethpick [data-part]:hover path { fill: #fff3c4; }
+.sd-sub b { white-space: nowrap; }
+
+/* phylogenetics */
+.sd-demo-wrap { width: min(100%, 34rem); background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: .4rem; }
+.sd-demo-wrap svg { width: 100%; height: auto; }
+.sd-legend { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+.sd-legend i { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--sd-ink); }
+.sd-tree-lab { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: .6rem; text-align: center; font: 700 1rem var(--sd-font); }
+
 .sd-settings { display: grid; gap: .8rem; font: 500 1.1rem var(--sd-font); background: #fff; border: 3px solid var(--sd-ink); border-radius: 16px; padding: 1rem 1.2rem; }
 .sd-settings select { font-size: 1rem; padding: .4rem; margin-left: .4rem; }
 .sd-settings input[type=checkbox] { width: 22px; height: 22px; vertical-align: middle; margin-right: .4rem; }
@@ -144,6 +219,11 @@ ellipse.sd-lit, circle.sd-lit { stroke: #c2552a; }
   .sd-tile { min-width: 7rem; } .sd-tile svg { width: 96px; }
   .sd-mini-skull { width: 92px; }
   .sd-gbar { grid-template-columns: 7rem 1fr 3.8rem; font-size: .95rem; }
-  .sd-tree-slots { grid-template-columns: 1fr; }
+  .sd-tree-slots, .sd-tree-lab { grid-template-columns: 1fr; }
+  .sd-tree-lab { display: none; }
+  .sd-meet { grid-template-columns: 1fr; }
+  .sd-meet-txt h3 { font-size: 1.35rem; }
+  .sd-mid-skull { width: 150px; }
+  .sd-gb .sd-gbar { grid-template-columns: 4.8rem 1fr 3.6rem; font-size: .9rem; }
 }
 @media (prefers-reduced-motion: reduce) { .sd-stage *, .sd-stage *::before { animation: none !important; transition: none !important; } }

@@ -8,7 +8,7 @@ window.TP_ART = (function () {
   const INK = "#2a2233", SKIN = "rgba(150,170,90,.35)", D = () => window.TP_DATA;
   const f = n => Math.round(n * 10) / 10;
   const col = (part, opt, base) => opt.sys && opt.sys[part] ? D().SYSTEMS[opt.sys[part]].color : base;
-  const T = (opt, id) => opt.parts ? ` data-part="${id}" class="tp-part" tabindex="0" role="button" aria-label="${D().PARTS[id] ? D().PARTS[id].name : id}"` : "";
+  const T = (opt, id) => opt.parts ? ` data-part="${id}" class="tp-part${opt.hi === id ? " tp-hi" : ""}" tabindex="0" role="button" aria-label="${D().PARTS[id] ? D().PARTS[id].name : id}"` : opt.hi === id ? ` class="tp-hi"` : "";
 
   /* See-through tadpole, side view, head left. viewBox 0 0 420 220. */
   function tadpole(stage = 0, opt = {}) {
@@ -112,6 +112,37 @@ window.TP_ART = (function () {
     return { svg: `<svg viewBox="0 0 200 200" role="img" aria-label="Cross-section slice"><g stroke="${INK}" stroke-width="2.5">${outline}${g}</g></svg>`, parts };
   }
 
+  /* Lifelike pictures for "meet the animals": a tadpole and a small fish seen from the side. viewBox 0 0 420 200. */
+  function realTadpole(w = 340) {
+    const spots = [[92, 82, 4], [118, 74, 3], [140, 96, 3.5], [104, 108, 3], [150, 80, 2.5], [128, 118, 2.5], [76, 96, 2.5]];
+    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A tadpole"><defs>
+      <radialGradient id="tpb" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#6f6a3c"/><stop offset=".6" stop-color="#4a4526"/><stop offset="1" stop-color="#2d2a18"/></radialGradient>
+      <linearGradient id="tpt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d7650" stop-opacity=".85"/><stop offset="1" stop-color="#b9b48e" stop-opacity=".35"/></linearGradient></defs>
+      <path d="M 170 82 C 230 40 330 50 405 98 C 330 140 230 150 170 118 Z" fill="url(#tpt)" stroke="#5b5636" stroke-width="1.2"/>
+      ${[[230, 72], [262, 84], [300, 78], [330, 94], [252, 112], [290, 116], [360, 100]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="#3f3b22" opacity=".55"/>`).join("")}
+      <path d="M 172 92 C 250 90 330 94 400 98 C 330 102 250 108 172 110 Z" fill="#5d5733" opacity=".9"/>
+      <path d="M 40 100 C 40 62 82 48 132 54 C 176 60 196 82 192 102 C 188 128 160 146 118 146 C 70 146 40 132 40 100 Z" fill="url(#tpb)" stroke="#262313" stroke-width="1.5"/>
+      ${spots.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#c9b25a" opacity=".7"/>`).join("")}
+      <path d="M 112 130 C 130 140 160 134 170 118" fill="none" stroke="#8a845a" stroke-width="1.5" opacity=".6"/>
+      <ellipse cx="74" cy="80" rx="9" ry="8" fill="#14110a"/><ellipse cx="74" cy="80" rx="9" ry="8" fill="none" stroke="#b49a44" stroke-width="2"/><circle cx="71" cy="77" r="2.4" fill="#fff"/>
+      <path d="M 44 110 q 6 5 13 2" fill="none" stroke="#1a170c" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 150 128 q 6 6 14 4" fill="none" stroke="#262313" stroke-width="1.5"/></svg>`;
+  }
+  function realFish(w = 340) {
+    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A small freshwater fish"><defs>
+      <linearGradient id="tpf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f6247"/><stop offset=".45" stop-color="#9aa88d"/><stop offset=".7" stop-color="#d9dccd"/><stop offset="1" stop-color="#f2efe2"/></linearGradient></defs>
+      <path d="M 318 98 L 398 52 Q 384 100 398 148 Z" fill="#7d8a6c" stroke="#3b4734" stroke-width="1.5"/>
+      <path d="M 170 56 Q 200 22 238 50 Z" fill="#6f7d60" stroke="#3b4734" stroke-width="1.3"/>
+      <path d="M 250 132 Q 268 160 288 132 Z" fill="#8e9a7d" stroke="#3b4734" stroke-width="1.3"/>
+      <path d="M 30 104 C 52 64 130 48 210 52 C 270 56 310 80 326 98 C 310 118 270 142 210 146 C 130 150 52 140 30 104 Z" fill="url(#tpf)" stroke="#33402d" stroke-width="1.6"/>
+      <path d="M 92 100 C 160 94 240 96 318 98" fill="none" stroke="#56634c" stroke-width="1.4" stroke-dasharray="3 4"/>
+      ${Array.from({ length: 6 }, (_, i) => `<path d="M ${130 + i * 30} 64 q 10 16 0 34 M ${130 + i * 30} 100 q 10 16 0 34" fill="none" stroke="#6b7760" stroke-width=".8" opacity=".5"/>`).join("")}
+      <path d="M 96 66 C 112 84 112 120 96 138" fill="none" stroke="#3b4734" stroke-width="1.8"/>
+      <path d="M 120 118 Q 140 142 160 124 Z" fill="#b8bfa6" stroke="#3b4734" stroke-width="1.2"/>
+      <circle cx="62" cy="92" r="11" fill="#e8dfb0" stroke="#33402d" stroke-width="1.3"/><circle cx="62" cy="92" r="6.5" fill="#15130c"/><circle cx="60" cy="90" r="2" fill="#fff"/>
+      <path d="M 31 106 q 8 4 16 1" fill="none" stroke="#33402d" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+
   const UI = {
     home: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M 18 50 L 50 20 L 82 50 V 82 H 18 Z" fill="#ffd23f" stroke="#2a2233" stroke-width="7" stroke-linejoin="round"/><rect x="40" y="56" width="20" height="26" fill="#2a2233"/></svg>`,
     speak: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M 16 38 H 34 L 54 20 V 80 L 34 62 H 16 Z" fill="#2ed3c6" stroke="#2a2233" stroke-width="6" stroke-linejoin="round"/><path d="M 64 36 Q 76 50 64 64 M 74 26 Q 94 50 74 74" fill="none" stroke="#2a2233" stroke-width="6" stroke-linecap="round"/></svg>`,
@@ -120,5 +151,5 @@ window.TP_ART = (function () {
     star: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L62 38 L94 38 L68 58 L78 90 L50 70 L22 90 L32 58 L6 38 L38 38 Z" fill="#ffd23f" stroke="#2a2233" stroke-width="6" stroke-linejoin="round"/></svg>`,
     gear: `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="16" fill="none" stroke="#2a2233" stroke-width="8"/><g stroke="#2a2233" stroke-width="12" stroke-linecap="round">${[0, 45, 90, 135].map(a => `<path d="M50 14 V24 M50 76 V86" transform="rotate(${a} 50 50)"/>`).join("")}</g></svg>`
   };
-  return { tadpole, fish, slice, INK, UI };
+  return { tadpole, fish, slice, realTadpole, realFish, INK, UI };
 })();

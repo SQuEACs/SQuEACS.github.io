@@ -149,40 +149,53 @@ window.SD_ART = (function () {
   let gradN = 0;
   function shade(hex, k) { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, n >> 8 & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * k)))); return "#" + c.map(v => v.toString(16).padStart(2, "0")).join(""); }
   function animal(sp, w = 200) {
-    const a = sp.look, gid = "sdfur" + (++gradN), line = shade(a.fur, .55), GY = 160;
-    const xs = 92, xe = xs + a.L, yb = GY - a.leg, yt = yb - a.H;
-    const hl = a.head, hh = a.H * (a.stripe ? .62 : .7), hx = xs - hl * .42, hy = yt + a.H * (a.flat ? .42 : .3);
+    const a = sp.look, id = ++gradN, gid = "sdfur" + id, line = shade(a.fur, .5), GY = 170;
+    const L = a.L, H = a.H, leg = a.leg, s = 110, h = s + L * .72, yb = GY - leg, yt = yb - H;
+    const hl = a.head, hh = H * (a.stripe ? .7 : .78), hx = s - hl * .55, hy = yt + H * (a.flat ? .38 : .22);
+    const lw = a.stripe ? 13 : 9 + H * .08, legC = a.legs || shade(a.fur, .9), far = shade(legC, .72);
+    const tl = a.tail[0], th = a.tail[1], bu = a.tail[2];
     const body = smooth([
-      [hx - hl * .62, hy + hh * .1], [hx - hl * .52, hy - hh * .2], [hx - hl * .15, hy - hh * .5], [hx + hl * .25, hy - hh * .45],
-      [xs + 6, yt + 1], [xs + a.L * .5, yt - a.arch], [xe - a.L * .08, yt + 1], [xe + 2, yt + a.H * .3], [xe + 4, yt + a.H * .62],
-      [xe - 6, yb + 1], [xs + a.L * .5, yb + 4], [xs + 8, yb + 1], [xs - 4, yb - a.H * .3],
-      [hx + hl * .1, hy + hh * .5], [hx - hl * .38, hy + hh * .4], [hx - hl * .58, hy + hh * .26]], true);
-    const leg = (cx, wd, far, hind) => {
-      const t = yb - a.H * (hind ? .45 : .3), sx = far ? 10 : 0;
-      return `<path d="${smooth([[cx - wd / 2 + sx, t], [cx + wd / 2 + sx, t], [cx + wd * .32 + sx, GY - 7], [cx + wd * .2 + sx, GY], [cx - wd * .95 + sx, GY], [cx - wd * .5 + sx, GY - 6]], true)}" fill="${far ? shade(a.legs || a.fur, .7) : (a.legs || a.fur)}" stroke="${line}" stroke-width="1.4"/>`;
-    };
-    const lw = a.stripe ? 19 : 14, tl = a.tail[0], th = a.tail[1], bu = a.tail[2];
-    const tail = smooth([[xe - 6, yt + a.H * .12], [xe + tl * .45, yt + a.H * .2 - bu * 5], [xe + tl * .88, yt + a.H * .38 + (bu ? 0 : 6)], [xe + tl, yt + a.H * .5 + (bu ? 2 : 12)],
-      [xe + tl * .85, yt + a.H * .5 + th * .35 + (bu ? 4 : 10)], [xe + tl * .45, yt + a.H * .3 + th + bu * 4], [xe - 4, yt + a.H * .62]], true);
-    let g = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(a.fur, .85)}"/><stop offset=".55" stop-color="${a.fur}"/><stop offset="1" stop-color="${a.belly}"/></linearGradient></defs>`;
-    g += leg(xs + 18, lw, true) + leg(xe - 22, lw + 6, true, true);
-    g += `<path d="${tail}" fill="url(#${gid})" stroke="${line}" stroke-width="1.4"/>`;
-    g += `<path d="${body}" fill="url(#${gid})" stroke="${line}" stroke-width="1.5"/>`;
-    if (a.frost) g += `<path d="${smooth([[hx - hl * .5, hy - hh * .25], [hx, hy - hh * .52], [xs + a.L * .3, yt + 2], [xs + a.L * .25, yt + a.H * .45], [hx + hl * .2, hy + hh * .2]], true)}" fill="${a.frost}" opacity=".45" stroke="none"/>`;
-    if (a.bib) g += `<path d="${smooth([[hx - hl * .1, hy + hh * .35], [hx + hl * .25, hy + hh * .2], [xs + 10, yb - a.H * .45], [xs + 4, yb - 2], [xs - 6, yb - a.H * .25]], true)}" fill="${a.bib}" stroke="none"/>`;
-    if (a.chin) g += `<ellipse cx="${hx - hl * .42}" cy="${hy + hh * .36}" rx="${hl * .12}" ry="${hh * .1}" fill="${a.chin}" stroke="none"/>`;
+      [hx - hl * .62, hy + hh * .08], [hx - hl * .55, hy - hh * .12], [hx - hl * .2, hy - hh * .42], [hx + hl * .15, hy - hh * .5], [hx + hl * .4, hy - hh * .36],
+      [s - 6, yt + H * .1], [s + 14, yt - a.arch * .3], [s + L * .45, yt - a.arch], [h - 4, yt - a.arch * .4], [h + L * .14, yt + H * .16],
+      [h + L * .2, yt + H * .55], [h + L * .1, yb - H * .02], [s + L * .5, yb - H * .08], [s + 8, yb + 3], [s - L * .08, yb - H * .3],
+      [hx + hl * .32, hy + hh * .5], [hx - hl * .15, hy + hh * .44], [hx - hl * .5, hy + hh * .28]], true);
+    const fore = (dx, c) => `<path d="${smooth([[s + dx - lw * .9, yb - H * .55], [s + dx + lw * .8, yb - H * .5], [s + dx + lw * .6, yb + leg * .35], [s + dx + lw * .35, GY - 6], [s + dx + lw * .45, GY], [s + dx - lw * 1.3, GY], [s + dx - lw * .5, GY - 7], [s + dx - lw * .55, yb + leg * .2]], true)}" fill="${c}" stroke="${line}" stroke-width="1.2"/>`;
+    const hind = (dx, c) => `<path d="${smooth([[h + dx - lw * 1.4, yb - H * .62], [h + dx + lw * 1.3, yb - H * .5], [h + dx + lw * .9, yb + leg * .15], [h + dx + lw * .55, GY - leg * .42], [h + dx + lw * .45, GY], [h + dx - lw * 1.4, GY], [h + dx - lw * .4, GY - 6], [h + dx - lw * .3, GY - leg * .35], [h + dx - lw * .9, yb + leg * .25]], true)}" fill="${c}" stroke="${line}" stroke-width="1.2"/>`;
+    const toes = dx => [0, 1, 2].map(i => `<path d="M ${dx - lw * (1.1 - i * .35)} ${GY - .5} v -3.5" stroke="${line}" stroke-width=".9"/>`).join("");
+    const tail = smooth([[h + L * .1, yt + H * .12], [h + L * .1 + tl * .45, yt + H * .1 - bu * 5 + (bu ? 0 : 4)], [h + L * .1 + tl * .9, yt + H * .3 + (bu ? -2 : 10)], [h + L * .1 + tl, yt + H * .42 + (bu ? 0 : 14)],
+      [h + L * .1 + tl * .86, yt + H * .44 + th * .45 + (bu ? 2 : 10)], [h + L * .1 + tl * .45, yt + H * .3 + th + bu * 4], [h + L * .16, yt + H * .55]], true);
+    let g = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(a.fur, .78)}"/><stop offset=".5" stop-color="${a.fur}"/><stop offset="1" stop-color="${a.belly}"/></linearGradient>
+      <linearGradient id="${gid}t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${a.fur}"/><stop offset="1" stop-color="${shade(a.fur, .7)}"/></linearGradient></defs>`;
+    g += hind(14, far) + fore(12, far);
+    g += `<path d="${tail}" fill="url(#${gid}t)" stroke="${line}" stroke-width="1.2"/>`;
+    // fur texture on the tail
+    for (let i = 1; i < 7; i++) { const x = h + L * .1 + tl * i / 7.5; g += `<path d="M ${f(x)} ${f(yt + H * .2 + i * (bu ? 1 : 2.4))} q 5 ${f(th * .25)} 9 ${f(th * .5)}" fill="none" stroke="${shade(a.fur, .55)}" stroke-width=".8" opacity=".55"/>`; }
+    g += `<path d="${body}" fill="url(#${gid})" stroke="${line}" stroke-width="1.4"/>`;
+    // shoulder and haunch shading, fur strokes along the back
+    g += `<ellipse cx="${f(h + 2)}" cy="${f(yb - H * .45)}" rx="${f(lw * 2.2)}" ry="${f(H * .38)}" fill="${shade(a.fur, .82)}" opacity=".45"/>`;
+    g += `<ellipse cx="${f(s + 6)}" cy="${f(yb - H * .45)}" rx="${f(lw * 1.6)}" ry="${f(H * .34)}" fill="${shade(a.fur, .85)}" opacity=".35"/>`;
+    for (let i = 0; i < 14; i++) { const x = s + 4 + i * (L * .95 / 14), y = yt - a.arch * Math.sin(Math.PI * Math.min(1, (x - s) / (L * .9))) + 4; g += `<path d="M ${f(x)} ${f(y)} q 3 3 7 3" fill="none" stroke="${shade(a.fur, .6)}" stroke-width=".8" opacity=".5"/>`; }
+    for (let i = 0; i < 8; i++) { const x = s + 10 + i * (L * .8 / 8); g += `<path d="M ${f(x)} ${f(yb - H * .14)} q 3 2 6 2" fill="none" stroke="${shade(a.belly, 1.12)}" stroke-width=".8" opacity=".6"/>`; }
+    if (a.frost) g += `<path d="${smooth([[hx - hl * .3, hy - hh * .4], [hx + hl * .3, hy - hh * .48], [s + L * .32, yt + 2], [s + L * .26, yt + H * .5], [s - 4, yt + H * .5], [hx + hl * .1, hy + hh * .05]], true)}" fill="${a.frost}" opacity=".5" stroke="none"/>`;
+    if (a.bib) g += `<path d="${smooth([[hx - hl * .05, hy + hh * .38], [hx + hl * .35, hy + hh * .25], [s + 6, yb - H * .5], [s + 2, yb - 1], [s - L * .07, yb - H * .32]], true)}" fill="${a.bib}" stroke="none"/>`;
+    if (a.chin) g += `<ellipse cx="${f(hx - hl * .4)}" cy="${f(hy + hh * .33)}" rx="${f(hl * .13)}" ry="${f(hh * .09)}" fill="${a.chin}" stroke="none"/>`;
     if (a.stripe) {
-      g += `<path d="${smooth([[hx - hl * .3, hy + hh * .05], [hx - hl * .05, hy + hh * .35], [hx + hl * .25, hy + hh * .3], [hx + hl * .05, hy - hh * .05]], true)}" fill="#1f1b18" stroke="none"/>`;
-      g += `<path d="M ${hx - hl * .55} ${hy - hh * .08} Q ${hx - hl * .1} ${hy - hh * .62} ${xs + a.L * .2} ${yt + 3}" fill="none" stroke="#f4f1ea" stroke-width="${hh * .16}" stroke-linecap="round"/>`;
+      g += `<path d="${smooth([[hx - hl * .35, hy - hh * .02], [hx - hl * .05, hy + hh * .02], [hx + hl * .25, hy + hh * .2], [hx + hl * .1, hy + hh * .36], [hx - hl * .2, hy + hh * .24]], true)}" fill="#1f1b18" stroke="none"/>`;
+      g += `<path d="M ${f(hx - hl * .52)} ${f(hy - hh * .12)} Q ${f(hx - hl * .1)} ${f(hy - hh * .62)} ${f(s + L * .22)} ${f(yt + 2)}" fill="none" stroke="#f4f1ea" stroke-width="${f(hh * .14)}" stroke-linecap="round"/>`;
+      g += `<path d="M ${f(hx + hl * .05)} ${f(hy + hh * .3)} q ${f(hl * .2)} ${f(-hh * .1)} ${f(hl * .35)} ${f(hh * .05)}" fill="none" stroke="#f4f1ea" stroke-width="${f(hh * .1)}" stroke-linecap="round"/>`;
     }
-    g += leg(xs + 18, lw, false) + leg(xe - 22, lw + 6, false, true);
-    if (a.claws) g += [xs + 18, xs + 28].map(x => `<path d="M ${x - lw * .9} ${GY - 1} q -9 1 -12 -4 M ${x - lw * .7} ${GY - 3} q -9 1 -12 -5" fill="none" stroke="#e9e2d2" stroke-width="2" stroke-linecap="round"/>`).join("");
-    // ear, eye, nose, whiskers
-    g += `<path d="${smooth([[hx + hl * .05, hy - hh * .46], [hx + hl * .14, hy - hh * .46 - a.ear], [hx + hl * .27, hy - hh * .4]], true)}" fill="${shade(a.fur, .8)}" stroke="${line}" stroke-width="1.3"/>`;
-    g += `<ellipse cx="${hx - hl * .27}" cy="${hy - hh * .14}" rx="3.4" ry="2.7" fill="#140f0c"/><circle cx="${hx - hl * .29}" cy="${hy - hh * .17}" r=".9" fill="#fff"/>`;
-    g += `<ellipse cx="${hx - hl * .6}" cy="${hy + hh * .04}" rx="3" ry="2.4" fill="#140f0c"/>`;
-    g += `<g stroke="${a.whisk ? "#e9e2d2" : "#b9afa3"}" stroke-width=".9" opacity=".9">${[-3, 0, 3].map(d => `<path d="M ${hx - hl * .5} ${hy + hh * .12 + d * .7} l ${-hl * (a.whisk ? .5 : .32)} ${d * 2 - 1}"/>`).join("")}</g>`;
-    return `<svg viewBox="${f(hx - hl * .9)} 20 ${f(xe + tl + 14 - (hx - hl * .9))} 150" width="${w}" role="img" aria-label="${sp.name}">${g}</svg>`;
+    g += hind(0, legC) + fore(0, legC) + toes(s) + toes(h);
+    if (a.claws) g += [s, s + 7].map(x => `<path d="M ${f(x - lw * 1.1)} ${GY - 1} q -8 1 -11 -4" fill="none" stroke="#e9e2d2" stroke-width="1.8" stroke-linecap="round"/>`).join("");
+    // ear, eye, nose, mouth, whiskers
+    const ex = hx + hl * .22, ey = hy - hh * .42, er = a.ear * .9 + 3;
+    g += `<path d="M ${f(ex - er)} ${f(ey + 2)} a ${f(er)} ${f(er * .95)} 0 0 1 ${f(er * 2)} 0 Z" fill="${shade(a.fur, .82)}" stroke="${line}" stroke-width="1.1"/><path d="M ${f(ex - er * .55)} ${f(ey + 1)} a ${f(er * .55)} ${f(er * .5)} 0 0 1 ${f(er * 1.1)} 0 Z" fill="${shade(a.fur, .45)}"/>`;
+    const eyx = hx - hl * .2, eyy = hy - hh * .14;
+    g += `<path d="M ${f(eyx - 4.2)} ${f(eyy)} q 4.2 -3.6 8.4 0 q -4.2 3.6 -8.4 0 Z" fill="#120d0a"/><circle cx="${f(eyx - 1)}" cy="${f(eyy - 1)}" r="1" fill="#fff"/>`;
+    g += `<path d="M ${f(hx - hl * .64)} ${f(hy + hh * .02)} q -1 -4 3 -5 q 4 0 4 4 q -2 4 -7 1 Z" fill="#140f0c"/>`;
+    g += `<path d="M ${f(hx - hl * .55)} ${f(hy + hh * .2)} q ${f(hl * .15)} ${f(hh * .08)} ${f(hl * .32)} ${f(hh * .04)}" fill="none" stroke="${line}" stroke-width="1"/>`;
+    g += `<g stroke="${a.whisk ? "#efe8da" : "#bdb3a6"}" stroke-width=".7" opacity=".9">${[-3, -1, 1, 3].map(d => `<path d="M ${f(hx - hl * .48)} ${f(hy + hh * .08 + d * .8)} q ${f(-hl * .2)} ${f(d * .6 - 1)} ${f(-hl * (a.whisk ? .5 : .32))} ${f(d * 2.2 - 1)}"/>`).join("")}</g>`;
+    const x0 = hx - hl * .95, x1 = h + L * .1 + tl + 10;
+    return `<svg viewBox="${f(x0)} ${f(yt - a.arch - 30)} ${f(x1 - x0)} ${f(GY + 6 - (yt - a.arch - 30))}" width="${w}" role="img" aria-label="Drawing of ${sp.name}">${g}</svg>`;
   }
 
   const HAB = {

@@ -230,3 +230,10 @@ path.tp-hi:not([fill="none"]), ellipse.tp-hi, circle.tp-hi, .tp-hi rect { fill: 
 .tp-sys:disabled { opacity: .55; cursor: default; }
 .tp-gutbar { width: min(100%, 36rem); height: auto; }
 @media (max-width: 600px) { .tp-slicer { grid-template-columns: 1fr; } .tp-slices { grid-template-columns: repeat(2, 1fr); justify-items: center; } .tp-slice { width: 46vw; max-width: 200px; } .tp-systems { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tp-card { width: 7.5rem; } }
+.tp-nw { white-space: nowrap; }
+.tp-ctpair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .6rem; width: min(100%, 46rem); }
+.tp-ctpair figure { margin: 0; display: grid; gap: .2rem; justify-items: center; }
+.tp-ctpair svg, .tp-ctimg { width: 100%; height: auto; display: block; }
+.tp-ctpanel svg, .tp-ctimg { border: 3px solid var(--tp-ink); border-radius: 12px; background: #101012; }
+.tp-ctpair figcaption { font: 600 .85rem/1.2 var(--tp-font); opacity: .8; }
+@media (max-width: 600px) { .tp-ctpair { grid-template-columns: 1fr; width: min(100%, 22rem); } }

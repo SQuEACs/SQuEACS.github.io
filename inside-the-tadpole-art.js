@@ -43,7 +43,7 @@ window.TP_ART = (function () {
     }
     if (stage >= 2) g += `<g${T(opt, "arms")}><path d="M 104 148 q 6 18 -8 28" fill="none" stroke="${col("arms", opt, "#8fbf3f")}" stroke-width="${stage === 2 ? 6 : 9}" ${stage === 2 ? 'stroke-dasharray="4 4"' : ""}/><circle cx="102" cy="162" r="18" fill="transparent" stroke="none"/></g>`;
     if (opt.sliceX != null) g += `<path d="M ${opt.sliceX} 20 V 200" stroke="#2ed3c6" stroke-width="5" opacity=".9"/>`;
-    return `<svg viewBox="0 0 420 220" role="img" aria-label="${opt.label || "See-through tadpole"}">${g}</g></svg>`;
+    return `<svg viewBox="0 0 420 220" role="img" data-stage="${stage}" aria-label="${opt.label || "See-through tadpole"}">${g}</g></svg>`;
   }
 
   /* See-through fish, side view, head left. viewBox 0 0 420 220. */
@@ -112,6 +112,25 @@ window.TP_ART = (function () {
     return { svg: `<svg viewBox="0 0 200 200" role="img" aria-label="Cross-section slice"><g stroke="${INK}" stroke-width="2.5">${outline}${g}</g></svg>`, parts };
   }
 
+
+  /* CT view of the tadpole from the side, to sit next to the drawing.
+     Uses the lab's real scan when one is listed in TP_DATA.CT.side[stage];
+     until then, a simulated grayscale scan made from the drawing's shapes. */
+  let ctN = 0;
+  const CTGRAY = [["rgba(170,190,120,.35)", "#3b3b3b"], ["rgba(150,170,90,.35)", "#4a4a4a"], ["#2a2233", "#6e6e6e"], ["#d9a3a8", "#8f8f8f"], ["#f3e7cf", "#d4d4d4"], ["#ffe79a", "#b8b8b8"],
+    ["#f0b46a", "#e4e4e4"], ["#ff8fa3", "#ababab"], ["#e8445a", "#cfcfcf"], ["#f6a5b5", "#c2c2c2"], ["#8fbf3f", "#a6a6a6"], ["#1b1530", "#efefef"], ['fill="#fff"', 'fill="none"']];
+  function ctSide(stage = 0) {
+    const real = D().CT.side && D().CT.side[stage], name = D().STAGES[stage] ? D().STAGES[stage].name.toLowerCase() : "tadpole";
+    if (real) return `<img class="tp-ctimg" src="${real}" alt="Real CT scan of a ${name}, seen from the side">`;
+    let body = tadpole(stage).replace(/^<svg[^>]*>|<\/svg>$/g, "");
+    CTGRAY.forEach(([a, b]) => { body = body.split(a).join(b); });
+    const id = "tpct" + (++ctN);
+    return `<svg viewBox="0 0 420 220" role="img" aria-label="Simulated CT scan of a ${name}, seen from the side"><defs>
+      <filter id="${id}b"><feGaussianBlur stdDeviation="1.8"/></filter>
+      <filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${stage + 3}"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .35 0"/></filter></defs>
+      <rect width="420" height="220" fill="#101012"/><g filter="url(#${id}b)">${body}</g><rect width="420" height="220" filter="url(#${id}n)" opacity=".5"/></svg>`;
+  }
+
   /* Lifelike pictures for "meet the animals": a tadpole and a small fish seen from the side. viewBox 0 0 420 200. */
   function realTadpole(w = 340) {
     const spots = [[92, 82, 4], [118, 74, 3], [140, 96, 3.5], [104, 108, 3], [150, 80, 2.5], [128, 118, 2.5], [76, 96, 2.5]];
@@ -151,5 +170,5 @@ window.TP_ART = (function () {
     star: `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L62 38 L94 38 L68 58 L78 90 L50 70 L22 90 L32 58 L6 38 L38 38 Z" fill="#ffd23f" stroke="#2a2233" stroke-width="6" stroke-linejoin="round"/></svg>`,
     gear: `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="16" fill="none" stroke="#2a2233" stroke-width="8"/><g stroke="#2a2233" stroke-width="12" stroke-linecap="round">${[0, 45, 90, 135].map(a => `<path d="M50 14 V24 M50 76 V86" transform="rotate(${a} 50 50)"/>`).join("")}</g></svg>`
   };
-  return { tadpole, fish, slice, realTadpole, realFish, INK, UI };
+  return { ctSide, tadpole, fish, slice, realTadpole, realFish, INK, UI };
 })();

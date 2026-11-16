@@ -330,28 +330,28 @@
     ladder: `<svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#2a2233" stroke-width="6" stroke-linecap="round"><path d="M30 8 V92 M70 8 V92 M30 24 H70 M30 44 H70 M30 64 H70 M30 84 H70" stroke="#9a6a35"/></g></svg>`,
     helmet: `<svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#2a2233" stroke-width="5" stroke-linejoin="round"><path d="M14 66 Q14 20 50 20 Q86 20 86 66Z" fill="#2ed3c6"/><path d="M8 66 H92" stroke-width="8"/></g></svg>`
   };
-  const JOBICON = { swimmer: "river", climber: "trees", digger: "grassland" };
+  const JOBICON = { swimmer: "river", climber: "trees", biter: "forest", digger: "grassland" };
   PLAY.g1 = function () {
     const ids = shuffle(D.IDS); let i = 0;
     const sortOne = () => {
       if (i >= ids.length) return copy(0);
       const id = ids[i++];
-      screen(`${head(`{classify|Classify} the ${nm(id)}: is it a swimmer, a climber, or a digger?`, "Clue: " + SK[id].clues[0])}
+      screen(`${head(`{classify|Classify} the ${nm(id)}: how does it hunt?`, "Skull clues: " + SK[id].clues[0] + " " + SK[id].clues[1])}
         <div class="sd-pair"><div class="sd-skull sd-small">${skullPic(id)}</div>${ART.animal(SK[id], 220)}</div>
         <div class="sd-row">${Object.keys(D.JOBS).map(j => btn("job", `${ART.habitat(JOBICON[j])}<span>${D.JOBS[j].name}</span>`, "sd-tile sd-hab", ` data-j="${j}"`)).join("")}</div>`, {
         job: el => {
-          if (el.dataset.j === SK[id].job) { el.classList.add("sd-ok"); unlock(id); say(`${pick(PH.yes)} The ${nm(id)} is a ${SK[id].job}. ${SK[id].clues[1]}`).then(ok => ok && sortOne()); }
+          if (el.dataset.j === SK[id].job) { el.classList.add("sd-ok"); unlock(id); say(`${pick(PH.yes)} The ${nm(id)} ${D.JOBS[SK[id].job].say}. ${SK[id].clues[2]}`).then(ok => ok && sortOne()); }
           else { flash(el, false); say(`Hmm. ${SK[id].clues[0]} ${SK[id].clues[1]}`); }
         }
       });
-      say(`This is the skull of ${the(id)}. ${SK[id].clues[0]} Classify it. Is it a swimmer, a climber, or a digger?`);
+      say(`This is the skull of ${the(id)}. ${SK[id].clues[0]} ${SK[id].clues[1]} How does it hunt? In water, in trees, after big prey, or by digging?`);
     };
     const Q = [
       { id: "otter", q: "Engineers copy animals! This is called {biomimicry}. The otter's flat, smooth {cranium} slips through water. What could you build with that shape?", a: "boat", opts: ["boat", "ladder", "shovel"], yes: "A boat! Its smooth, flat front slips through the water, just like an otter's head." },
       { id: "badger", q: "The badger's wide, strong {skull} pushes through dirt. What could you build that works the same way?", a: "shovel", opts: ["helmet", "shovel", "boat"], yes: "A shovel! Strong and wide for pushing dirt, like a badger's head and claws." }
     ];
     const copy = k => {
-      if (k >= Q.length) return solved("g1", "You classified all five mustelids by the job they do, and used biomimicry to invent new things.");
+      if (k >= Q.length) return solved("g1", "You classified all five mustelids by how they hunt, using clues from their skulls, and used biomimicry to invent new things.");
       const q = Q[k];
       screen(`${head(q.q)}<div class="sd-skull sd-small">${skullPic(q.id)}</div>
         <div class="sd-row">${q.opts.map(o => btn("b", `${BUILD[o]}<span>${cap1(o)}</span>`, "sd-tile", ` data-o="${o}"`)).join("")}</div>`, {
@@ -362,28 +362,29 @@
     sortOne();
   };
 
-  // 2nd: clues from the skull lead to the animal's habitat.
+  // 2nd: clues from the skull (teeth, orbits, jaws) point to what the animal eats.
   PLAY.g2 = function () {
     const ids = shuffle(D.IDS); let i = 0;
+    const dietBtn = id => btn("d", `<span class="sd-diet-pics">${D.DIETS[id].foods.map(f => ART.icon(f)).join("")}</span><span>${esc(D.DIETS[id].name)}</span>`, "sd-tile sd-diet", ` data-id="${id}"`);
     const one = () => {
-      if (i >= ids.length) return solved("g2", "You matched all five mustelids to their habitats. Same family, four different habitats!");
-      const id = ids[i++]; let c = 0;
+      if (i >= ids.length) return solved("g2", "You used teeth, orbits, and jaws as evidence to figure out what all five mustelids eat. Same family, five different diets!");
+      const id = ids[i++], opts = shuffle([id, ...shuffle(D.IDS.filter(x => x !== id)).slice(0, 2)]); let c = 0;
       const draw = () => {
-        screen(`${head("Which {habitat} does this animal live in?", `Clue ${c + 1}: ${SK[id].clues[c]}`)}
+        screen(`${head("What does this animal eat?", `Skull clue ${c + 1}: ${SK[id].clues[c]}`)}
           <div class="sd-skull sd-small">${skullPic(id)}</div>
-          <div class="sd-habs">${Object.keys(D.HABITATS).map(h => btn("h", `${ART.habitat(h)}<span>${cap1(D.HABITATS[h].name)}</span>`, "sd-tile sd-hab", ` data-h="${h}"`)).join("")}</div>
+          <div class="sd-row">${opts.map(dietBtn).join("")}</div>
           ${c < 2 ? `<div class="sd-row">${btn("more", "Another clue", "sd-chip")}</div>` : ""}`, {
-          h: el => {
-            if (el.dataset.h === SK[id].hab) {
+          d: el => {
+            if (el.dataset.id === id) {
               unlock(id);
-              screen(`<div class="sd-reveal"><div class="sd-hab-big">${ART.habitat(SK[id].hab)}<div class="sd-in">${ART.animal(SK[id], 240)}</div></div>${head(`It's ${the(id)}!`, SK[id].fact)}</div>${nextBtn()}`, { next: one });
-              say(`${pick(PH.yes)} It's ${the(id)}, at home in ${D.HABITATS[SK[id].hab].say}. ${SK[id].fact}`);
-            } else { flash(el, false); if (c < 2) { c++; draw(); say("Not there. Here's another clue. " + SK[id].clues[c]); } else say(pick(PH.no)); }
+              screen(`<div class="sd-reveal"><div class="sd-meet-pic">${SK[id].photo ? `<figure class="sd-photo"><img src="${esc(SK[id].photo.src)}" alt="Photo of ${esc(the(id))}"><figcaption>${SK[id].photo.credit}</figcaption></figure>` : ART.animal(SK[id], 300)}</div>${head(`It's ${the(id)}!`, `It eats ${SK[id].eats.charAt(0).toLowerCase() + SK[id].eats.slice(1)} ${SK[id].fact}`)}</div>${nextBtn()}`, { next: one });
+              say(`${pick(PH.yes)} It's ${the(id)}. It eats ${SK[id].eats.charAt(0).toLowerCase() + SK[id].eats.slice(1)} ${SK[id].fact}`);
+            } else { flash(el, false); if (c < 2) { c++; draw(); say("Not quite. Here's another skull clue. " + SK[id].clues[c]); } else say(pick(PH.no)); }
           },
           more: () => { c++; draw(); say(SK[id].clues[c]); }
         });
       };
-      draw(); say("Which habitat does this animal live in? " + SK[id].clues[0]);
+      draw(); say(`What does this animal eat? ${SK[id].clues[0]} Is it ${opts.map(o => D.DIETS[o].name).join(", or ")}?`);
     };
     one();
   };

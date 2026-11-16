@@ -28,7 +28,7 @@ window.SD_DATA = (function () {
       size: "About 1 meter (3 feet) long with the tail, 5 to 14 kilograms (11 to 30 pounds).",
       eats: "Fish, crayfish, frogs, and other water animals.",
       intro: "River otters are playful swimmers with webbed feet, a thick tail, and very sensitive whiskers.",
-      clues: ["My skull is flat and low, like the front of a boat.", "My {orbit|orbits} sit up high, so I can peek out of the water.", "A big {iof} by my nose carries the nerve from my whiskers. I feel for fish in muddy water."],
+      clues: ["My {molar|molars} are wide and bumpy, good for crushing hard shells.", "A big {iof} carries the nerve from my sensitive whiskers. I feel for prey in muddy water.", "My skull is flat and low, so I can swim with just my eyes and nose above the water."],
       fact: "River otters can close their ears and nostrils under water and find fish by feeling with their whiskers.",
       foods: ["fish", "crayfish", "frog"], chain: ["sun", "algae", "tadpole", "fish", "otter"],
       teeth: "mixed", teethSay: "The otter has sharp {carnassial|carnassials} for slicing fish, plus wide, bumpy {molar|molars} for crushing crayfish shells.",
@@ -43,7 +43,7 @@ window.SD_DATA = (function () {
       size: "About 50 to 70 centimeters (20 to 28 inches) long with the tail, 0.5 to 1.6 kilograms (1 to 3.5 pounds).",
       eats: "Fish, frogs, crayfish, mice, and muskrats.",
       intro: "Mink are small, dark brown hunters that hunt both on land and in the water.",
-      clues: ["I am the smallest skull of the five.", "My long, narrow skull fits into holes along the river bank.", "Sharp {carnassial|carnassials} slice up fish, frogs, and mice."],
+      clues: ["I am the smallest skull of the five, so I hunt small animals.", "My sharp {carnassial|carnassials} slice meat like scissors.", "My long, narrow skull fits into burrows and holes along the riverbank."],
       fact: "Mink hunt on land and in water. They can swim under water for about 30 meters.",
       foods: ["fish", "frog", "mouse"], chain: ["sun", "algae", "tadpole", "frog", "mink"],
       teeth: "slicer", teethSay: "The mink's {carnassial|carnassials} are blades that slice meat like scissors.",
@@ -58,14 +58,14 @@ window.SD_DATA = (function () {
       size: "About 50 to 70 centimeters (20 to 28 inches) long with the tail, 0.5 to 1.3 kilograms (1 to 3 pounds), about the size of a small house cat.",
       eats: "Red squirrels, voles, mice, birds, and berries.",
       intro: "Martens are tree climbers with bushy tails and an orange patch on the throat. Most people have never seen one, because they live deep in forests.",
-      clues: ["My skull is light and slender, like a climber's helmet.", "My large {orbit|orbits} face forward, which helps me judge jumps from branch to branch.", "I chase red squirrels through the tree tops."],
+      clues: ["My large {orbit|orbits} face forward, which helps me judge jumps when I chase prey through the branches.", "My skull is light and slender, good for a climber.", "Sharp {carnassial|carnassials} slice meat, and my {molar|molars} can mash berries too."],
       fact: "Martens can turn their back feet around to climb down trees head first.",
       foods: ["squirrel", "mouse", "berries"], chain: ["sun", "seeds", "squirrel", "marten"],
       teeth: "slicer", teethSay: "Sharp {carnassial|carnassials} slice meat, and its {molar|molars} can mash berries.",
       ct: {}
     },
     fisher: {
-      name: "fisher", sci: "Pekania pennanti", job: "climber", hab: "forest",
+      name: "fisher", sci: "Pekania pennanti", job: "biter", hab: "forest",
       len: 112, wid: 66, orbit: 15, canine: 15, teethN: 38,
       shape: { r: .25, h: .36, oy: .57, crest: .06, zw: .59, rw: .24, pc: .14, bw: .42, mw: .5, iof: .02, bulb: .75, molar: "slice" },
       look: { L: 190, H: 36, leg: 30, arch: 10, head: 50, ear: 8, fur: "#2b211c", belly: "#2b211c", tail: [110, 16, 2], frost: "#7d6f63" },
@@ -73,7 +73,7 @@ window.SD_DATA = (function () {
       size: "About 75 to 120 centimeters (30 to 47 inches) long with the tail, 2 to 6 kilograms (4 to 13 pounds).",
       eats: "Snowshoe hares, squirrels, mice, birds, and even porcupines.",
       intro: "Fishers are larger, darker relatives of martens. Despite the name, they almost never eat fish.",
-      clues: ["I have a tall {sagcrest} on top of my skull, where strong jaw muscles attach.", "I can climb, but I hunt mostly on the forest floor.", "I am one of the few animals that can hunt porcupines."],
+      clues: ["I have a tall {sagcrest} on top of my skull, where big biting muscles attach.", "My long {canine|canines} grab and hold large prey.", "My strong bite lets me hunt prey bigger than a squirrel, even porcupines."],
       fact: "Fishers almost never eat fish. They hunt hares, squirrels, and even porcupines.",
       foods: ["porcupine", "rabbit", "squirrel"], chain: ["sun", "bark", "porcupine", "fisher"],
       teeth: "slicer", teethSay: "Long {canine|canines} and strong {carnassial|carnassials} give the fisher a powerful bite.",
@@ -88,7 +88,7 @@ window.SD_DATA = (function () {
       size: "About 60 to 75 centimeters (24 to 30 inches) long, 6 to 11 kilograms (13 to 24 pounds).",
       eats: "Ground squirrels, pocket gophers, prairie dogs, mice, and insects.",
       intro: "American badgers are wide, flat diggers with long front claws and a white stripe down the face. They live in Arizona!",
-      clues: ["I have the biggest, widest skull of the five, shaped like a triangle.", "My strong skull and jaws help me dig after ground squirrels.", "Big {olfbulb|olfactory bulbs} in my brain help me smell animals under the ground."],
+      clues: ["I have the biggest, widest skull of the five, with strong jaws.", "Big {olfbulb|olfactory bulbs} help me smell prey hiding under the ground.", "Wide {molar|molars} crush insects, and strong jaws grab the animals I dig up."],
       fact: "An American badger can dig itself out of sight in less than a minute.",
       foods: ["squirrel", "mouse", "insect"], chain: ["sun", "seeds", "squirrel", "badger"],
       teeth: "mixed", teethSay: "Badgers have {carnassial|carnassials} for slicing and big, square {molar|molars} for crushing, so they can eat many kinds of food.",
@@ -177,6 +177,14 @@ window.SD_DATA = (function () {
     dental: { t: "dental formula", def: "A short code for how many incisors, canines, premolars, and molars an animal has on one side of the upper and lower jaws." }
   };
 
+  // What each animal eats (2nd grade), as two foods from FOODS plus a label.
+  const DIETS = {
+    otter: { foods: ["fish", "crayfish"], name: "Fish and crayfish" },
+    mink: { foods: ["frog", "mouse"], name: "Frogs and mice" },
+    marten: { foods: ["squirrel", "berries"], name: "Red squirrels and berries" },
+    fisher: { foods: ["porcupine", "rabbit"], name: "Porcupines and snowshoe hares" },
+    badger: { foods: ["squirrel", "insect"], name: "Ground squirrels (dug up) and insects" }
+  };
   const HABITATS = {
     river: { name: "river", say: "the river" },
     trees: { name: "tree tops", say: "the tree tops" },
@@ -184,9 +192,10 @@ window.SD_DATA = (function () {
     grassland: { name: "grassland", say: "the grassland" }
   };
   const JOBS = {
-    swimmer: { name: "Swimmers", say: "swimmers" },
-    climber: { name: "Climbers", say: "climbers" },
-    digger: { name: "Diggers", say: "diggers" }
+    swimmer: { name: "Hunts in water", say: "hunts in water" },
+    climber: { name: "Hunts in trees", say: "hunts in trees" },
+    biter: { name: "Hunts big prey", say: "hunts big prey" },
+    digger: { name: "Digs for prey", say: "digs for prey" }
   };
 
   // Body parts to find on a skull (K). Each matches a tappable part in the drawing.
@@ -212,8 +221,8 @@ window.SD_DATA = (function () {
 
   const GRADES = {
     k: { label: "K", title: "Face Finder", std: "K-LS1-1 · K.L1U1.6, K.L1U1.7", say: "Kindergarten. Find the parts of a skull, and learn their science names." },
-    g1: { label: "1", title: "Sort the Skulls", std: "1-LS1-1 · 1.L4.U1.10", say: "First grade. Classify the skulls by the job they do, and copy nature to build things." },
-    g2: { label: "2", title: "Who Lives Where?", std: "2-LS4-1 · 2.L2U1.9", say: "Second grade. Use clues from the skull to find each animal's habitat." },
+    g1: { label: "1", title: "Sort the Skulls", std: "1-LS1-1 · 1.L4.U1.10", say: "First grade. Classify the skulls by how each animal hunts, and copy nature to build things." },
+    g2: { label: "2", title: "What's for Dinner?", std: "2-LS4-1 · 2.L2U1.9", say: "Second grade. Use clues from the skull, like teeth, orbits, and jaws, to figure out what each animal eats." },
     g3: { label: "3", title: "Measure the Skulls", std: "3-LS4-2, 3-LS4-3 · 3.L1U1.5, 3.P2U1.1", say: "Third grade. Learn how a CT scanner works, measure skulls, teeth, and orbits, and make a graph." },
     g4: { label: "4", title: "Brain Detective", std: "4-LS1-1, 4-LS1-2 · 4.L4U1.11", say: "Fourth grade. Look inside the skull at the brain, follow the paths from the senses to the brain, and solve adaptation cases." },
     g5: { label: "5", title: "Tooth Tales", std: "5-LS2-1, 5-PS3-1", say: "Fifth grade. Learn the four kinds of mammal teeth, read each animal's teeth to find its diet, and follow the energy from the Sun." },
@@ -221,5 +230,5 @@ window.SD_DATA = (function () {
   };
   const GRADE_IDS = ["k", "g1", "g2", "g3", "g4", "g5", "g6"];
 
-  return { SKULLS, IDS, HABITATS, JOBS, TERMS, PARTS, FOODS, PRODUCERS, TREE, GRADES, GRADE_IDS };
+  return { SKULLS, IDS, DIETS, HABITATS, JOBS, TERMS, PARTS, FOODS, PRODUCERS, TREE, GRADES, GRADE_IDS };
 })();

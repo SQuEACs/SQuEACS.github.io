@@ -8,6 +8,8 @@
    assets/inside-the-tadpole/ and list them in CT below, e.g.
      CT.tadpole = ["assets/inside-the-tadpole/tadpole-001.jpg", ...]
    The slice slider then steps through the real images too.
+   For the CT view beside the drawings, add one side-view (sagittal)
+   image per life stage to CT.side.
    ============================================================ */
 window.TP_DATA = (function () {
   // Body parts. name = the anatomical term; k = kindergarten line; says = older grades; job = what it does (3rd grade).
@@ -119,6 +121,8 @@ window.TP_DATA = (function () {
     g6: { label: "6", title: "Body Systems Lab", std: "MS-LS1-3", say: "Sixth grade. Learn the body systems, name the system for each organ, compare real CT scans with drawings, and see how systems work together." }
   };
   const GRADE_IDS = ["k", "g1", "g2", "g3", "g4", "g5", "g6"];
-  const CT = { tadpole: [], fish: [] };
+  // side: one side-view CT image per life stage (0 tadpole, 1 back-leg buds, 2 front legs inside, 3 froglet),
+  // shown next to the drawings, e.g. side: ["assets/inside-the-tadpole/side-stage0.png", ...]. Empty = simulated view.
+  const CT = { tadpole: [], fish: [], side: [] };
   return { PARTS, ANIMALS, TERMS, SYSTEMS, STAGES, GRADES, GRADE_IDS, CT };
 })();

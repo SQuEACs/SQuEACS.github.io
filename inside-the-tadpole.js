@@ -25,9 +25,9 @@
   };
 
   /* ---------- science words: {key} or {key|shown words} ---------- */
-  const TERM_RE = /\{(\w+)(?:\|([^}]*))?\}/g;
-  const plain = s => String(s).replace(TERM_RE, (m, k, alt) => alt || (TERMS[k] ? TERMS[k].t : k));
-  const rich = s => esc(s).replace(TERM_RE, (m, k, alt) => TERMS[k] ? `<button type="button" class="tp-term" data-act="term" data-k="${k}">${alt || TERMS[k].t}</button>` : (alt || k));
+  const TERM_RE = /\{(\w+)(?:\|([^}]*))?\}([.,!?;:)]*)/g;
+  const plain = s => String(s).replace(TERM_RE, (m, k, alt, p) => (alt || (TERMS[k] ? TERMS[k].t : k)) + p);
+  const rich = s => esc(s).replace(TERM_RE, (m, k, alt, p) => { const w = TERMS[k] ? `<button type="button" class="tp-term" data-act="term" data-k="${k}">${alt || TERMS[k].t}</button>` : (alt || k); return p ? `<span class="tp-nw">${w}${p}</span>` : w; });
 
   /* ---------- saved progress ---------- */
   const S = Object.assign({ grade: null, done: {}, mute: false, opts: { lock: "", slow: false, caps: true } }, load());
@@ -141,6 +141,9 @@
       say(plain(q) + " " + o.map(x => plain(x[1])).join(". Or, ") + "?");
     });
   }
+  // A drawing with the CT view of the same stage beside it, so kids see the inside.
+  const ctPair = (draw, stage = 0, cls = "") => `<div class="tp-ctpair ${cls}"><figure class="tp-ctdraw">${draw}<figcaption>Drawing</figcaption></figure><figure class="tp-ctpanel">${ART.ctSide(stage)}<figcaption>${D.CT.side && D.CT.side[stage] ? "Real CT scan" : "CT scan view (simulated)"}</figcaption></figure></div>`;
+  const withCT = (draw, cls = "") => { const m = /data-stage="(\d)"/.exec(draw); return m ? ctPair(draw, +m[1], cls) : `<div class="tp-pic ${cls === "tp-tap" ? cls : "tp-small " + cls}">${draw}</div>`; };
   // Tap parts on a drawing, one prompt at a time.
   function tapParts(drawing, list, title) {
     return new Promise(res => {
@@ -148,7 +151,7 @@
       const ask = () => {
         if (i >= list.length) return res();
         const [id, prompt, after] = list[i];
-        screen(`${head(prompt)}<div class="tp-pic tp-tap">${drawing()}</div>`, {});
+        screen(`${head(prompt)}${withCT(drawing(), "tp-tap")}`, {});
         partsOn(); say(prompt);
         acts.part = el => {
           const got = el.dataset.part;
@@ -290,7 +293,7 @@
   PLAY.k = async function () {
     const list = shuffle([["eye", "Tap the {eye}.", P.eye.k], ["mouth", "Tap the {mouth}.", P.mouth.k], ["tail", "Tap the tail.", P.tail.k], ["gut", "Tap the {intestine}, the long, coiled tube in the belly.", P.gut.k], ["heart", "Tap the {heart}.", P.heart.k], ["gills", "Tap the {gills}, behind the head.", P.gills.k]]).slice(0, 4);
     await tapParts(() => ART.tadpole(0, { parts: true }), list);
-    await choose("What does a tadpole use its tail for?", [["swim", "Swimming"], ["fly", "Flying"], ["dig", "Digging"]], "swim", "Swish, swish! The tail muscles push the tadpole through the water.", `<div class="tp-pic tp-small">${ART.tadpole(0)}</div>`);
+    await choose("What does a tadpole use its tail for?", [["swim", "Swimming"], ["fly", "Flying"], ["dig", "Digging"]], "swim", "Swish, swish! The tail muscles push the tadpole through the water.", ctPair(ART.tadpole(0)));
     solved("k", "You found the eye, mouth, intestine, heart, and gills inside a tadpole, and learned what they do.");
   };
   PLAY.g1 = async function () {
@@ -312,13 +315,13 @@
     solved("g2", "You found the tadpole's survival kit: gills to breathe, an intestine to digest food, and muscles to swim.");
   };
   // Show one highlighted part and ask a question about it (no tapping needed).
-  function askPart(drawing, id, q, opts, right, why) { return choose(q, opts, right, why, `<div class="tp-pic tp-small tp-hipic">${drawing(id)}</div>`); }
+  function askPart(drawing, id, q, opts, right, why) { return choose(q, opts, right, why, withCT(drawing(id), "tp-hipic")); }
   PLAY.g3 = async function () {
     await ctIntro();
     await slicer("tadpole", shuffle(["eye", "gills", "heart", "gut", "noto"]).slice(0, 3), 0, "This cartoon shows what CT slices let us see. Move the slice from head to tail.");
     await ctCompare("tadpole");
     const JOBS = ["eye", "gills", "heart", "gut", "muscle", "brain"];
-    await lesson(`${head("Structure and function", "Every body part, or {structure}, has a job, or {function}. Next, a part of the tadpole will glow pink. Pick the job it does.")}<div class="tp-pic tp-small">${ART.tadpole(0)}</div>`, "Structure and function. Every body part has a job. Next, a part of the tadpole will glow pink. Pick the job it does.");
+    await lesson(`${head("Structure and function", "Every body part, or {structure}, has a job, or {function}. Next, a part of the tadpole will glow pink. Pick the job it does.")}${ctPair(ART.tadpole(0))}`, "Structure and function. Every body part has a job. Next, a part of the tadpole will glow pink. Pick the job it does.");
     for (const id of shuffle(JOBS).slice(0, 4)) {
       const wrong = shuffle(JOBS.filter(x => x !== id)).slice(0, 2);
       await askPart(h => ART.tadpole(0, { hi: h }), id, `This glowing part is the ${P[id].name}. What is its function?`, [[id, P[id].job], ...wrong.map(w => [w, P[w].job])], id, P[id].says || P[id].k);
@@ -363,7 +366,7 @@
   };
   PLAY.g5 = async function () {
     screen(`${head("Unroll the intestine!", "Slide to stretch out the tadpole's coiled {intestine} and compare it with its body.")}
-      <div class="tp-pic tp-small">${ART.tadpole(0)}</div>
+      ${ctPair(ART.tadpole(0))}
       <svg class="tp-gutbar" viewBox="0 0 420 70" role="img" aria-label="Intestine length compared with body length"><g stroke="#2a2233" stroke-width="3"><rect x="10" y="8" width="60" height="16" rx="8" fill="#cfe3a3"/><text x="78" y="22" font-size="14" stroke="none" fill="#2a2233">body</text><rect id="tp-gutr" x="10" y="38" width="10" height="16" rx="8" fill="#f0b46a"/></g></svg>
       <label class="tp-range"><span id="tp-gx">Intestine</span><input type="range" min="0" max="100" value="0" id="tp-g" data-focus aria-label="Unroll the intestine"></label>
       <div class="tp-row" id="tp-gok" hidden>${btn("next", `${UI.go}<span>Next</span>`, "tp-go")}</div>`, {});
@@ -400,7 +403,7 @@
       const draw = () => {
         const sys = {}; if (on) SY6[on].parts.forEach(id => { sys[id] = on; });
         screen(`${head("Meet the body systems", "Tap each system to see its organs light up and learn its job.")}
-          <div class="tp-pic tp-small">${ART.tadpole(0, { sys })}</div>
+          ${ctPair(ART.tadpole(0, { sys }))}
           <div class="tp-systems">${Object.keys(SY6).map(s => btn("sys", `<i style="background:${SY6[s].color}"></i><b>${SY6[s].name}</b><span>${SY6[s].job}</span>`, "tp-sys" + (seen[s] ? " tp-seen" : "") + (on === s ? " tp-sel" : ""), ` data-s="${s}"`)).join("")}</div>
           ${nextBtn("Next", Object.keys(seen).length < 6)}`, {
           sys: el => { on = el.dataset.s; seen[on] = 1; draw(); const parts = SY6[on].parts.map(id => P[id].name).join(", "); showTerm(on).then(() => { say(`In the tadpole, the ${SY6[on].name.toLowerCase()} system includes the ${parts}.`); if (Object.keys(seen).length === 6) showNext(); }); },

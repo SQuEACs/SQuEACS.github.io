@@ -29,9 +29,12 @@
   };
 
   /* ---------- science words: {key} or {key|shown words} ---------- */
-  const TERM_RE = /\{(\w+)(?:\|([^}]*))?\}/g;
-  const plain = s => String(s).replace(TERM_RE, (m, k, alt) => alt || (TERMS[k] ? TERMS[k].t : k));
-  const rich = s => esc(s).replace(TERM_RE, (m, k, alt) => TERMS[k] ? `<button type="button" class="sd-term" data-act="term" data-k="${k}">${alt || TERMS[k].t}</button>` : (alt || k));
+  const TERM_RE = /\{(\w+)(?:\|([^}]*))?\}([.,!?;:)]*)/g;
+  const plain = s => String(s).replace(TERM_RE, (m, k, alt, p) => (alt || (TERMS[k] ? TERMS[k].t : k)) + p);
+  /* Photo of the real animal with the game's drawing beside it, so kids link the two */
+  const animalPic = (id, w) => { const sp = SK[id];
+    return `<div class="sd-meet-pic">${sp.photo ? `<figure class="sd-photo"><img src="${esc(sp.photo.src)}" alt="Photo of ${esc(the(id))}"><figcaption>${sp.photo.credit}</figcaption></figure><figure class="sd-drawn">${ART.animal(sp, w)}<figcaption>In the game, ${esc(the(id))} looks like this.</figcaption></figure>` : ART.animal(sp, w)}</div>`; };
+  const rich = s => esc(s).replace(TERM_RE, (m, k, alt, p) => { const w = TERMS[k] ? `<button type="button" class="sd-term" data-act="term" data-k="${k}">${alt || TERMS[k].t}</button>` : (alt || k); return p ? `<span class="sd-nw">${w}${p}</span>` : w; });
   const firstTerm = s => { const m = /\{(\w+)/.exec(s); return m && TERMS[m[1]] ? m[1] : null; };
 
   /* ---------- saved progress ---------- */
@@ -212,7 +215,7 @@
       }
       const id = D.IDS[i], sp = SK[id], last = i === D.IDS.length - 1;
       screen(`<div class="sd-meet"><p class="sd-meet-n">Animal ${i + 1} of ${D.IDS.length}</p>
-        <div class="sd-meet-pic">${sp.photo ? `<figure class="sd-photo"><img src="${esc(sp.photo.src)}" alt="Photo of ${esc(the(id))}"><figcaption>${sp.photo.credit}</figcaption></figure>` : ART.animal(sp, 360)}</div>
+        ${animalPic(id, 360)}
         <div class="sd-meet-txt"><h3>${esc(cap1(nm(id)))} <i>${esc(sp.sci)}</i></h3><p>${rich(sp.intro)}</p>
           <dl><dt>Lives</dt><dd>${esc(sp.lives)}</dd>${young() ? "" : `<dt>Size</dt><dd>${esc(sp.size)}</dd>`}<dt>Eats</dt><dd>${esc(sp.eats)}</dd></dl></div></div>
         <div class="sd-row">${btn("next", `${ART.UI.go}<span>${last ? "Start the case" : "Next animal"}</span>`, "sd-go", " data-focus")}${last ? "" : btn("skip", "Skip", "sd-chip")}</div>`, { next: () => { i++; card(); }, skip: then });
@@ -262,8 +265,8 @@
           <g stroke="#2ed3c6" stroke-width="2" opacity=".7">${[-40, -20, 0, 20, 40].map(d => `<path d="M -166 43 L 178 ${43 + d * 1.6}"/>`).join("")}</g>
           <circle cx="0" cy="43" r="82" fill="#e3ddd0" stroke="#2a2233" stroke-width="3"/><text x="0" y="150" class="sd-dlab">turning stage</text>
           <g id="sd-rot" transform="rotate(0 0 43)"><g transform="translate(0 -20) scale(.42)">${ART.top(sp, { L: 300, cx: 0, y: 0 })}</g></g>
-          <rect x="178" y="-10" width="20" height="150" rx="4" fill="#1f2a44" stroke="#2a2233" stroke-width="3"/>
-          <text x="0" y="-18" class="sd-dlab" id="sd-count">X-ray pictures taken: 0</text></svg>
+          <rect x="178" y="-10" width="20" height="150" rx="4" fill="#1f2a44" stroke="#2a2233" stroke-width="3"/></svg>
+        <p class="sd-found" id="sd-count" aria-live="polite">X-ray pictures taken: 0</p>
         <label class="sd-range"><span>Turn</span><input type="range" min="0" max="360" value="0" id="sd-turn" data-focus aria-label="Turn the stage, in degrees"></label></div>
         ${nextBtn("Next", true)}`, { next: () => scanner(id, check) });
       const r = $("sd-turn"); let told = false;
@@ -377,7 +380,7 @@
           d: el => {
             if (el.dataset.id === id) {
               unlock(id);
-              screen(`<div class="sd-reveal"><div class="sd-meet-pic">${SK[id].photo ? `<figure class="sd-photo"><img src="${esc(SK[id].photo.src)}" alt="Photo of ${esc(the(id))}"><figcaption>${SK[id].photo.credit}</figcaption></figure>` : ART.animal(SK[id], 300)}</div>${head(`It's ${the(id)}!`, `It eats ${SK[id].eats.charAt(0).toLowerCase() + SK[id].eats.slice(1)} ${SK[id].fact}`)}</div>${nextBtn()}`, { next: one });
+              screen(`<div class="sd-reveal">${animalPic(id, 300)}${head(`It's ${the(id)}!`, `It eats ${SK[id].eats.charAt(0).toLowerCase() + SK[id].eats.slice(1)} ${SK[id].fact}`)}</div>${nextBtn()}`, { next: one });
               say(`${pick(PH.yes)} It's ${the(id)}. It eats ${SK[id].eats.charAt(0).toLowerCase() + SK[id].eats.slice(1)} ${SK[id].fact}`);
             } else { flash(el, false); if (c < 2) { c++; draw(); say("Not quite. Here's another skull clue. " + SK[id].clues[c]); } else say(pick(PH.no)); }
           },
@@ -744,10 +747,11 @@
       });
       say(`Trait ${k + 1}: ${plain(ft.name)}. Tap every skull that has it, then tap done.`);
     };
+    const traitTable = (cls = "") => `<div class="sd-table-wrap${cls}"><table class="sd-table"><caption class="sd-table-cap">Your trait table</caption><thead><tr><th>Trait</th>${D.IDS.map(id => `<th>${esc(short(id))}</th>`).join("")}</tr></thead>
+        <tbody>${F.map(ft => `<tr><td>${rich(ft.name)}</td>${D.IDS.map(id => `<td>${ft.has.includes(id) ? "●" : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     const table = () => {
       screen(`${head("Your trait table", "Which pairs share the most traits? Shared derived traits are clues to {sister|sister taxa}.")}
-        <div class="sd-table-wrap"><table class="sd-table"><thead><tr><th>Trait</th>${D.IDS.map(id => `<th>${esc(short(id))}</th>`).join("")}</tr></thead>
-        <tbody>${F.map(ft => `<tr><td>${rich(ft.name)}</td>${D.IDS.map(id => `<td>${ft.has.includes(id) ? "●" : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${nextBtn("Build the tree")}`, { next: tree });
+        ${traitTable()}${nextBtn("Build the tree")}`, { next: tree });
       say("Here is your trait table. Which pairs share the most traits?");
     };
     const tree = () => {
@@ -756,11 +760,12 @@
         const slot = s => btn("slot", slots[s] ? `<div class="sd-mini-skull">${skullPic(slots[s])}</div><span>${esc(short(slots[s]))}</span>` : `<span>Empty</span>`, "sd-slot" + (slots[s] ? " full" : ""), ` data-s="${s}" aria-label="Tree spot ${s.toUpperCase()}${slots[s] ? ": " + esc(nm(slots[s])) : ", empty"}"`);
         const left = D.IDS.filter(id => !Object.values(slots).includes(id));
         screen(`${head("Build the {phylotree}", "Put each pair of {sister|sister taxa} together. The {outgroup}, the lineage that branched off first, goes on its own. Tap a skull, then tap a spot.")}
-          <div class="sd-tree"><div class="sd-tree-lab"><span>Outgroup</span><span>Sister taxa</span><span>Sister taxa</span></div>
+          <div class="sd-treewrap"><div class="sd-treemain"><div class="sd-tree"><div class="sd-tree-lab"><span>Outgroup</span><span>Sister taxa</span><span>Sister taxa</span></div>
             <svg viewBox="0 0 400 120" aria-hidden="true" preserveAspectRatio="none"><g fill="none" stroke="#2a2233" stroke-width="5" stroke-linecap="round"><path d="M140 116 V90 M40 90 H240 M40 90 V8 M240 90 V60 M160 60 H320 M160 60 V36 M320 60 V36 M120 36 H200 M280 36 H360 M120 36 V8 M200 36 V8 M280 36 V8 M360 36 V8"/></g></svg>
             <div class="sd-tree-slots"><div>${slot("e")}</div><div class="sd-pairbox">${slot("a")}${slot("b")}</div><div class="sd-pairbox">${slot("c")}${slot("d")}</div></div></div>
           <div class="sd-skulls5">${left.map(id => btn("hold", `<div class="sd-mini-skull">${skullPic(id)}</div><span>${esc(short(id))}</span>`, "sd-tile sd-wide" + (held === id ? " sd-sel" : ""), ` data-id="${id}" aria-pressed="${held === id}"`)).join("")}</div>
-          ${left.length ? "" : `<div class="sd-row">${btn("check", "Check my tree", "sd-go", " data-focus")}</div>`}`, {
+          ${left.length ? "" : `<div class="sd-row">${btn("check", "Check my tree", "sd-go", " data-focus")}</div>`}</div>
+          ${traitTable(" sd-table-small")}</div>`, {
           hold: el => { held = el.dataset.id; draw(); say(cap1(nm(held)) + ". Now tap a spot on the tree."); },
           slot: el => { const s = el.dataset.s; if (slots[s]) { slots[s] = null; draw(); return; } if (!held) return say("First tap a skull."); slots[s] = held; held = null; draw(); },
           check: () => {

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skull Detective: Free CT Scan Skull Game for K to 6th Grade · SQuEACs Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Skull Detective is a free science game for kindergarten to 6th grade from the SQuEACs Lab at Midwestern University. Kids explore CT-scanned skulls of five weasel-family cousins to learn body parts, habitats, senses, diets, and family trees. Everything is read aloud, with captions.">
+<link rel="canonical" href="https://squeacs.github.io/skull-detective.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SQuEACs Lab">
+<meta property="og:title" content="Skull Detective: a free CT scan science game">
+<meta property="og:description" content="Explore CT-scanned skulls of otters, mink, martens, fishers, and badgers. One case for each grade from K to 6, read aloud.">
+<meta property="og:url" content="https://squeacs.github.io/skull-detective.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Skull Detective">
+<meta name="twitter:description" content="Explore CT-scanned skulls of otters, mink, martens, fishers, and badgers. One case for each grade from K to 6, read aloud.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<meta name="theme-color" content="#0b0a10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skull Detective">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css?v=40">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="skull-detective.css?v=1">
+<script src="skull-detective-data.js?v=1" defer></script>
+<script src="skull-detective-art.js?v=1" defer></script>
+<script src="skull-detective.js?v=1" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html">3D Models</a></li>
+          <li class="sub"><a href="otter-game.html">Otter Evolution</a></li>
+          <li class="sub"><a href="tadpole-game.html">Tadpole Trek</a></li>
+          <li class="sub"><a href="mammal-mystery.html">Mammal Mystery</a></li>
+          <li class="sub"><a href="skull-detective.html" aria-current="page">Skull Detective</a></li>
+          <li class="sub"><a href="inside-the-tadpole.html">Inside the Tadpole</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+
+
+<main id="top" class="subpage">
+  <section id="skull-detective">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Skull Detective</p>
+        <h1 class="page-title">Skull Detective</h1>
+        <p>A CT scan science game for kindergarten to 6th grade. Explore the skulls of five weasel-family cousins and solve a case for your grade: find skull parts, match skulls to habitats, measure them, look inside at the brain, read the teeth, and build the family tree. Everything is read aloud.</p>
+      </div>
+
+      <div class="sd-wrap">
+        <div class="sd-stage" id="sd-stage">
+          <div class="sd-bar">
+            <button type="button" class="sd-ib" id="sd-home" aria-label="Home" hidden></button>
+            <span class="sd-sp"></span>
+            <button type="button" class="sd-ib" id="sd-say" aria-label="Say it again"></button>
+            <button type="button" class="sd-ib" id="sd-mute" aria-label="Voice off" aria-pressed="false"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M 16 38 H 34 L 54 20 V 80 L 34 62 H 16 Z" fill="#2ed3c6" stroke="#2a2233" stroke-width="6" stroke-linejoin="round"/><path d="M 66 38 L 88 62 M 88 38 L 66 62" stroke="#2a2233" stroke-width="7" stroke-linecap="round"/></svg></button>
+            <button type="button" class="sd-ib" id="sd-fs" aria-label="Full screen">⛶</button>
+          </div>
+          <div class="sd-view" id="sd-view" aria-live="polite"></div>
+          <p class="sd-cap" id="sd-cap" hidden></p>
+          <noscript><p style="padding:1rem">Skull Detective needs JavaScript turned on.</p></noscript>
+        </div>
+
+        <p class="og-help sd-help"><b>How to play:</b> pick your grade and open the case. Each grade has its own mission: find skull parts (K), sort skulls by job (1st), match skulls to habitats (2nd), measure skulls (3rd), look at the brain inside (4th), read the teeth and follow the energy (5th), and build the family tree (6th). Everything is read aloud and shown as captions. Tap the speaker to hear it again. Works with touch, a mouse, or a keyboard (Tab and Enter).</p>
+
+        <div class="sd-grownups">
+          <div>
+            <h3>What each grade learns</h3>
+            <ul>
+              <li><b>K:</b> skull parts and what they do (K-LS1-1).</li>
+              <li><b>1st:</b> sorting animals into groups, and copying nature to solve problems (1-LS1-1).</li>
+              <li><b>2nd:</b> habitats and the variety of life in them (2-LS4-1).</li>
+              <li><b>3rd:</b> measuring, graphing, and arguing from evidence about survival (3-LS4-2, 3-LS4-3).</li>
+              <li><b>4th:</b> senses, the brain, and how bodies fit habitats (4-LS1-1, 4-LS1-2).</li>
+              <li><b>5th:</b> teeth, diets, and energy in food chains (5-LS2-1, 5-PS3-1).</li>
+              <li><b>6th:</b> shared features and family trees (MS-LS4-2).</li>
+            </ul>
+          </div>
+          <div>
+            <h3>The skulls</h3>
+            <p>The SQuEACs Lab CT-scanned the skulls of five North American cousins in the weasel family: river otter, American mink, American marten, fisher, and American badger. They are close relatives, so every difference between their skulls is a clue to how each one lives.</p>
+          </div>
+          <div>
+            <h3>For teachers</h3>
+            <p>The classroom edition lets you lock a grade, slow the voice, and turn captions on or off. The teacher guide has a lesson plan for each grade.</p>
+            <p style="margin-top:.6rem"><a class="btn primary" href="skull-detective-teachers.html">Teacher guide</a></p>
+          </div>
+        </div>
+        <p class="og-note">Skull drawings follow each species' real proportions and will be joined by the lab's CT scan images. Skull sizes are typical adult measurements. The family tree follows published DNA studies of the weasel family. Progress is saved only in this browser.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0003-3055-8438" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js?v=9"></script>
+</body>
+</html>

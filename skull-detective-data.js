@@ -102,7 +102,8 @@ window.SD_DATA = (function () {
     otter: { src: "assets/mammal-mystery/photos/otter.jpg", credit: `Photo: Dmitry Azovtsev (<a href="http://www.daphoto.info" target="_blank" rel="noopener">daphoto.info</a>), ${BYSA}, ${WC}` },
     mink: { src: "assets/skull-detective/photos/mink.jpg", credit: `Photo: Jonn Leffmann, ${BY}, ${WC}` },
     marten: { src: "assets/skull-detective/photos/marten.jpg", credit: `Photo: USFWS Midwest Region, public domain, ${WC}` },
-    fisher: { src: "assets/skull-detective/photos/fisher.jpg", credit: `Photo: Jeff Lewis, Olympic National Park, public domain, ${WC}` }
+    fisher: { src: "assets/skull-detective/photos/fisher.jpg", credit: `Photo: Jeff Lewis, Olympic National Park, public domain, ${WC}` },
+    badger: { src: "assets/skull-detective/photos/badger.jpg", credit: `Photo: Yathin S Krishnappa, ${BYSA}, ${WC}` }
   };
   for (const id in PHOTOS) SKULLS[id].photo = PHOTOS[id];
   // Drawing sizes that follow the measurements: orbit radius and canine height as fractions of skull length.

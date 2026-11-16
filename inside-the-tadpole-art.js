@@ -129,7 +129,7 @@ window.TP_ART = (function () {
       <path d="M 150 128 q 6 6 14 4" fill="none" stroke="#262313" stroke-width="1.5"/></svg>`;
   }
   function realFish(w = 340) {
-    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="A western mosquitofish"><defs>
+    return `<svg viewBox="0 0 420 200" width="${w}" role="img" aria-label="An eastern mosquitofish"><defs>
       <linearGradient id="tpf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f6247"/><stop offset=".45" stop-color="#9aa88d"/><stop offset=".7" stop-color="#d9dccd"/><stop offset="1" stop-color="#f2efe2"/></linearGradient></defs>
       <path d="M 318 98 L 398 52 Q 384 100 398 148 Z" fill="#7d8a6c" stroke="#3b4734" stroke-width="1.5"/>
       <path d="M 170 56 Q 200 22 238 50 Z" fill="#6f7d60" stroke="#3b4734" stroke-width="1.3"/>

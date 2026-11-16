@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inside the Tadpole: Classroom edition</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Inside the Tadpole is a free science game for kindergarten to 6th grade from the SQuEACs Lab at Midwestern University. Kids slice through CT scans of a see-through tadpole and fish to find body parts, follow the frog life cycle, trace messages to the brain, and sort body systems. Everything is read aloud, with captions.">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SQuEACs Lab">
+<meta property="og:title" content="Inside the Tadpole: a free CT scan science game">
+<meta property="og:description" content="Slice through CT scans of a tadpole and a fish. One mission for each grade from K to 6, read aloud.">
+<meta property="og:url" content="https://squeacs.github.io/inside-the-tadpole.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Inside the Tadpole">
+<meta name="twitter:description" content="Slice through CT scans of a tadpole and a fish. One mission for each grade from K to 6, read aloud.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<meta name="theme-color" content="#0b0a10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inside the Tadpole">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css?v=40">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="inside-the-tadpole.css?v=1">
+<script>window.TP_CLASSROOM = true;</script>
+<script src="inside-the-tadpole-data.js?v=1" defer></script>
+<script src="inside-the-tadpole-art.js?v=1" defer></script>
+<script src="inside-the-tadpole.js?v=1" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+  </div>
+</header>
+
+
+
+<main id="top" class="subpage">
+  <section id="inside-the-tadpole">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="inside-the-tadpole-teachers.html">Teacher guide</a> / Classroom edition</p>
+        <h1 class="page-title">Inside the Tadpole</h1>
+        <p>A CT scan science game for kindergarten to 6th grade. Peek inside a tadpole and a fish, slice through them the way a CT scanner does, and complete a mission for your grade: find body parts, follow the life cycle, trace a message to the brain, unroll the gut, and sort body systems. Everything is read aloud.</p>
+        <p><b>Teachers:</b> press and hold the gear on the title screen for settings (lock a grade, slower voice, captions, clear progress).</p>
+      </div>
+
+      <div class="tp-wrap">
+        <div class="tp-stage" id="tp-stage">
+          <div class="tp-bar">
+            <button type="button" class="tp-ib" id="tp-home" aria-label="Home" hidden></button>
+            <span class="tp-sp"></span>
+            <button type="button" class="tp-ib" id="tp-say" aria-label="Say it again"></button>
+            <button type="button" class="tp-ib" id="tp-mute" aria-label="Voice off" aria-pressed="false"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M 16 38 H 34 L 54 20 V 80 L 34 62 H 16 Z" fill="#2ed3c6" stroke="#2a2233" stroke-width="6" stroke-linejoin="round"/><path d="M 66 38 L 88 62 M 88 38 L 66 62" stroke="#2a2233" stroke-width="7" stroke-linecap="round"/></svg></button>
+            <button type="button" class="tp-ib" id="tp-fs" aria-label="Full screen">⛶</button>
+          </div>
+          <div class="tp-view" id="tp-view" aria-live="polite"></div>
+          <p class="tp-cap" id="tp-cap" hidden></p>
+          <noscript><p style="padding:1rem">Inside the Tadpole needs JavaScript turned on.</p></noscript>
+        </div>
+
+        <p class="og-help tp-help"><b>How to play:</b> pick your grade and start the mission. Tap body parts on the see-through tadpole, put stages in order, and move the slice slider from head to tail to see inside, the way a CT scanner does. Everything is read aloud and shown as captions. Tap the speaker to hear it again. Works with touch, a mouse, or a keyboard (Tab, Enter, and arrow keys for sliders).</p>
+
+        <div class="tp-grownups">
+          <div>
+            <h3>For teachers</h3>
+            <p><a class="btn primary" href="inside-the-tadpole-teachers.html">Teacher guide and lesson plans</a></p>
+          </div>
+          <div>
+            <h3>Start on one grade</h3>
+            <p>Add <code>?grade=k</code>, <code>?grade=g1</code>, up to <code>?grade=g6</code> to this page's address, or lock a grade in the teacher settings.</p>
+          </div>
+        </div>
+        <p class="og-note">The tadpole and fish are simplified drawings based on the lab's stained CT scans; real scan slices will appear beside them. Progress is saved only in this browser.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id"><p class="brand">SQu<span>EAC</span>s Lab</p><p>Department of Anatomy, Midwestern University · Glendale, AZ</p></div>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

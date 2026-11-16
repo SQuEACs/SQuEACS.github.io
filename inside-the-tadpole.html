@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inside the Tadpole: Free CT Scan Slice Game for K to 6th Grade · SQuEACs Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Inside the Tadpole is a free science game for kindergarten to 6th grade from the SQuEACs Lab at Midwestern University. Kids slice through CT scans of a see-through tadpole and fish to find body parts, follow the frog life cycle, trace messages to the brain, and sort body systems. Everything is read aloud, with captions.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://squeacs.github.io/inside-the-tadpole.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SQuEACs Lab">
+<meta property="og:title" content="Inside the Tadpole: a free CT scan science game">
+<meta property="og:description" content="Slice through CT scans of a tadpole and a fish. One mission for each grade from K to 6, read aloud.">
+<meta property="og:url" content="https://squeacs.github.io/inside-the-tadpole.html">
+<meta property="og:image" content="https://squeacs.github.io/assets/inside-the-tadpole-preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Inside the Tadpole: a see-through cartoon tadpole with CT slices">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Inside the Tadpole">
+<meta name="twitter:image" content="https://squeacs.github.io/assets/inside-the-tadpole-preview.jpg">
+<meta name="twitter:description" content="Slice through CT scans of a tadpole and a fish. One mission for each grade from K to 6, read aloud.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<meta name="theme-color" content="#0b0a10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inside the Tadpole">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css?v=40">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="inside-the-tadpole.css?v=1">
+<script src="inside-the-tadpole-data.js?v=1" defer></script>
+<script src="inside-the-tadpole-art.js?v=1" defer></script>
+<script src="inside-the-tadpole.js?v=1" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html">3D Models</a></li>
+          <li class="sub"><a href="otter-game.html">Otter Evolution</a></li>
+          <li class="sub"><a href="tadpole-game.html">Tadpole Trek</a></li>
+          <li class="sub"><a href="mammal-mystery.html">Mammal Mystery</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+
+
+<main id="top" class="subpage">
+  <section id="inside-the-tadpole">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="open-science.html">Open Science</a> / Inside the Tadpole</p>
+        <h1 class="page-title">Inside the Tadpole</h1>
+        <p>A CT scan science game for kindergarten to 6th grade. Peek inside a tadpole and a fish, slice through them the way a CT scanner does, and complete a mission for your grade: find body parts, follow the life cycle, trace a message to the brain, unroll the gut, and sort body systems. Everything is read aloud.</p>
+      </div>
+
+      <div class="tp-wrap">
+        <div class="tp-stage" id="tp-stage">
+          <div class="tp-bar">
+            <button type="button" class="tp-ib" id="tp-home" aria-label="Home" hidden></button>
+            <span class="tp-sp"></span>
+            <button type="button" class="tp-ib" id="tp-say" aria-label="Say it again"></button>
+            <button type="button" class="tp-ib" id="tp-mute" aria-label="Voice off" aria-pressed="false"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M 16 38 H 34 L 54 20 V 80 L 34 62 H 16 Z" fill="#2ed3c6" stroke="#2a2233" stroke-width="6" stroke-linejoin="round"/><path d="M 66 38 L 88 62 M 88 38 L 66 62" stroke="#2a2233" stroke-width="7" stroke-linecap="round"/></svg></button>
+            <button type="button" class="tp-ib" id="tp-fs" aria-label="Full screen">⛶</button>
+          </div>
+          <div class="tp-view" id="tp-view" aria-live="polite"></div>
+          <p class="tp-cap" id="tp-cap" hidden></p>
+          <noscript><p style="padding:1rem">Inside the Tadpole needs JavaScript turned on.</p></noscript>
+        </div>
+
+        <p class="og-help tp-help"><b>How to play:</b> pick your grade and start the mission. Tap body parts on the see-through tadpole, put stages in order, and move the slice slider from head to tail to see inside, the way a CT scanner does. Everything is read aloud and shown as captions. Tap the speaker to hear it again. Works with touch, a mouse, or a keyboard (Tab, Enter, and arrow keys for sliders).</p>
+
+        <div class="tp-grownups">
+          <div>
+            <h3>What each grade learns</h3>
+            <ul>
+              <li><b>K:</b> body parts and what they do (K-LS1-1).</li>
+              <li><b>1st:</b> the frog life cycle, and young animals compared with their parents (1-LS3-1).</li>
+              <li><b>2nd:</b> what a tadpole needs to survive in its pond habitat (2-LS4-1).</li>
+              <li><b>3rd:</b> internal and external structures, and life cycles (3-LS1-1).</li>
+              <li><b>4th:</b> senses, the brain, and how the body reacts (4-LS1-1, 4-LS1-2).</li>
+              <li><b>5th:</b> the gut, diet, and energy from the Sun (5-PS3-1, 5-LS2-1).</li>
+              <li><b>6th:</b> body systems and how they work together (MS-LS1-3).</li>
+            </ul>
+          </div>
+          <div>
+            <h3>The scans</h3>
+            <p>The SQuEACs Lab stains tadpoles and fish with iodine before CT scanning, so soft tissues like the brain, gut, gills, and muscles show up, not just bone. Scanners image the body in thin slices, which this game lets kids slide through.</p>
+          </div>
+          <div>
+            <h3>For teachers</h3>
+            <p>The classroom edition lets you lock a grade, slow the voice, and turn captions on or off. The teacher guide has a lesson plan for each grade.</p>
+            <p style="margin-top:.6rem"><a class="btn primary" href="inside-the-tadpole-teachers.html">Teacher guide</a></p>
+          </div>
+        </div>
+        <p class="og-note">The tadpole and fish are simplified drawings based on the lab's stained CT scans; real scan slices will appear beside them. Progress is saved only in this browser.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0003-3055-8438" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js?v=9"></script>
+</body>
+</html>

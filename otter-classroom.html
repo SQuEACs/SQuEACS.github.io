@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Otter Evolution: Classroom edition</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Classroom edition of Otter Evolution from the SQuEACs Lab. Private link for teachers.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/app/otter-classroom-180.png">
+<link rel="manifest" href="otter-classroom.webmanifest">
+<meta name="theme-color" content="#0b0a10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Otter Class">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="styles.css?v=41">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<script src="assets/vendor/three-r149.min.js?v=1" defer></script>
+<script>window.OG_CLASSROOM = true;</script>
+<script src="otter-game.js?v=44" defer></script>
+<style>
+/* Classroom edition only */
+.og-term { all: unset; cursor: pointer; text-decoration: underline dotted 2px; text-underline-offset: 3px; text-decoration-color: #a47bff; font-weight: 600; }
+.og-term:hover, .og-term:focus-visible { background: rgba(164, 123, 255, .22); border-radius: .2rem; outline: 2px solid #a47bff; outline-offset: 1px; }
+.og-term-key { text-decoration: underline dotted 2px; text-decoration-color: #a47bff; text-underline-offset: 3px; }
+.og-pop { position: absolute; z-index: 40; left: 50%; bottom: 1rem; transform: translateX(-50%); width: min(26rem, calc(100% - 2rem)); padding: .9rem 1.1rem; border: 3px solid #0b0a10; border-radius: 1rem; background: #fffbea; color: #0b0a10; box-shadow: 0 8px 0 rgba(0, 0, 0, .35); font-family: Fredoka, "IBM Plex Sans", sans-serif; }
+.og-pop b { font-size: 1.15rem; }
+.og-pop p { margin: .35rem 0 .7rem; line-height: 1.4; }
+.og-pop .og-btn { padding: .4rem 1.1rem; }
+.og-meet-grid { display: grid; grid-template-columns: minmax(0, 15rem) 1fr; gap: 1rem; align-items: start; text-align: left; }
+.og-meet-grid canvas { width: 100%; height: auto; background: rgba(88, 198, 224, .18); border-radius: 1rem; }
+.og-meet-facts { margin: 0; padding-left: 1.1rem; line-height: 1.45; }
+.og-meet-facts li { margin: .25rem 0; }
+@media (max-width: 620px) { .og-meet-grid { grid-template-columns: 1fr; } .og-meet-grid canvas { max-width: 14rem; margin: 0 auto; } }
+.og-words { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); text-align: left; margin: .6rem 0 1rem; }
+.og-words div { padding: .55rem .75rem; border: 2px solid rgba(128, 128, 128, .45); border-radius: .8rem; }
+.og-words dt { font-weight: 700; }
+.og-words dd { margin: .2rem 0 0; line-height: 1.35; }
+.og-meet .tg-reflect, .og-card .tg-reflect { text-align: left; }
+body.og-big .og-card { font-size: 1.2em; }
+body.og-big .og-card .og-small { font-size: .95em; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">SQu<span>EAC</span>s</a>
+    <details class="menu" id="menu">
+      <summary aria-label="Site menu"><span class="menu-word">Menu</span><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+      <nav class="menu-panel" aria-label="Pages">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="open-science.html">Open Science</a></li>
+          <li class="sub"><a href="models.html">3D Models</a></li>
+          <li class="sub-head" aria-hidden="true">Games</li>
+          <li class="sub game"><a href="otter-game.html">Otter Evolution</a></li>
+          <li class="sub game"><a href="tadpole-game.html">Tadpole Trek</a></li>
+          <li class="sub game"><a href="mammal-mystery.html">Mammal Mystery</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="funding.html">Funding</a></li>
+          <li><a href="teaching.html">Teaching</a></li>
+          <li><a href="people.html">People</a></li>
+          <li><a href="collaborators.html">Collaborators</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<main id="top" class="subpage">
+  <section id="otter-game">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label"><a class="crumb" href="otter-teachers.html">For teachers</a> / Otter Evolution classroom edition</p>
+        <h1 class="page-title">Otter Evolution <small>Classroom edition</small></h1>
+        <p>Guide a population of river otters through eight generations. Explore a small 3D world as one otter each season, escape predators, and finish goals. Then watch natural selection, inheritance, mutation, and luck reshape the whole population. Pick snowy, desert, fast, slow, murky, or deep-lake homes, and see how bodies, brains, and inner ears evolve to match.</p>
+      </div>
+
+      <div class="og">
+        <div class="og-stage">
+          <canvas id="og-canvas" aria-hidden="true"></canvas>
+          <canvas id="og-3d" tabindex="0" hidden aria-label="Otter Evolution 3D world. Arrow keys or WASD to move, Space to jump or swim up, Shift or E to dive."></canvas>
+          <div class="og-flash" id="og-stage-flash" aria-hidden="true"></div>
+          <div class="og-hud" id="og-hud" hidden>
+            <div class="og-hud-top">
+              <span class="og-pill pink" id="og-gen">GEN 1</span>
+              <span class="og-pill" id="og-hab">Deep Clear Lake</span>
+              <span class="og-timer" aria-hidden="true"><i id="og-time"></i></span>
+              <button type="button" class="og-pill og-end" id="og-end" hidden>End season</button>
+              <button type="button" class="og-pill og-mute" id="og-mute" aria-pressed="false">Sound on</button>
+            </div>
+            <div class="og-hud-row">
+              <span class="og-hearts" id="og-hearts" aria-label="Hearts"></span>
+              <span class="og-energy" title="Energy"><b>Energy</b><span><i id="og-energy"></i></span></span>
+            </div>
+            <div class="og-tasks" id="og-tasks"></div>
+            <canvas class="og-map" id="og-map" width="120" height="120" aria-hidden="true"></canvas>
+          </div>
+          <div class="og-touch" id="og-touch" hidden>
+            <div class="og-stick" id="og-stick" aria-hidden="true"><i id="og-knob"></i></div>
+            <p class="og-touch-hint" id="og-touch-hint" hidden>Left thumb: move · Right thumb: swipe to look</p>
+            <button type="button" class="og-tbtn og-dive" data-key="dive" aria-label="Dive">Dive</button>
+            <button type="button" class="og-tbtn og-jump" data-key=" " aria-label="Jump or swim up">Jump</button>
+          </div>
+          <div class="og-corner" id="og-corner"><button type="button" class="og-home" id="og-home" aria-label="Main menu (Esc)" title="Main menu (Esc)">⌂</button><button type="button" class="og-bag" id="og-bag" aria-label="Open menu" title="Menu"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round"><path d="M11 9 Q11 4 16 4 Q21 4 21 9" fill="none" stroke="#fff"/><rect x="6" y="9" width="20" height="19" rx="5" fill="#ff8a5c"/><rect x="10" y="17" width="12" height="7" rx="2" fill="#ffd23f"/></svg></button><button type="button" class="og-fs" id="og-fs" aria-pressed="false" aria-label="Full screen" title="Full screen">⛶</button></div>
+          <p class="og-toast" id="og-toast" role="status" hidden></p>
+          <div class="og-screen" id="og-screen" hidden></div>
+        </div>
+        <nav class="og-hotbar" aria-label="Game menu">
+          <button type="button" class="og-slot" data-win="journal" aria-label="Journal (J)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M5 6 Q11 4 16 7 Q21 4 27 6 L27 26 Q21 24 16 27 Q11 24 5 26 Z" fill="#2ed3c6"/><path d="M16 7 V27" fill="none"/><path d="M8 11 H13 M8 15 H13 M19 11 H24 M19 15 H24" fill="none" stroke-width="1.6"/></svg><span>Journal</span><kbd>J</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="life" aria-label="Life story (L)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><rect x="6" y="4" width="20" height="24" rx="3" fill="#ffb347"/><path d="M10 4 V28" fill="none"/><circle cx="18" cy="17" r="3.2" fill="#7a4a2c" stroke-width="1.6"/><circle cx="14.5" cy="12" r="1.6" fill="#7a4a2c" stroke-width="1.2"/><circle cx="18" cy="10.6" r="1.6" fill="#7a4a2c" stroke-width="1.2"/><circle cx="21.5" cy="12" r="1.6" fill="#7a4a2c" stroke-width="1.2"/></svg><span>Life story</span><kbd>L</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="anatomy" aria-label="Anatomy (K)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 5 C10 3 5 7 6 13 C3 16 5 23 10 23 C12 27 16 26 16 24 C16 26 20 27 22 23 C27 23 29 16 26 13 C27 7 22 3 16 5Z" fill="#ff9fc8"/><path d="M16 5 V24 M10 11 Q13 13 11 16 M22 11 Q19 13 21 16" fill="none" stroke-width="1.6"/></svg><span>Anatomy</span><kbd>K</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="evolution" aria-label="Evolution (V)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="4" width="24" height="24" rx="4" fill="#fff"/><path d="M8 22 L13 16 L18 19 L24 9" fill="none" stroke="#ff5fa2" stroke-width="3"/><path d="M8 25 L13 22 L18 23 L24 18" fill="none" stroke="#2ed3c6" stroke-width="2.4"/></svg><span>Evolution</span><kbd>V</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="wardrobe" aria-label="Wardrobe (O)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 6 a3 3 0 1 1 3 3 L16 12 L4 22 L28 22 L16 12" fill="none" stroke-width="2.4"/><path d="M4 22 L28 22 L28 26 L4 26 Z" fill="#ff5fa2"/></svg><span>Wardrobe</span><kbd>O</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="dex" aria-label="Otter-dex (X)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><circle cx="16" cy="18" r="9" fill="#9a6440"/><circle cx="9" cy="10" r="3.5" fill="#6b4a2b"/><circle cx="23" cy="10" r="3.5" fill="#6b4a2b"/><ellipse cx="16" cy="21" rx="5" ry="3.5" fill="#c99a6b"/><circle cx="12.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="19.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="16" cy="19.5" r="1.6" fill="#0b0a10" stroke="none"/></svg><span>Otter-dex</span><kbd>X</kbd><b class="og-badge-new" hidden>!</b></button>
+          <button type="button" class="og-slot" data-win="treasure" aria-label="Treasures (T)"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 14 Q16 6 28 14 L28 26 L4 26 Z" fill="#8a6440"/><path d="M4 14 L28 14 M4 18 L28 18" fill="none"/><rect x="13" y="16" width="6" height="5" rx="1" fill="#ffd23f"/><path d="M9 9 L11 6 L13 9 Z M20 8 L23 5 L25 9 Z" fill="#a47bff" stroke-width="1.5"/></svg><span>Treasures</span><kbd>T</kbd><b class="og-badge-new" hidden>!</b></button>
+        </nav>
+        <p class="og-help"><b>Touch:</b> left thumb to move, right thumb to swipe and look, plus Jump and Dive buttons. <b>Keyboard:</b> arrows or WASD to move · Space to jump and swim up · Shift or E to dive. Each season lasts until you finish its three goals (or tap End season), with predators to escape and an energy bar to keep full. The minimap highlights only what your goals need: the food to eat, the landmark, friends, or treasure. Tap the menu slots, or press J, L, K, V, O, X, or T, to open your Journal, Life story, Anatomy, Evolution chart, Wardrobe, Otter-dex, and Treasure chest. Opening a menu pauses the game.</p>
+
+        <div class="og-modal" id="og-modal" hidden role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
+          <div class="og-modal-box">
+            <div class="og-modal-bar"><button type="button" class="og-wback" id="og-win-back" aria-label="Back">◀</button><span id="og-modal-icon"></span><h2 id="og-modal-title">Journal</h2><button type="button" class="og-close" id="og-close" aria-label="Close">✕</button></div>
+            <div class="og-modal-tabs" role="tablist"><button type="button" role="tab" data-win="journal"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M5 6 Q11 4 16 7 Q21 4 27 6 L27 26 Q21 24 16 27 Q11 24 5 26 Z" fill="#2ed3c6"/><path d="M16 7 V27" fill="none"/><path d="M8 11 H13 M8 15 H13 M19 11 H24 M19 15 H24" fill="none" stroke-width="1.6"/></svg><span>Journal</span></button><button type="button" role="tab" data-win="life"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><rect x="6" y="4" width="20" height="24" rx="3" fill="#ffb347"/><path d="M10 4 V28" fill="none"/><circle cx="18" cy="17" r="3.2" fill="#7a4a2c" stroke-width="1.6"/><circle cx="14.5" cy="12" r="1.6" fill="#7a4a2c" stroke-width="1.2"/><circle cx="18" cy="10.6" r="1.6" fill="#7a4a2c" stroke-width="1.2"/><circle cx="21.5" cy="12" r="1.6" fill="#7a4a2c" stroke-width="1.2"/></svg><span>Life story</span></button><button type="button" role="tab" data-win="anatomy"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 5 C10 3 5 7 6 13 C3 16 5 23 10 23 C12 27 16 26 16 24 C16 26 20 27 22 23 C27 23 29 16 26 13 C27 7 22 3 16 5Z" fill="#ff9fc8"/><path d="M16 5 V24 M10 11 Q13 13 11 16 M22 11 Q19 13 21 16" fill="none" stroke-width="1.6"/></svg><span>Anatomy</span></button><button type="button" role="tab" data-win="evolution"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="4" width="24" height="24" rx="4" fill="#fff"/><path d="M8 22 L13 16 L18 19 L24 9" fill="none" stroke="#ff5fa2" stroke-width="3"/><path d="M8 25 L13 22 L18 23 L24 18" fill="none" stroke="#2ed3c6" stroke-width="2.4"/></svg><span>Evolution</span></button><button type="button" role="tab" data-win="wardrobe"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 6 a3 3 0 1 1 3 3 L16 12 L4 22 L28 22 L16 12" fill="none" stroke-width="2.4"/><path d="M4 22 L28 22 L28 26 L4 26 Z" fill="#ff5fa2"/></svg><span>Wardrobe</span></button><button type="button" role="tab" data-win="dex"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><circle cx="16" cy="18" r="9" fill="#9a6440"/><circle cx="9" cy="10" r="3.5" fill="#6b4a2b"/><circle cx="23" cy="10" r="3.5" fill="#6b4a2b"/><ellipse cx="16" cy="21" rx="5" ry="3.5" fill="#c99a6b"/><circle cx="12.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="19.5" cy="16" r="1.4" fill="#0b0a10" stroke="none"/><circle cx="16" cy="19.5" r="1.6" fill="#0b0a10" stroke="none"/></svg><span>Otter-dex</span></button><button type="button" role="tab" data-win="treasure"><svg viewBox="0 0 32 32" aria-hidden="true" stroke="#0b0a10" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 14 Q16 6 28 14 L28 26 L4 26 Z" fill="#8a6440"/><path d="M4 14 L28 14 M4 18 L28 18" fill="none"/><rect x="13" y="16" width="6" height="5" rx="1" fill="#ffd23f"/><path d="M9 9 L11 6 L13 9 Z M20 8 L23 5 L25 9 Z" fill="#a47bff" stroke-width="1.5"/></svg><span>Treasures</span></button></div>
+            <div class="og-modal-body">
+          <section class="og-window" data-win="journal" hidden>
+            <header><h2>Science journal</h2></header>
+            <div class="og-how"><b>How evolution works in this game</b><ol><li><span>1</span>Fitness</li><li><span>2</span>Natural selection</li><li><span>3</span>Inheritance</li><li><span>4</span>Mutation</li><li><span>5</span>Genetic drift</li></ol><p>Every generation, otters that fit the habitat survive more often and raise more pups. Pups blend their parents' traits, with the occasional mutation and a dose of luck.</p><a href="otter-evolution-science.html" target="_blank" rel="noopener">Read exactly how it works, with all the numbers →</a></div>
+            <div class="og-fact" id="og-fact" aria-live="polite"><p class="og-kicker">Science card</p><h3>Press Play to start</h3><p>Science cards from our research appear here as your otters evolve. Each card names the hypothesis or concept the way scientists know it.</p></div>
+          </section>
+          <section class="og-window" data-win="life" hidden>
+            <header><h2>Life story</h2></header>
+            <p class="og-panel-sub">The story of your otter family: every habitat, meal, close call, and find, season by season.</p><div id="og-life"></div>
+          </section>
+          <section class="og-window" data-win="anatomy" hidden>
+            <header><h2>Anatomy</h2><span class="og-count" id="og-anat-sub">Starting otters</span></header>
+            <figure class="og-headfig"><h3 class="og-mini">Where are these inside the head?</h3><svg class="og-head-svg" viewBox="20 36 560 206" role="img" aria-labelledby="hs-t hs-d">
+  <title id="hs-t">Where the brain and inner ear sit inside an otter's head</title>
+  <desc id="hs-d">Side view of an otter head drawn see-through. The skull outline holds the brain in the braincase. The inner ear sits deep inside the skull, behind and below the ear, and a magnified circle shows its spiral cochlea and looping semicircular canals.</desc>
+  <defs><radialGradient id="hs-glow"><stop offset="0" stop-color="#ffcc4d" stop-opacity="0.55"/><stop offset="1" stop-color="#ffcc4d" stop-opacity="0"/></radialGradient></defs>
+  <path d="M30 150 C40 90 90 50 170 48 C240 46 300 62 345 92 C375 110 400 118 402 132 C404 146 380 158 350 160 C320 168 300 178 260 182 C200 190 120 200 60 205 L30 205 Z" fill="#7a4a2c" fill-opacity="0.38" stroke="#c99a6b" stroke-width="2"/>
+  <ellipse cx="104" cy="74" rx="12" ry="10" fill="#4e2e1a" stroke="#c99a6b" stroke-width="1.5" transform="rotate(-30 104 74)"/>
+  <path d="M95 140 C92 100 125 72 175 70 C225 68 265 80 300 98 C330 112 360 118 378 128 C384 134 380 142 368 144 L300 150 C250 152 200 156 160 160 C125 164 100 158 95 140 Z" fill="#efe6d2" fill-opacity="0.1" stroke="#efe6d2" stroke-width="2.2"/>
+  <path d="M178 168 C230 172 300 168 362 152 L360 160 C300 177 230 182 180 177 Z" fill="#efe6d2" fill-opacity="0.1" stroke="#efe6d2" stroke-width="2"/>
+  <path d="M205 143 C240 133 270 131 300 129" fill="none" stroke="#efe6d2" stroke-width="2"/>
+  <path d="M110 128 C108 98 140 82 180 82 C215 82 238 94 248 110 C252 122 236 134 210 136 C170 140 130 142 110 128 Z" fill="#2ed3c6" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="258" cy="112" rx="10" ry="7" fill="#2ed3c6" stroke="#0b0a10" stroke-width="1.5"/>
+  <ellipse cx="120" cy="131" rx="15" ry="11" fill="#24b3a8" stroke="#0b0a10" stroke-width="1.5"/>
+  <path d="M140 100 Q155 94 168 102 M175 92 Q192 88 205 98 M150 118 Q170 112 190 120 M200 112 Q218 106 232 116" fill="none" stroke="#0b0a10" stroke-opacity="0.45" stroke-width="1.5"/>
+  <circle cx="285" cy="111" r="14" fill="#15121e" stroke="#efe6d2" stroke-width="2"/>
+  <circle cx="285" cy="110" r="7" fill="#0b0a10"/><circle cx="287.5" cy="107.5" r="2" fill="#fff"/>
+  <ellipse cx="396" cy="128" rx="7" ry="5" fill="#0b0a10"/>
+  <path d="M372 140 L420 132 M372 144 L422 146 M370 148 L416 158" stroke="#fff" stroke-opacity="0.7" stroke-width="1.2"/>
+  <path d="M106 84 C86 104 86 136 132 150" fill="none" stroke="#ffcc4d" stroke-width="2" stroke-dasharray="4 4"/>
+  <circle cx="146" cy="151" r="22" fill="url(#hs-glow)"/>
+  <circle cx="146" cy="151" r="15" fill="none" stroke="#ffcc4d" stroke-width="2.5"/>
+  <path d="M148 154 m0 0 a2 2 0 1 1 4 0 a4 4 0 1 1 -8 0 a6 6 0 1 1 12 0" fill="none" stroke="#ffcc4d" stroke-width="2.2"/>
+  <ellipse cx="140" cy="145" rx="3" ry="6" fill="none" stroke="#ff5fa2" stroke-width="1.8" transform="rotate(-25 140 145)"/>
+  <ellipse cx="145" cy="143" rx="3" ry="6" fill="none" stroke="#a47bff" stroke-width="1.8" transform="rotate(25 145 143)"/>
+  <path d="M160 145 L436 116 M158 160 L440 182" stroke="#ffcc4d" stroke-width="1.5" stroke-opacity="0.7"/>
+  <circle cx="500" cy="151" r="66" fill="#15121e" stroke="#ffcc4d" stroke-width="3"/>
+  <ellipse cx="510" cy="160" rx="13" ry="10" fill="#e0b43a"/>
+  <path d="M478 172 m0 0 a3 3 0 1 1 6 0 a6 6 0 1 1 -12 0 a9 9 0 1 1 18 0 a12 12 0 1 1 -24 0 a15 15 0 1 1 30 0" fill="none" stroke="#ffcc4d" stroke-width="4" stroke-linecap="round"/>
+  <path d="M497 166 L502 162" stroke="#e0b43a" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="503" cy="126" rx="9" ry="21" fill="none" stroke="#ff5fa2" stroke-width="4" transform="rotate(-25 503 126)"/>
+  <ellipse cx="523" cy="126" rx="9" ry="21" fill="none" stroke="#a47bff" stroke-width="4" transform="rotate(25 523 126)"/>
+  <ellipse cx="530" cy="158" rx="18" ry="7" fill="none" stroke="#2ed3c6" stroke-width="4"/>
+  <g font-family="Fredoka, 'IBM Plex Sans', Arial, sans-serif" font-weight="700">
+    <text x="160" y="116" font-size="16" fill="#0b0a10">Brain</text>
+    <text x="300" y="86" font-size="13" fill="#efe6d2">Skull</text>
+    <text x="66" y="66" font-size="13" fill="#c99a6b">Ear</text>
+    <text x="236" y="222" font-size="14" fill="#ffcc4d">Inner ear <tspan font-size="11" font-weight="500">deep inside the skull</tspan></text>
+    <path d="M232 217 L156 164" stroke="#ffcc4d" stroke-width="1.2"/>
+    <text x="500" y="234" font-size="12" fill="#ffcc4d" text-anchor="middle">Cochlea: hearing</text>
+    <text x="500" y="76" font-size="12" fill="#d6c2ff" text-anchor="middle">Canals: balance</text>
+  </g>
+</svg><figcaption>The <b class="hs-brain">brain</b> fills the braincase at the back of the skull. The <b class="hs-ear">inner ear</b> sits deep inside the skull, behind and below the ear, wrapped in bone. Its spiral <b>cochlea</b> senses sound, and its looping <b>canals</b> sense balance and turning. The dashed line shows the path from the ear into the skull.</figcaption></figure><div class="og-anat"><figure><canvas id="og-brain" aria-hidden="true"></canvas><figcaption><b>Brain (endocast, top view)</b><span id="og-brain-cap"></span></figcaption></figure><figure><canvas id="og-ear" aria-hidden="true"></canvas><figcaption><b>Inner ear</b><span id="og-ear-cap"></span></figcaption></figure></div><h3 class="og-mini og-gal-h">Your brain and inner ear collection</h3><p class="og-panel-sub">Every generation you raise adds its average brain and inner ear here. Compare how they changed in different habitats.</p><div class="og-gallery" id="og-gallery"></div>
+          </section>
+          <section class="og-window" data-win="evolution" hidden>
+            <header><h2>Evolution chart</h2></header>
+            <p class="og-panel-sub">Population average for each trait, generation by generation. The numbers along the bottom are generations; generation 0 is the starting otters.</p><canvas id="og-chart" aria-label="Line chart of average traits across generations"></canvas><ul class="og-legend"><li><i style="background:#ff5fa2"></i>Body size</li><li><i style="background:#a47bff"></i>Fur thickness</li><li><i style="background:#2ed3c6"></i>Ears and tail</li><li><i style="background:#ffb347"></i>Cochlea shape</li><li><i style="background:#7fd1ff"></i>Canal angle</li><li><i style="background:#f4f2fa"></i>Brain size</li></ul>
+          </section>
+          <section class="og-window" data-win="wardrobe" hidden>
+            <header><h2>Wardrobe</h2><span class="og-count" id="og-outfit-count">0 of 8</span></header>
+            <p class="og-panel-sub">Unlock outfits by evolving your otters and playing well. Tap an outfit to wear it.</p><div class="og-tiles" id="og-closet"></div>
+          </section>
+          <section class="og-window" data-win="dex" hidden>
+            <header><h2>Otter-dex</h2><span class="og-count" id="og-dex-count">0 of 10</span></header>
+            <p class="og-panel-sub">Each new kind of pup your population produces joins your collection. Different habitats evolve different otters, so explore them all.</p><div class="og-tiles" id="og-dex"></div>
+          </section>
+          <section class="og-window" data-win="treasure" hidden>
+            <header><h2>Treasure chest</h2><span class="og-count" id="og-treasure-count">0 of 8</span></header>
+            <p class="og-panel-sub">Sparkly surprises pop up during seasons. Grab them before they vanish. Rare finds restore a heart.</p><div class="og-tiles" id="og-treasure"></div><div class="og-nat-head"><h3 class="og-mini">Nature finds</h3><span class="og-count" id="og-nature-count">0 of 24</span></div><p class="og-panel-sub">Each habitat hides its own plants, shells, and other natural treasures. Look for green rings while you explore. They don't vanish, so take your time.</p><div id="og-nature"></div>
+          </section>
+            </div>
+          </div>
+        </div>
+        <p class="og-note">The habitat targets, trait values, and anatomy drawings in this game are illustrative, not measurements. Real populations evolve over many more generations, and the hypotheses on the cards are ideas our lab and others are testing, not settled answers. <a href="otter-evolution-science.html">See exactly how the game works →</a> · <a href="otter-teachers.html">Teacher guide →</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-id">
+      <p class="brand">SQu<span>EAC</span>s Lab</p>
+      <p>Department of Anatomy, Midwestern University · Glendale, AZ</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="cv/Lynch_CV.pdf">CV</a></li>
+      <li><a href="https://scholar.google.com/citations?user=FNytLYgAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0003-3055-8438" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="https://www.morphosource.org/projects/000765745?locale=en" target="_blank" rel="noopener">MorphoSource</a></li>
+      <li><a href="https://github.com/SQuEACS" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="foot-copy">© <span id="year">2026</span> Leigha M. Lynch</p>
+  </div>
+</footer>
+
+<script src="script.js?v=9"></script>
+</body>
+</html>

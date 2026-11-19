@@ -17,19 +17,21 @@
    one that only calls self.registration.unregister(); tablets pick
    it up the next time they open a game online.
    ============================================================ */
-const VERSION = "games-v16";
+const VERSION = "games-v18";
 
 const CORE = [
   "tadpole-game.html",
   "tadpole-classroom.html",
   "otter-game.html",
+  "otter-classroom.html",
+  "otter-teachers.html",
   "tadpole-trek-science.html",
   "otter-evolution-science.html",
   "tadpole-teachers.html",
   "styles.css?v=41",
   "script.js?v=9",
   "tadpole-game.js?v=16",
-  "otter-game.js?v=43",
+  "otter-game.js?v=44",
   "assets/vendor/three-r149.min.js?v=1",
   "models/tadpole-cns.glb",
   "favicon.svg",
@@ -38,12 +40,15 @@ const CORE = [
   "tadpole-trek.webmanifest",
   "tadpole-classroom.webmanifest",
   "otter-evolution.webmanifest",
+  "otter-classroom.webmanifest",
   "assets/app/tadpole-trek-192.png",
   "assets/app/tadpole-trek-512.png",
   "assets/app/tadpole-classroom-192.png",
   "assets/app/tadpole-classroom-512.png",
   "assets/app/otter-evolution-192.png",
   "assets/app/otter-evolution-512.png",
+  "assets/app/otter-classroom-192.png",
+  "assets/app/otter-classroom-512.png",
   "mammal-mystery.html",
   "mammal-mystery-classroom.html",
   "mammal-mystery-teachers.html",

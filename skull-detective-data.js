@@ -15,7 +15,9 @@
    the term, {orbit|eye sockets} shows other words for the same term.
 
    CT renders: put images in assets/skull-detective/ and list them
-   under ct (e.g. ct: { side: "assets/skull-detective/otter-side.png" }).
+   under ct (e.g. ct: { side: "assets/skull-detective/ct/otter-side.webp" }).
+   Renders are side views, snout to the left, on a transparent background,
+   made from the lab's skull models reduced to about 50,000 triangles.
    ============================================================ */
 window.SD_DATA = (function () {
   const SKULLS = {
@@ -62,7 +64,7 @@ window.SD_DATA = (function () {
       fact: "Martens can turn their back feet around to climb down trees head first.",
       foods: ["squirrel", "mouse", "berries"], chain: ["sun", "seeds", "squirrel", "marten"],
       teeth: "slicer", teethSay: "Sharp {carnassial|carnassials} slice meat, and its {molar|molars} can mash berries.",
-      ct: {}
+      ct: { side: "assets/skull-detective/ct/marten-side.webp" }
     },
     fisher: {
       name: "fisher", sci: "Pekania pennanti", job: "biter", hab: "forest",
@@ -77,7 +79,7 @@ window.SD_DATA = (function () {
       fact: "Fishers almost never eat fish. They hunt hares, squirrels, and even porcupines.",
       foods: ["porcupine", "rabbit", "squirrel"], chain: ["sun", "bark", "porcupine", "fisher"],
       teeth: "slicer", teethSay: "Long {canine|canines} and strong {carnassial|carnassials} give the fisher a powerful bite.",
-      ct: {}
+      ct: { side: "assets/skull-detective/ct/fisher-side.webp" }
     },
     badger: {
       name: "American badger", sci: "Taxidea taxus", job: "digger", hab: "grassland",

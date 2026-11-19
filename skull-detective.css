@@ -52,7 +52,7 @@
 .sd-skull { width: min(100%, 34rem); }
 .sd-skull.sd-small { width: min(100%, 22rem); }
 .sd-skull svg, .sd-ct { width: 100%; height: auto; }
-.sd-ct { border-radius: 14px; background: #1f2a44; }
+.sd-ct { display: block; margin: 0 auto; }
 .sd-tap .sd-part { cursor: pointer; }
 .sd-tap .sd-part:focus-visible { outline: none; stroke: #6b4fd8; stroke-width: 8px; }
 .sd-lit { fill: #ffd23f !important; }

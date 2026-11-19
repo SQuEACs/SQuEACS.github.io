@@ -17,7 +17,7 @@
    one that only calls self.registration.unregister(); tablets pick
    it up the next time they open a game online.
    ============================================================ */
-const VERSION = "games-v18";
+const VERSION = "games-v19";
 
 const CORE = [
   "tadpole-game.html",
@@ -29,7 +29,7 @@ const CORE = [
   "otter-evolution-science.html",
   "tadpole-teachers.html",
   "styles.css?v=41",
-  "script.js?v=9",
+  "script.js?v=10",
   "tadpole-game.js?v=16",
   "otter-game.js?v=44",
   "assets/vendor/three-r149.min.js?v=1",

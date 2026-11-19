@@ -14,7 +14,10 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- Constants and helpers ---------- */
-  const VIEW_H = 360, GROUND = 262, SEABED = 338, WORLD_W = 2600, SEASON = 75, POP = 12, GENS = 8, QUEST = 8;
+  const VIEW_H = 360, GROUND = 262, SEABED = 338, WORLD_W = 2600, SEASON = 75, POP = 12, QUEST = 8;
+  let GENS = 8;   // the classroom edition's Short game option plays 4
+  const CL = !!window.OG_CLASSROOM;   // classroom edition: set by otter-classroom.html
+  const SAVE_KEY = CL ? "squeacs-otter-evo-classroom" : "squeacs-otter-evo";
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -150,11 +153,11 @@
   function pickTreasure() { let r = Math.random() * TREASURE.reduce((a, b) => a + b.w, 0); for (const tr of TREASURE) { r -= tr.w; if (r <= 0) return tr; } return TREASURE[0]; }
 
   /* ---------- Game state ---------- */
-  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: false }, gallery: [], inRun: false, nature: {}, life: [], runCount: 0, runId: 0 };
-  try { const s = JSON.parse(localStorage.getItem("squeacs-otter-evo") || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.opts.timer = false;   // timer mode retired: seasons end when goals are done G.gallery = s.gallery || []; G.seen = s.seen || {}; G.runCount = s.runCount || 0; G.nature = s.nature || {};
-    if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; } } } catch (e) {}
-  const save = () => { try { localStorage.setItem("squeacs-otter-evo", JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-90), seen: G.seen, runCount: G.runCount, nature: G.nature,
-    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life, contrib: G.contrib, runId: G.runId } : null })); } catch (e) {} };
+  let G = { screen: "title", hab: "lake", gen: 1, pop: [], history: [], runs: [], seen: {}, unlocked: {}, worn: {}, habSeasons: {}, dex: {}, treasure: {}, opts: { preds: true, timer: false, pred: true }, gallery: [], inRun: false, nature: {}, life: [], runCount: 0, runId: 0 };
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); if (s.unlocked) { G.unlocked = s.unlocked; G.worn = s.worn || {}; G.runs = s.runs || []; G.dex = s.dex || {}; G.treasure = s.treasure || {}; if (s.opts) G.opts = s.opts; G.opts.timer = false;   // timer mode retired: seasons end when goals are done G.gallery = s.gallery || []; G.seen = s.seen || {}; G.runCount = s.runCount || 0; G.nature = s.nature || {};
+    G.met = !!s.met; if (s.run && s.run.pop && s.run.pop.length) { Object.assign(G, s.run); G.inRun = true; if (s.run.gens) GENS = s.run.gens; } } } catch (e) {}
+  const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ unlocked: G.unlocked, worn: G.worn, runs: G.runs.slice(-4), dex: G.dex, treasure: G.treasure, opts: G.opts, gallery: G.gallery.slice(-90), seen: G.seen, runCount: G.runCount, nature: G.nature, met: G.met,
+    run: G.inRun && G.pop.length ? { pop: G.pop, gen: G.gen, hab: G.hab, history: G.history, startHab: G.startHab, habSeasons: G.habSeasons, life: G.life, contrib: G.contrib, runId: G.runId, gens: GENS } : null })); } catch (e) {} };
 
   const startTraits = () => ({ size: 50 + gauss() * 14, fur: 50 + gauss() * 14, ext: 50 + gauss() * 14, cochlea: 50 + gauss() * 14, canal: valOfDeg(84) + gauss() * 11, brain: 50 + gauss() * 14 });
   const clampT = t => { const o = {}; for (const k in t) o[k] = clamp(t[k], 0, 100); return o; };
@@ -1301,12 +1304,14 @@
           ${traitTips().map(([ic, txt]) => `<div class="og-row">${ICON[ic]}<small>${txt}</small></div>`).join("")}
         </section>
       </div>
+      ${CL && G.opts.pred !== false ? predBlock() : ""}
       <div class="og-controls">${controls}</div>
       <p class="og-sub og-small">Take your time! The season ends when you finish all 3 goals. Stuck? Tap <b>End season</b>. Finishing at least 2 goals still keeps your otter safe.</p>${(coarse || touchMode) && matchMedia("(orientation: portrait)").matches ? '<p class="og-sub og-small">📱 Tip: turn your phone sideways for a bigger view.</p>' : ""}
       <button type="button" class="og-btn" id="og-go">Start season ▶</button></div>`);
     $("og-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); startSeason(); });
     onBack(G.back);
     $("og-change").addEventListener("click", () => screenSettings(screenBriefing, screenBriefing));
+    if (CL) document.querySelectorAll(".tg-pred-opts button").forEach(b => b.addEventListener("click", () => { PRED[G.gen] = b.dataset.p; document.querySelectorAll(".tg-pred-opts button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); beep(560, 0.06, "triangle", 0.04); }));
   }
 
   /* ---------- Between seasons: selection, inheritance, mutation ---------- */
@@ -1366,7 +1371,7 @@
   }
 
   /* ---------- Screens (DOM overlays) ---------- */
-  function screen(html) { const el = $("og-screen"); freeCanvases(el); el.innerHTML = html; el.hidden = !html; if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-hab, .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
+  function screen(html) { const el = $("og-screen"); freeCanvases(el); hidePop(); el.innerHTML = html; el.hidden = !html; if (CL && html) linkTerms(el); if (html) { const b = el.querySelector(".og-btn:not([disabled]), .og-hab, .og-opt, button:not(.og-back)"); if (b) b.focus({ preventScroll: true }); } }
   const BACK = '<button type="button" class="og-back" id="og-back">◀ Back</button>';
   const onBack = fn => { const b = $("og-back"); if (b) b.addEventListener("click", () => { beep(440, 0.06, "triangle", 0.04); fn(); }); };
   function portrait(o, i, cls = "") {
@@ -1380,6 +1385,109 @@
     });
   }
 
+  /* ---------- Classroom edition (otter-classroom.html sets window.OG_CLASSROOM) ---------- */
+  const CL_OPTS = [["short", "⏱", "Short game", "4 generations instead of 8"], ["pred", "🔮", "Predictions", "Guess before each season, check after"], ["big", "🔠", "Big text", "Larger words"]];
+  const PRED = {};
+  const GLOSS = {
+    population: ["Population", "All the animals of one species living in the same place at the same time. In this game, 12 otters.", /\bpopulations?\b/i],
+    trait: ["Trait", "A feature of a living thing, such as body size, fur thickness, or the shape of its inner ear.", /\btraits?\b/i],
+    generation: ["Generation", "Parents make up one generation. Their pups make up the next.", /\bgenerations?\b/i],
+    habitat: ["Habitat", "The place where an animal lives and finds its food, water, and shelter.", /\bhabitats?\b/i],
+    selection: ["Natural selection", "Animals whose traits suit their habitat survive and have young more often, so those traits become more common over generations.", /\b(natural )?selection\b/i],
+    fitness: ["Fitness", "How well an animal survives and leaves offspring. It does not mean strength or exercise.", /\bfitness\b/i],
+    inherit: ["Inheritance (heredity)", "Parents pass traits to their young through their genes. Pups look like a blend of their parents.", /\binherit(s|ed|ance)?\b/i],
+    mutation: ["Mutation", "A random change in a gene. It can make a pup a little different from both parents. Mutations happen by chance, not because an animal needs them.", /\bmutations?\b/i],
+    drift: ["Genetic drift", "Changes in a population caused by luck, not by how well traits suit the habitat. Luck matters most in small populations.", /\b(genetic )?drift\b/i],
+    adapt: ["Adaptation", "A trait that helps an animal survive and reproduce in its habitat, shaped by natural selection over many generations.", /\badapt(ation|ations|ed)?\b/i],
+    plastic: ["Phenotypic plasticity", "A change in one animal's body during its own life, like growing thicker fur in winter. Its young do not inherit the change.", /\bplasticity\b/i],
+    predator: ["Predator", "An animal that hunts other animals for food. Bald eagles, coyotes, and alligators can hunt otters.", /\bpredators?\b/i],
+    mustelid: ["Mustelid", "A member of the weasel family (Mustelidae). Otters, weasels, badgers, minks, and wolverines are all mustelids.", /\bmustelids?\b/i],
+    semiaq: ["Semiaquatic", "Living partly in water and partly on land.", /\bsemiaquatic\b/i],
+    vibrissae: ["Vibrissae", "Stiff, sensitive whiskers. Otters use them to feel the water move when a fish swims by.", /\bvibrissae\b/i],
+    cochlea: ["Cochlea", "The snail-shaped spiral in the inner ear that senses sound.", /\bcochleas?\b/i],
+    canals: ["Semicircular canals", "Three looping tubes in the inner ear that sense balance and turning of the head.", /\b(semicircular )?canals?\b/i],
+    endocast: ["Endocast", "A model of the space inside the skull where the brain sat. Scientists use endocasts to study brain size and shape.", /\bendocasts?\b/i],
+  };
+  function linkTerms(root) {
+    const used = new Set(), list = Object.entries(GLOSS);
+    root.querySelectorAll(".og-sub, .og-cl-auto").forEach(p => {
+      const w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT), nodes = [];
+      while (w.nextNode()) nodes.push(w.currentNode);
+      nodes.forEach(n => {
+        while (n && !n.parentElement.closest("button, a, b.og-nolink")) {
+          let m = null, key = null;
+          for (const [k, v] of list) { if (used.has(k)) continue; const x = v[2].exec(n.nodeValue); if (x && (!m || x.index < m.index)) { m = x; key = k; } }
+          if (!m) break;
+          const hit = n.splitText(m.index), rest = hit.splitText(m[0].length), b = document.createElement("button");
+          b.type = "button"; b.className = "og-term"; b.dataset.term = key; b.textContent = hit.nodeValue; hit.replaceWith(b); used.add(key); n = rest;
+        }
+      });
+    });
+  }
+  function hidePop() { const p = $("og-pop"); if (p) p.remove(); }
+  if (CL) document.addEventListener("click", e => {
+    const t = e.target.closest(".og-term");
+    if (!t) { if (!e.target.closest("#og-pop")) hidePop(); return; }
+    hidePop(); const [name, def] = GLOSS[t.dataset.term];
+    const p = document.createElement("div"); p.id = "og-pop"; p.className = "og-pop"; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", name);
+    p.innerHTML = `<b>${name}</b><p>${def}</p><button type="button" class="og-btn">Got it</button>`;
+    document.querySelector(".og-stage").appendChild(p); beep(620, 0.05, "triangle", 0.03);
+    const btn = p.querySelector("button"); btn.addEventListener("click", () => { hidePop(); t.focus({ preventScroll: true }); }); btn.focus({ preventScroll: true });
+  });
+  function applyOpts() { if (CL) document.body.classList.toggle("og-big", !!G.opts.big); }
+  function predBlock() {
+    const cur = PRED[G.gen];
+    return `<section class="tg-pred"><h3 class="og-mini">Make a prediction (optional)</h3><p class="og-sub og-small">Which trait do you think will change the most in the population this season?</p><div class="tg-pred-opts">${TRAITS.map(({ k, name }) => `<button type="button" data-p="${k}" aria-pressed="${cur === k}">${TICON[k]}<span>${name}</span></button>`).join("")}<button type="button" data-p="none" aria-pressed="${cur === "none"}"><span class="tg-ic">?</span><span>Not sure</span></button></div></section>`;
+  }
+  const REFLECT_Q = [
+    "Look at the otters that were lost. What did their traits have in common?",
+    "Your otter's fur can thicken during a cold season, but its pups don't inherit that change. Why not? (Hint: plasticity.)",
+    "Did any pup carry a mutation? Would that mutation help, hurt, or not matter in this habitat?",
+    "Sometimes a well-suited otter is lost by bad luck. Why does luck matter more in a small population?",
+    "If you moved to a very different habitat, which trait would change first? How could you test your prediction?",
+    "No single otter changed its own genes. So what does it mean to say the population evolved?",
+  ];
+  function reflectBlock(prev, now) {
+    const gen = G.gen, pr = PRED[gen], nm = k => TRAITS.find(t => t.k === k).name;
+    const top = TRAITS.map(({ k }) => [k, now[k] - prev[k]]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
+    const said = pr ? (pr === "none" ? "You were not sure, and that is a fine place to start." : `You predicted <b class="og-nolink">${nm(pr)}</b>.`) : "You did not make a prediction this time.";
+    const big = Math.abs(top[1]) < 1 ? "No trait changed much this generation." : `<b class="og-nolink">${nm(top[0])}</b> changed the most (${top[1] > 0 ? "up" : "down"} ${top[0] === "canal" ? Math.abs(degOf(now.canal) - degOf(prev.canal)) + "°" : Math.abs(Math.round(top[1]))}).`;
+    const match = pr && pr !== "none" && Math.abs(top[1]) >= 1 ? (pr === top[0] ? " Your prediction matched." : " That is different from your prediction. Scientists learn from surprises too.") : "";
+    return `<section class="tg-reflect"><h3 class="og-mini">Think like a scientist</h3><p class="og-cl-auto">${said} ${big}${match}</p><p class="og-cl-auto"><b>Talk about it:</b> ${REFLECT_Q[(gen - 1) % REFLECT_Q.length]}</p></section>`;
+  }
+  function screenMeet(next) {
+    G.screen = "meet"; const first = next !== screenTitle;
+    screen(`<div class="og-card og-wide og-meet">${first ? "" : BACK}
+      <p class="og-badge">Meet the animal</p>
+      <h2 class="og-h">The North American river otter</h2>
+      <p class="og-sub"><i>Lontra canadensis</i> · tap any <span class="og-term-key">underlined word</span> to see what it means</p>
+      <div class="og-meet-grid"><canvas id="og-meet-cv" width="280" height="190" aria-label="Drawing of a river otter"></canvas>
+      <ul class="og-meet-facts">
+        <li class="og-cl-auto"><b>Who:</b> River otters are mustelids, members of the weasel family.</li>
+        <li class="og-cl-auto"><b>Where:</b> Rivers, lakes, marshes, and coasts across much of North America. They are semiaquatic: they hunt in water and rest and raise pups on land.</li>
+        <li class="og-cl-auto"><b>Size:</b> About 1 meter (3 feet) from nose to tail tip, and 5 to 14 kg (11 to 30 pounds).</li>
+        <li class="og-cl-auto"><b>Food:</b> Mostly fish, plus crayfish, frogs, and other small animals.</li>
+        <li class="og-cl-auto"><b>Built for water:</b> Thick, waterproof fur, webbed feet, and a strong tail. They close their ears and nostrils when they dive, and feel for prey with sensitive whiskers called vibrissae.</li>
+        <li class="og-cl-auto"><b>Family:</b> A mother usually has 2 or 3 pups each spring, in a den near the water.</li>
+      </ul></div>
+      <div class="tg-reflect"><h3 class="og-mini">Why our lab studies otters</h3><p class="og-cl-auto">Our lab uses CT scans of skulls to study the brain (from endocasts) and the inner ear of otters and their relatives. The inner ear has a cochlea for hearing and semicircular canals for balance. In this game you will watch these parts, and the otters' bodies, evolve over many generations.</p></div>
+      <div class="og-actions"><button type="button" class="og-btn" id="og-meet-go">${first ? "Let's play ▶" : "Back to the title"}</button></div></div>`);
+    const cv = $("og-meet-cv"), c = cv.getContext("2d"); c.save(); c.scale(2, 2); drawOtter(c, 66, 92, { size: 55, fur: 55, ext: 50, cochlea: 50, canal: valOfDeg(84), brain: 50 }, { k: 1.0, worn: {} }); c.restore();
+    G.met = true; save();
+    $("og-meet-go").addEventListener("click", () => { beep(660, 0.1, "triangle"); next(); });
+    onBack(screenTitle);
+  }
+  function screenWords() {
+    G.screen = "words";
+    screen(`<div class="og-card og-wide">${BACK}
+      <h2 class="og-h">Key words</h2>
+      <p class="og-sub og-small">The words scientists use for what happens in this game.</p>
+      <dl class="og-words">${Object.values(GLOSS).map(([n, d]) => `<div><dt>${n}</dt><dd>${d}</dd></div>`).join("")}</dl>
+      <div class="og-actions"><button type="button" class="og-btn" id="og-words-ok">Back to the title</button></div></div>`);
+    onBack(screenTitle); $("og-words-ok").addEventListener("click", screenTitle);
+  }
+  applyOpts();
+
   function screenSettings(next, back = screenTitle) {
     G.screen = "settings"; G.back = back;
     const opt = (k, val, ic, title, sub) => `<button type="button" class="og-opt" data-k="${k}" data-v="${val}" aria-pressed="${G.opts[k] === val}">${ic}<b>${title}</b><span>${sub}</span></button>`;
@@ -1387,8 +1495,12 @@
       <h2 class="og-h">How do you want to play?</h2>
       <h3 class="og-mini">Predators</h3>
       <div class="og-opts">${opt("preds", true, ICON.eagle, "Predators on", "Eagles, coyotes, and alligators. More challenge!")}${opt("preds", false, ICON.friends, "No predators", "Relaxed exploring, great for little kids.")}</div>
+      ${CL ? `<h3 class="og-mini">Classroom options</h3><div class="og-opts tg-cl-opts">${CL_OPTS.map(([k, ic, t, sub]) => `<button type="button" class="og-opt tg-tog" data-t="${k}" aria-pressed="${k === "pred" ? G.opts.pred !== false : !!G.opts[k]}"><span class="tg-ic">${ic}</span><b>${t}</b><span>${sub}</span></button>`).join("")}</div>${G.inRun && G.history.length > 1 ? '<p class="og-sub og-small">Short game takes effect when you start a new population.</p>' : ""}` : ""}
       <button type="button" class="og-btn" id="og-set-go">Let's go ▶</button></div>`);
-    document.querySelectorAll(".og-opt").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".og-opt[data-t]").forEach(b => b.addEventListener("click", () => {
+      const k = b.dataset.t, on = b.getAttribute("aria-pressed") !== "true"; G.opts[k] = on; b.setAttribute("aria-pressed", String(on)); save(); applyOpts(); beep(560, 0.06, "triangle", 0.04);
+    }));
+    document.querySelectorAll(".og-opt[data-k]").forEach(b => b.addEventListener("click", () => {
       G.opts[b.dataset.k] = b.dataset.v === "true"; save(); beep(560, 0.06, "triangle", 0.04);
       document.querySelectorAll(`.og-opt[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
     }));
@@ -1398,7 +1510,8 @@
   const hasCollections = () => Object.keys(G.unlocked).length || Object.keys(G.dex).length || Object.keys(G.treasure).length || G.gallery.length || Object.keys(G.seen).length;
   function newGame() {
     G.inRun = false; G.pop = []; G.history = []; G.gen = 1; G.habSeasons = {}; G.plan = null; G.life = []; save(); updatePanels();
-    if (window.SQ_track) window.SQ_track("play", "otter-game");
+    if (window.SQ_track && !CL) window.SQ_track("play", "otter-game");
+    if (CL && !G.met) { screenMeet(() => screenSettings(() => screenHabitat(true))); return; }
     screenSettings(() => screenHabitat(true));
   }
   function screenTitle() {
@@ -1415,7 +1528,9 @@
       </ol>`}
       <div class="og-actions">${saved ? `<button type="button" class="og-btn" id="og-continue">▶ Continue · Gen ${G.gen - 1}</button><button type="button" class="og-btn ghost" id="og-play">New game</button>` : '<button type="button" class="og-btn" id="og-play">Play</button>'}</div>
       ${saved ? '<p class="og-sub og-small">A new game erases your current generations. Your outfits, Otter-dex, treasures, and journal stay.</p>' : ""}
+      ${CL ? '<div class="tg-cl-links"><button type="button" class="og-btn ghost" id="og-meet">🦦 Meet the river otter</button><button type="button" class="og-link" id="og-words">Key words</button><a class="og-link" href="otter-teachers.html">For teachers</a></div>' : ""}
       ${hasCollections() || saved ? '<button type="button" class="og-link" id="og-erase">Erase everything and start fresh</button>' : ""}</div>`);
+    if (CL) { $("og-meet").addEventListener("click", () => screenMeet(screenTitle)); $("og-words").addEventListener("click", screenWords); }
     const cont = $("og-continue"); if (cont) cont.addEventListener("click", () => { beep(660, 0.1, "triangle"); screenBriefing(); });
     $("og-play").addEventListener("click", () => { beep(660, 0.1, "triangle"); newGame(); });
     const er = $("og-erase"); if (er) er.addEventListener("click", screenErase);
@@ -1444,7 +1559,7 @@
       <div class="og-habs">${ORDER.map(k => `<button type="button" class="og-hab og-hab-${k}${!fresh && k === G.hab ? " current" : ""}" data-h="${k}"><b>${HAB[k].name}</b><span>${HAB[k].blurb}</span>${!fresh && k === G.hab ? "<em>Current home</em>" : ""}</button>`).join("")}</div></div>`);
     document.querySelectorAll(".og-hab").forEach(b => b.addEventListener("click", () => {
       G.hab = b.dataset.h; beep(520, 0.08, "triangle");
-      if (fresh) { G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; G.contrib = newContrib();
+      if (fresh) { if (CL) GENS = G.opts.short ? 4 : 8; G.gen = 1; G.pop = newPopulation(); G.history = [meanTraits(G.pop)]; G.startHab = G.hab; G.habSeasons = {}; G.inRun = true; G.plan = null; G.contrib = newContrib();
         { const last = G.gallery[G.gallery.length - 1]; if (last && last.label && last.run === G.runId && G.history.length <= 1) G.gallery.pop(); else { G.runCount = (G.runCount || 0) + 1; G.runId = G.runCount; } } setTimeout(save, 0); addGallery("Starting otters"); }
       updatePanels(); screenBriefing();
     }));
@@ -1490,6 +1605,7 @@
       <h3 class="og-h3">How the population changed</h3>
       <p class="og-sub og-small">Pictures compare the starting otters (generation 0, left) with this generation (right). Numbers show the change since last generation.</p>
       <ul class="og-changes og-changes-pics">${changes}</ul>
+      ${CL ? reflectBlock(prev, now) : ""}
       <div class="og-actions"><button type="button" class="og-btn" id="og-next">${G.gen + 1 > GENS ? "See your results →" : "Play next season →"}</button>
       ${G.gen + 1 <= GENS ? '<button type="button" class="og-btn ghost" id="og-move">Move to a new habitat</button>' : ""}</div></div>`);
     paintPortraits(G.pop, $("og-grid")); paintTraits($("og-screen"));
@@ -1524,7 +1640,7 @@
         if (hiHabs.length && loHabs.length) why = `Barely changed. Your habitats pulled in opposite directions: the ${hiHabs.join(" and ")} favored ${WORD[0]}, while the ${loHabs.join(" and ")} favored ${WORD[1]}.`;
         else if (!favored) why = `Barely changed. Your habitats favored ${lname} close to where the starting otters began, so selection had little to push.`;
         else if (against && Math.abs(against[1]) > 0.8) why = `Barely changed. Selection favored ${favored}, but ${against[0][1].toLowerCase().replace(/ \(.*\)/, "")} pulled it back.`;
-        else why = `Barely changed. Selection favored ${favored}, but eight generations weren't enough to move it far.`;
+        else why = `Barely changed. Selection favored ${favored}, but ${GENS} generations weren't enough to move it far.`;
       }
       else if (top === "surv" || top === "breed") why = `Natural selection did most of the work. ${hiHabs.length && loHabs.length ? "Overall, your habitats" : habText.replace(/^./, c => c.toUpperCase())} favored ${d > 0 ? WORD[0] : WORD[1]}, so otters with them survived and raised more pups.`;
       else if (top === "player") why = `Your otter's family made the biggest difference. Finishing goals gave it extra pups, so its ${lname} spread through the population.`;

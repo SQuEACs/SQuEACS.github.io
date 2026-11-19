@@ -211,7 +211,7 @@ const MODELS = [
     { n:  7, name: "Pro-coronal gyrus", color: "#271493", pos: "-5.291m 0.760m 4.582m", normal: "-0.442m -0.042m 0.896m" },
     { n:  8, name: "Pro-posterior sigmoid gyrus", color: "#34c29f", pos: "-3.702m 3.123m 4.141m", normal: "-0.144m 0.687m 0.712m" },
     { n:  9, name: "Coronal gyrus", color: "#00fea9", pos: "-1.468m 2.684m 4.767m", normal: "-0.025m 0.657m 0.754m" },
-    { n: 10, name: "Lateral gyrus", color: "#0bf31e", pos: "1.969m 3.338m 4.118m", normal: "0.105m 0.671m 0.734m" },
+    { n: 10, name: "Suprasylvian gyrus", color: "#0bf31e", pos: "1.969m 3.338m 4.118m", normal: "0.105m 0.671m 0.734m" },
     { n: 11, name: "Pro-anterior ectosylvian gyrus", color: "#fac359", pos: "-2.230m -0.509m 5.575m", normal: "-0.383m 0.144m 0.912m" },
     { n: 12, name: "Anterior ectosylvian gyrus", color: "#fffa00", pos: "-0.756m 1.345m 5.525m", normal: "-0.157m 0.383m 0.910m" },
     { n: 13, name: "Medial ectosylvian gyrus", color: "#fefa00", pos: "1.169m 1.887m 5.396m", normal: "0.085m 0.548m 0.832m" },

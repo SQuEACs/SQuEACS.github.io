@@ -104,6 +104,87 @@ const MODELS = [
     { n: 18, name: "Suprasylvian sulcus", color: "#fef200", pos: "10.169m 9.919m -16.000m", normal: "0.432m 0.826m -0.363m" },
     { n: 19, name: "Lateral sulcus", color: "#0cf01e", pos: "10.536m 14.588m -7.919m", normal: "-0.212m 0.823m -0.526m" }
     ]
+  },
+  {
+    file: "models/martes-endocast.glb",
+    title: "American marten endocast anatomy",
+    specimen: "Martes americana",
+    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer.",
+    wide: true,
+    view: { orbit: "25deg 65deg auto", zoom: "30m", homeLabel: "Reset view" },
+    labels: [
+    { n:  1, name: "Olfactory bulb", color: "#ff8c00", pos: "-24.997m 3.157m -7.701m", normal: "-0.887m -0.120m 0.446m" },
+    { n:  2, name: "Proreal gyrus", color: "#ef230b", pos: "-17.521m 12.945m -8.286m", normal: "-0.076m 0.952m -0.296m" },
+    { n:  3, name: "Anterior sigmoid gyrus", color: "#ea96e9", pos: "-6.993m 14.436m -5.744m", normal: "0.073m 0.986m -0.148m" },
+    { n:  4, name: "Lateral gyrus", color: "#2e9f27", pos: "17.571m 9.512m 4.755m", normal: "0.523m 0.739m 0.426m" },
+    { n:  5, name: "Rhinal fissure", color: "#9a6fa2", pos: "-15.963m -1.176m 2.382m", normal: "-0.791m -0.370m 0.487m" },
+    { n:  6, name: "Orbital gyrus", color: "#8b1a43", pos: "-18.012m 4.440m 1.640m", normal: "-0.798m 0.005m 0.603m" },
+    { n:  7, name: "Pro-coronal gyrus", color: "#0839fe", pos: "-12.598m 3.481m 8.076m", normal: "-0.578m 0.145m 0.803m" },
+    { n:  8, name: "Posterior sigmoid gyrus", color: "#34c39f", pos: "-6.968m 10.893m 7.453m", normal: "-0.229m 0.616m 0.754m" },
+    { n:  9, name: "Coronal gyrus", color: "#08fe8f", pos: "-4.250m 8.037m 10.486m", normal: "-0.305m 0.542m 0.783m" },
+    { n: 10, name: "Suprasylvian gyrus", color: "#0cf21d", pos: "7.961m 11.690m 8.189m", normal: "0.115m 0.875m 0.470m" },
+    { n: 11, name: "Pro-anterior ectosylvian gyrus", color: "#fac359", pos: "-8.267m 0.238m 10.819m", normal: "-0.478m -0.039m 0.877m" },
+    { n: 12, name: "Anterior ectosylvian gyrus", color: "#f8fa04", pos: "-1.386m 5.807m 12.421m", normal: "-0.294m 0.409m 0.864m" },
+    { n: 13, name: "Medial ectosylvian gyrus", color: "#faf704", pos: "5.204m 7.933m 12.534m", normal: "0.184m 0.678m 0.712m" },
+    { n: 14, name: "Posterior ectosylvian gyrus", color: "#fbf802", pos: "0.505m 1.166m 15.736m", normal: "-0.273m 0.264m 0.925m" },
+    { n: 15, name: "Presylvian sulcus", color: "#546779", pos: "-13.500m 3.882m -14.432m", normal: "-0.368m -0.372m -0.852m" },
+    { n: 16, name: "Cruciate sulcus", color: "#967355", pos: "-5.344m 9.628m -14.476m", normal: "0.111m 0.584m -0.804m" },
+    { n: 17, name: "Coronal sulcus", color: "#17e892", pos: "2.098m 6.590m -14.660m", normal: "0.253m 0.448m -0.857m" },
+    { n: 18, name: "Lateral sulcus", color: "#1cc823", pos: "13.718m 8.803m -8.844m", normal: "0.395m 0.524m -0.755m" },
+    { n: 19, name: "Suprasylvian sulcus", color: "#b2f210", pos: "8.112m 4.186m -14.357m", normal: "0.152m 0.591m -0.792m" },
+    { n: 20, name: "Pseudosylvian sulcus", color: "#f2f30b", pos: "2.761m -2.715m -16.428m", normal: "-0.166m 0.153m -0.974m" }
+    ]
+  },
+  {
+    file: "models/pekania-endocast.glb",
+    title: "Fisher endocast anatomy",
+    specimen: "Pekania pennanti",
+    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer.",
+    wide: true,
+    view: { orbit: "25deg 65deg auto", zoom: "30m", homeLabel: "Reset view" },
+    labels: [
+    { n:  1, name: "Olfactory bulb", color: "#ff5d00", pos: "-22.440m 6.581m 0.847m", normal: "-0.705m 0.517m -0.485m" },
+    { n:  2, name: "Proreal gyrus", color: "#ff1d00", pos: "-14.051m 8.544m 8.373m", normal: "-0.398m 0.290m 0.870m" },
+    { n:  3, name: "Orbital gyrus", color: "#963734", pos: "-14.883m 2.480m 7.109m", normal: "-0.526m -0.385m 0.758m" },
+    { n:  4, name: "Rhinal fissure", color: "#a56fda", pos: "-14.973m -1.457m 4.477m", normal: "-0.554m -0.680m 0.481m" },
+    { n:  5, name: "Anterior sigmoid gyrus", color: "#eb95ea", pos: "-9.708m 8.803m 9.872m", normal: "-0.200m 0.325m 0.924m" },
+    { n:  6, name: "Posterior sigmoid gyrus", color: "#34c39f", pos: "-3.130m 8.280m 10.056m", normal: "0.456m 0.745m 0.488m" },
+    { n:  7, name: "Post cruciate gyrus", color: "#0400ff", pos: "2.248m 11.475m 4.735m", normal: "0.191m 0.882m 0.432m" },
+    { n:  8, name: "Lateral gyrus", color: "#2e9f28", pos: "10.827m 9.129m 5.797m", normal: "0.086m 0.846m 0.526m" },
+    { n:  9, name: "Suprasylvian gyrus", color: "#0cf31f", pos: "8.492m 4.219m 12.697m", normal: "0.030m 0.434m 0.900m" },
+    { n: 10, name: "Coronal gyrus", color: "#00ffaa", pos: "-2.193m 1.488m 13.186m", normal: "-0.202m 0.085m 0.976m" },
+    { n: 11, name: "Pro-coronal gyrus", color: "#271493", pos: "-9.786m 0.853m 10.643m", normal: "-0.485m 0.081m 0.870m" },
+    { n: 12, name: "Posterior ectosylvian gyrus", color: "#fbff00", pos: "2.239m -4.463m 14.826m", normal: "-0.326m 0.056m 0.944m" },
+    { n: 13, name: "Medial ectosylvian gyrus", color: "#ffff00", pos: "5.840m 1.710m 14.414m", normal: "-0.072m 0.332m 0.940m" },
+    { n: 14, name: "Anterior ectosylvian gyrus", color: "#ffff00", pos: "0.522m -1.447m 13.591m", normal: "-0.427m -0.074m 0.901m" },
+    { n: 15, name: "Pro-anterior ectosylvian gyrus", color: "#fbc259", pos: "-5.212m -2.675m 11.806m", normal: "-0.383m -0.152m 0.911m" },
+    { n: 16, name: "Lateral sulcus", color: "#20df2c", pos: "12.922m 6.037m -9.167m", normal: "0.628m 0.522m -0.577m" },
+    { n: 17, name: "Suprasylvian sulcus", color: "#f8fe03", pos: "10.270m 5.753m -10.483m", normal: "0.013m 0.629m -0.777m" },
+    { n: 18, name: "Pseudosylvian sulcus", color: "#ffff00", pos: "5.253m 4.636m -11.269m", normal: "-0.003m 0.547m -0.837m" },
+    { n: 19, name: "Coronal sulcus", color: "#4ac9a9", pos: "-0.714m 8.812m -8.535m", normal: "0.346m 0.474m -0.809m" }
+    ]
+  },
+  {
+    file: "models/neogale-endocast.glb",
+    title: "American mink endocast",
+    specimen: "Neogale vison",
+    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer. Labels coming soon.",
+    wide: true,
+    view: { orbit: "25deg 65deg auto", zoom: "25m", homeLabel: "Reset view" },
+    // Labels coming soon. Paste the numbered list here in the same format as the models above
+    // (tools/build_model.py makes it from Sketchfab annotations or name + position lists).
+    labels: []
+  },
+  {
+    file: "models/mustela-endocast.glb",
+    title: "Ermine endocast",
+    specimen: "Mustela erminea",
+    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer. Labels coming soon.",
+    wide: true,
+    view: { orbit: "25deg 65deg auto", zoom: "15m", homeLabel: "Reset view" },
+    // Labels coming soon. Paste the numbered list here in the same format as the models above
+    // (tools/build_model.py makes it from Sketchfab annotations or name + position lists).
+    labels: []
   }
   // Add more models like this:
   // { file: "models/otter-endocast.glb", title: "River otter endocast", specimen: "Lontra canadensis", caption: "Virtual endocast of the braincase." },
@@ -115,7 +196,8 @@ function buildGallery() {
 
   MODELS.forEach((m, mi) => {
     const fig = document.createElement("figure");
-    fig.className = "model" + (m.wide ? " wide" : "") + (m.labels ? " labeled" : "");
+    const labeled = !!(m.labels && m.labels.length);
+    fig.className = "model" + (m.wide ? " wide" : "") + (labeled ? " labeled" : "");
     const v = m.view || {};
     const hotspots = (m.labels || []).map(l => `
       <button class="hotspot" type="button" slot="hotspot-${mi}-${l.n}" data-n="${l.n}"
@@ -137,13 +219,13 @@ function buildGallery() {
           <div class="empty" slot="poster"><span class="label">Loading model…</span></div>
           ${hotspots}
         </model-viewer>
-        ${m.labels ? `<div class="view-tools">
+        ${labeled ? `<div class="view-tools">
           <button type="button" class="tool" data-act="brain">${v.homeLabel || "Reset view"}</button>
           ${v.fullLabel ? `<button type="button" class="tool" data-act="all">${v.fullLabel}</button>` : ""}
           <button type="button" class="tool" data-act="labels" aria-pressed="true">Labels</button>
         </div>` : ""}
       </div>
-      ${m.labels ? `<aside class="label-panel" aria-label="Structures">
+      ${labeled ? `<aside class="label-panel" aria-label="Structures">
         <p class="label">Structures · select to zoom</p>
         <ol class="label-list">${list}</ol>
       </aside>` : ""}
@@ -154,7 +236,7 @@ function buildGallery() {
       </figcaption>`;
     gallery.appendChild(fig);
     trackModel(fig, m);
-    if (m.labels) wireLabels(fig, m);
+    if (labeled) wireLabels(fig, m);
   });
 }
 

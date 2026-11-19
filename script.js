@@ -166,25 +166,63 @@ const MODELS = [
   },
   {
     file: "models/neogale-endocast.glb",
-    title: "American mink endocast",
+    title: "American mink endocast anatomy",
     specimen: "Neogale vison",
-    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer. Labels coming soon.",
+    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer.",
     wide: true,
     view: { orbit: "25deg 65deg auto", zoom: "25m", homeLabel: "Reset view" },
-    // Labels coming soon. Paste the numbered list here in the same format as the models above
-    // (tools/build_model.py makes it from Sketchfab annotations or name + position lists).
-    labels: []
+    labels: [
+    { n:  1, name: "Olfactory bulb", color: "#ff6a00", pos: "-19.852m 3.324m -9.277m", normal: "-0.680m 0.150m 0.717m" },
+    { n:  2, name: "Rhinal fissure", color: "#a570da", pos: "-14.272m -1.559m -1.654m", normal: "-0.704m -0.236m 0.669m" },
+    { n:  3, name: "Orbital gyrus", color: "#9b1515", pos: "-16.111m 2.000m -2.467m", normal: "-0.812m -0.069m 0.579m" },
+    { n:  4, name: "Proreal gyrus", color: "#f3210a", pos: "-16.365m 6.689m -4.281m", normal: "-0.611m 0.547m 0.573m" },
+    { n:  5, name: "Anterior sigmoid gyrus", color: "#eb96ea", pos: "-12.963m 8.791m -6.818m", normal: "-0.008m 0.999m 0.040m" },
+    { n:  6, name: "Posterior sigmoid gyrus", color: "#07eee7", pos: "-6.268m 8.429m -2.833m", normal: "-0.113m 0.955m -0.275m" },
+    { n:  7, name: "Lateral gyrus", color: "#2e9f28", pos: "3.522m 8.995m 0.905m", normal: "-0.195m 0.945m 0.264m" },
+    { n:  8, name: "Pro-coronal gyrus", color: "#261493", pos: "-13.086m 5.449m 1.072m", normal: "-0.636m 0.602m 0.482m" },
+    { n:  9, name: "Coronal gyrus", color: "#00fea9", pos: "-8.266m 6.960m 2.540m", normal: "-0.391m 0.693m 0.606m" },
+    { n: 10, name: "Suprasylvian gyrus", color: "#0bf21d", pos: "3.766m 6.175m 8.086m", normal: "-0.352m 0.786m 0.508m" },
+    { n: 11, name: "Pro-anterior ectosylvian gyrus", color: "#fbc35a", pos: "-12.202m 1.610m 3.025m", normal: "-0.577m -0.003m 0.817m" },
+    { n: 12, name: "Anterior ectosylvian gyrus", color: "#fafe00", pos: "-6.203m 3.839m 6.725m", normal: "-0.489m 0.306m 0.817m" },
+    { n: 13, name: "Medial ectosylvian gyrus", color: "#f4f508", pos: "0.983m 6.045m 7.798m", normal: "0.047m 0.672m 0.739m" },
+    { n: 14, name: "Posterior ectosylvian gyrus", color: "#f3f30a", pos: "-3.461m -0.126m 10.923m", normal: "-0.432m 0.486m 0.760m" },
+    { n: 15, name: "Presylvian sulcus", color: "#c76d83", pos: "-11.161m 3.445m -12.011m", normal: "-0.686m -0.018m -0.728m" },
+    { n: 16, name: "Cruciate sulcus", color: "#50e9f5", pos: "-7.982m 5.987m -11.062m", normal: "0.438m 0.592m -0.677m" },
+    { n: 17, name: "Coronal sulcus", color: "#00feaa", pos: "-0.800m 5.439m -9.825m", normal: "0.348m 0.655m -0.671m" },
+    { n: 18, name: "Lateral sulcus", color: "#2bb42b", pos: "8.758m 6.113m -5.727m", normal: "0.428m 0.896m -0.120m" },
+    { n: 19, name: "Suprasylvian sulcus", color: "#dff30d", pos: "6.634m 4.016m -9.035m", normal: "0.373m 0.628m -0.682m" },
+    { n: 20, name: "Pseudosylvian sulcus", color: "#fcfd00", pos: "2.920m -1.208m -12.425m", normal: "0.004m 0.334m -0.943m" }
+    ]
   },
   {
     file: "models/mustela-endocast.glb",
-    title: "Ermine endocast",
+    title: "Ermine endocast anatomy",
     specimen: "Mustela erminea",
-    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer. Labels coming soon.",
+    caption: "Virtual endocast (a cast of the braincase) with gyri and sulci colored. Model by Angela Boyer.",
     wide: true,
     view: { orbit: "25deg 65deg auto", zoom: "15m", homeLabel: "Reset view" },
-    // Labels coming soon. Paste the numbered list here in the same format as the models above
-    // (tools/build_model.py makes it from Sketchfab annotations or name + position lists).
-    labels: []
+    labels: [
+    { n:  1, name: "Olfactory bulb", color: "#ff8700", pos: "-10.637m 2.230m -0.669m", normal: "-0.930m 0.179m 0.321m" },
+    { n:  2, name: "Anterior sigmoid gyrus", color: "#eb96ea", pos: "-6.017m 4.589m -0.697m", normal: "-0.002m 0.948m 0.318m" },
+    { n:  3, name: "Lateral gyrus", color: "#2e9f28", pos: "4.953m 4.230m 1.132m", normal: "0.190m 0.955m 0.229m" },
+    { n:  4, name: "Rhinal fissure", color: "#a56fda", pos: "-6.121m -1.219m 3.430m", normal: "-0.739m -0.078m 0.669m" },
+    { n:  5, name: "Orbital gyrus", color: "#9f1809", pos: "-7.219m 0.891m 2.774m", normal: "-0.861m -0.231m 0.454m" },
+    { n:  6, name: "Proreal gyrus", color: "#fe1900", pos: "-7.496m 3.763m 2.411m", normal: "-0.699m 0.038m 0.714m" },
+    { n:  7, name: "Pro-coronal gyrus", color: "#271493", pos: "-5.291m 0.760m 4.582m", normal: "-0.442m -0.042m 0.896m" },
+    { n:  8, name: "Pro-posterior sigmoid gyrus", color: "#34c29f", pos: "-3.702m 3.123m 4.141m", normal: "-0.144m 0.687m 0.712m" },
+    { n:  9, name: "Coronal gyrus", color: "#00fea9", pos: "-1.468m 2.684m 4.767m", normal: "-0.025m 0.657m 0.754m" },
+    { n: 10, name: "Lateral gyrus", color: "#0bf31e", pos: "1.969m 3.338m 4.118m", normal: "0.105m 0.671m 0.734m" },
+    { n: 11, name: "Pro-anterior ectosylvian gyrus", color: "#fac359", pos: "-2.230m -0.509m 5.575m", normal: "-0.383m 0.144m 0.912m" },
+    { n: 12, name: "Anterior ectosylvian gyrus", color: "#fffa00", pos: "-0.756m 1.345m 5.525m", normal: "-0.157m 0.383m 0.910m" },
+    { n: 13, name: "Medial ectosylvian gyrus", color: "#fefa00", pos: "1.169m 1.887m 5.396m", normal: "0.085m 0.548m 0.832m" },
+    { n: 14, name: "Posterior ectosylvian gyrus", color: "#fffa00", pos: "0.276m -0.514m 6.187m", normal: "-0.017m 0.074m 0.997m" },
+    { n: 15, name: "Presylvian sulcus", color: "#a0518b", pos: "-5.952m 1.336m -4.316m", normal: "-0.583m -0.004m -0.812m" },
+    { n: 16, name: "Cruciate sulcus", color: "#95aec7", pos: "-4.085m 3.326m -3.739m", normal: "0.266m 0.653m -0.709m" },
+    { n: 17, name: "Coronal sulcus", color: "#14e7a5", pos: "-2.745m 2.391m -4.894m", normal: "0.136m 0.408m -0.903m" },
+    { n: 18, name: "Lateral sulcus", color: "#0bf21e", pos: "0.597m 3.647m -3.358m", normal: "-0.092m 0.943m -0.319m" },
+    { n: 19, name: "Suprasylvian sulcus", color: "#e9f604", pos: "0.370m 2.320m -4.866m", normal: "0.133m 0.575m -0.807m" },
+    { n: 20, name: "Ansate sulcus", color: "#33c097", pos: "-2.342m 3.745m -3.308m", normal: "0.073m 0.929m -0.364m" }
+    ]
   }
   // Add more models like this:
   // { file: "models/otter-endocast.glb", title: "River otter endocast", specimen: "Lontra canadensis", caption: "Virtual endocast of the braincase." },
